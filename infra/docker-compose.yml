@@ -1,0 +1,99 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: healthos-postgres
+    environment:
+      POSTGRES_DB: healthos
+      POSTGRES_USER: healthos
+      POSTGRES_PASSWORD: healthos
+    ports:
+      - "5432:5432"
+    volumes:
+      - healthos_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthos -d healthos"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    container_name: healthos-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  user-management-service:
+    build:
+      context: ../user-management-service
+      dockerfile: Dockerfile
+    container_name: healthos-user-management-service
+    environment:
+      SERVER_PORT: 8081
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healthos
+      SPRING_DATASOURCE_USERNAME: healthos
+      SPRING_DATASOURCE_PASSWORD: healthos
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_ISSUER: healthos
+      JWT_SECRET: ${JWT_SECRET:-dev-only-change-me-dev-only-change-me}
+      ACCESS_TOKEN_TTL_SECONDS: 900
+      REFRESH_TOKEN_TTL_SECONDS: 2592000
+      DEV_OTP_CODE: 123456
+      OTP_TTL_SECONDS: 600
+      OTP_LENGTH: 6
+      OTP_DEV_BYPASS: "true"
+      # WhatsApp OTP delivery via notification-service. When disabled the OTP is
+      # logged to this service's console (read it there in dev).
+      NOTIFICATION_ENABLED: "false"
+      NOTIFICATION_BASE_URL: http://notification-service:8082
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health | grep -q UP"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  api-gateway:
+    build:
+      context: ../api-gateway
+      dockerfile: Dockerfile
+    container_name: healthos-api-gateway
+    environment:
+      SERVER_PORT: 8080
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_ISSUER: healthos
+      JWT_SECRET: ${JWT_SECRET:-dev-only-change-me-dev-only-change-me}
+      ACCESS_TOKEN_TTL_SECONDS: 900
+      USER_MGMT_BASE_URL: http://user-management-service:8081
+      CORS_ALLOWED_ORIGINS: "*"
+      RATE_LIMIT_REPLENISH_RATE: 20
+      RATE_LIMIT_BURST_CAPACITY: 40
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+    ports:
+      - "8080:8080"
+    depends_on:
+      redis:
+        condition: service_healthy
+      user-management-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q UP"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  healthos_pgdata:
+

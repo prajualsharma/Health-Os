@@ -1,0 +1,1 @@
+ /home/pras/Documents/Health-Os/kitchen_app/build/web/manifest.json:  /home/pras/Documents/Health-Os/kitchen_app/web/manifest.json /home/pras/Documents/Health-Os/kitchen_app/web/index.html

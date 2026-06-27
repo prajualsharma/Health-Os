@@ -1,0 +1,114 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../core/constants/app_constants.dart';
+import '../../data/models/auth.dart';
+import '../../data/services/api_service.dart';
+
+class AuthProvider extends ChangeNotifier {
+  AuthProvider({ApiService? api}) : _api = api ?? ApiService.instance;
+
+  final ApiService _api;
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+
+  String? _token;
+  String? _registrationToken;
+  bool _isLoading = false;
+  String? _error;
+  bool _lastDevMode = false;
+
+  String? get token => _token;
+  String? get registrationToken => _registrationToken;
+  bool get isLoading => _isLoading;
+  String? get error => _error;
+  bool get isAuthenticated => _token != null;
+  bool get lastDevMode => _lastDevMode;
+
+  /// Step 1: request a WhatsApp OTP. Returns true if the OTP was sent.
+  Future<bool> initiatePhone(String phone) async {
+    _setLoading(true);
+    try {
+      final res = await _api.initiatePhone(phone);
+      _lastDevMode = res.devMode;
+      _error = null;
+      return res.otpSent;
+    } on ApiException catch (e) {
+      _error = e.message;
+      return false;
+    } catch (e) {
+      _error = e.toString();
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  /// Step 2: verify the OTP. Returns true for a new user (needs onboarding),
+  /// false for a returning user (now logged in), null on error.
+  Future<bool?> verifyPhone(String phone, String otp) async {
+    _setLoading(true);
+    try {
+      final res = await _api.verifyPhone(phone, otp);
+      _error = null;
+      if (res.newUser) {
+        _registrationToken = res.registrationToken;
+        return true;
+      }
+      await _persistTokens(res.accessToken!, res.refreshToken);
+      return false;
+    } on ApiException catch (e) {
+      _error = e.message;
+      return null;
+    } catch (e) {
+      _error = e.toString();
+      return null;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  /// Step 3 (new users): complete registration with the collected onboarding data.
+  Future<RegisterResult?> registerPhone(OnboardingData data) async {
+    _setLoading(true);
+    try {
+      final res = await _api.registerPhone(data, _registrationToken ?? '');
+      await _persistTokens(res.accessToken, res.refreshToken);
+      _registrationToken = null;
+      _error = null;
+      return res;
+    } on ApiException catch (e) {
+      _error = e.message;
+      return null;
+    } catch (e) {
+      _error = e.toString();
+      return null;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> _persistTokens(String access, String? refresh) async {
+    _token = access;
+    await _storage.write(key: AppConstants.tokenKey, value: access);
+    if (refresh != null && refresh.isNotEmpty) {
+      await _storage.write(key: AppConstants.refreshTokenKey, value: refresh);
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(AppConstants.tokenKey, access);
+  }
+
+  void _setLoading(bool value) {
+    _isLoading = value;
+    notifyListeners();
+  }
+
+  Future<void> logout() async {
+    await _storage.deleteAll();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(AppConstants.tokenKey);
+    _token = null;
+    _registrationToken = null;
+    notifyListeners();
+  }
+}

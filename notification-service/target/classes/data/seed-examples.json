@@ -1,0 +1,32 @@
+{
+  "notification_topics": [
+    {
+      "topic": "MEMBERSHIP_EXPIRED",
+      "description": "Membership Expiry Notification"
+    }
+  ],
+  "notification_templates": [
+    {
+      "tenantId": "gym001",
+      "topic": "MEMBERSHIP_EXPIRED",
+      "channel": "EMAIL",
+      "subject": "Membership Expiring Soon",
+      "body": "Hello {{firstName}}, your membership expires on {{expiryDate}} at {{gymName}}",
+      "active": true
+    }
+  ],
+  "notification_provider_configs": [
+    {
+      "tenantId": "gym001",
+      "providerType": "EMAIL",
+      "provider": "SMTP",
+      "active": true,
+      "config": {
+        "host": "localhost",
+        "port": "1025",
+        "auth": "false",
+        "from": "noreply@healthos.test"
+      }
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+server:
+  port: ${SERVER_PORT:8081}
+
+spring:
+  application:
+    name: user-management-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/healthos}
+    username: ${SPRING_DATASOURCE_USERNAME:healthos}
+    password: ${SPRING_DATASOURCE_PASSWORD:healthos}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+healthos:
+  security:
+    jwt:
+      issuer: ${JWT_ISSUER:healthos}
+      secret: ${JWT_SECRET:dev-only-change-me-dev-only-change-me}
+      access-token-ttl-seconds: ${ACCESS_TOKEN_TTL_SECONDS:900}
+      refresh-token-ttl-seconds: ${REFRESH_TOKEN_TTL_SECONDS:2592000} # 30 days
+  otp:
+    dev-code: ${DEV_OTP_CODE:123456}
+    ttl-seconds: ${OTP_TTL_SECONDS:600}
+    length: ${OTP_LENGTH:6}
+    dev-bypass: ${OTP_DEV_BYPASS:true}
+    max-attempts: ${OTP_MAX_ATTEMPTS:5}
+    registration-ttl-seconds: ${OTP_REGISTRATION_TTL_SECONDS:900}
+  notification:
+    enabled: ${NOTIFICATION_ENABLED:false}
+    base-url: ${NOTIFICATION_BASE_URL:http://localhost:8082}
+    tenant-id: ${NOTIFICATION_TENANT_ID:healthos}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+

@@ -1,0 +1,13 @@
+/home/pras/Documents/Health-Os/api-gateway/src/main/java/com/healthos/gateway/ApiGatewayApplication.java
+/home/pras/Documents/Health-Os/api-gateway/src/main/java/com/healthos/gateway/config/AppConfig.java
+/home/pras/Documents/Health-Os/api-gateway/src/main/java/com/healthos/gateway/config/CorsConfig.java
+/home/pras/Documents/Health-Os/api-gateway/src/main/java/com/healthos/gateway/config/GatewayProperties.java
+/home/pras/Documents/Health-Os/api-gateway/src/main/java/com/healthos/gateway/config/RateLimitConfig.java
+/home/pras/Documents/Health-Os/api-gateway/src/main/java/com/healthos/gateway/config/WebClientConfig.java
+/home/pras/Documents/Health-Os/api-gateway/src/main/java/com/healthos/gateway/exception/ApiError.java
+/home/pras/Documents/Health-Os/api-gateway/src/main/java/com/healthos/gateway/exception/GlobalErrorHandler.java
+/home/pras/Documents/Health-Os/api-gateway/src/main/java/com/healthos/gateway/filters/JwtAuthFilter.java
+/home/pras/Documents/Health-Os/api-gateway/src/main/java/com/healthos/gateway/filters/RequestLoggingFilter.java
+/home/pras/Documents/Health-Os/api-gateway/src/main/java/com/healthos/gateway/routes/GoogleAuthController.java
+/home/pras/Documents/Health-Os/api-gateway/src/main/java/com/healthos/gateway/security/JwtIssuer.java
+/home/pras/Documents/Health-Os/api-gateway/src/main/java/com/healthos/gateway/security/JwtValidator.java

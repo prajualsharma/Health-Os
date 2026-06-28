@@ -1,10 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/auth/otp_input_field.dart';
 import '../../widgets/common.dart';
 
 class OtpScreen extends StatefulWidget {
@@ -17,89 +19,153 @@ class OtpScreen extends StatefulWidget {
 }
 
 class _OtpScreenState extends State<OtpScreen> {
-  final _otp = TextEditingController();
+  static const int _otpLength = 6;
+  String _otp = '';
+  int _resendIn = 25;
+  Timer? _timer;
+
+  String get _displayPhone {
+    final phone = widget.phone ?? '';
+    if (phone.isEmpty) return '';
+    final digits = phone.replaceAll(RegExp(r'\D'), '');
+    if (digits.length >= 10) {
+      return '+91 - ${digits.substring(digits.length - 10)}';
+    }
+    return phone;
+  }
+
+  bool get _otpComplete => _otp.length == _otpLength;
+
+  @override
+  void initState() {
+    super.initState();
+    _startResendTimer();
+  }
+
+  void _startResendTimer() {
+    _timer?.cancel();
+    setState(() => _resendIn = 25);
+    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (_resendIn <= 1) {
+        t.cancel();
+        setState(() => _resendIn = 0);
+      } else {
+        setState(() => _resendIn--);
+      }
+    });
+  }
+
+  Future<void> _resend() async {
+    if (_resendIn > 0 || widget.phone == null) return;
+    final auth = context.read<AuthProvider>();
+    await auth.initiatePhone(widget.phone!);
+    if (!mounted) return;
+    _startResendTimer();
+  }
 
   @override
   void dispose() {
-    _otp.dispose();
+    _timer?.cancel();
     super.dispose();
   }
 
   Future<void> _verify() async {
-    final code = _otp.text.trim();
-    if (code.length < 4) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter the 6-digit code')),
-      );
-      return;
-    }
+    if (!_otpComplete || widget.phone == null) return;
     final auth = context.read<AuthProvider>();
-    final ok = await auth.verifyPhone(widget.phone ?? '', code);
+    final newUser = await auth.verifyPhone(widget.phone!, _otp);
     if (!mounted) return;
-    if (ok) {
-      context.go('/role');
-    } else {
+
+    if (newUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: AppColors.danger,
           content: Text(auth.error ?? 'Invalid code'),
         ),
       );
+      return;
     }
+
+    context.go(newUser ? '/auth/name' : '/role');
+  }
+
+  String get _timeLabel {
+    final m = (_resendIn ~/ 60).toString();
+    final s = (_resendIn % 60).toString().padLeft(2, '0');
+    return '$m:$s';
   }
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     return Scaffold(
-      appBar: AppBar(leading: BackButton(onPressed: () => context.go('/auth/phone'))),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Enter the code',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
-              const SizedBox(height: 6),
+              AuthBackButton(onPressed: () => context.go('/auth/phone')),
+              const SizedBox(height: 24),
+              const Text(
+                'A verification code has been sent to',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF212121),
+                ),
+              ),
+              const SizedBox(height: 8),
               Text(
-                widget.phone == null
-                    ? 'Sent on WhatsApp'
-                    : 'Sent on WhatsApp to ${widget.phone}',
-                style: const TextStyle(color: AppColors.muted),
+                _displayPhone.isEmpty ? 'your phone' : _displayPhone,
+                style: const TextStyle(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                ),
               ),
               if (auth.lastDevMode) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Text('Dev mode: use code 123456',
-                      style: TextStyle(color: AppColors.primary)),
+                  child: const Text(
+                    'Dev mode: use code 123456',
+                    style: TextStyle(color: AppColors.primary, fontSize: 12),
+                  ),
                 ),
               ],
-              const SizedBox(height: 28),
-              TextField(
-                controller: _otp,
-                keyboardType: TextInputType.number,
-                maxLength: 6,
-                textAlign: TextAlign.center,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                style: const TextStyle(
-                    fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: 8),
-                decoration: const InputDecoration(
-                  counterText: '',
-                  hintText: '••••••',
-                ),
-              ),
+              const SizedBox(height: 32),
+              OtpInputField(onChanged: (v) => setState(() => _otp = v)),
               const SizedBox(height: 24),
               PrimaryButton(
-                label: 'Verify',
+                label: 'Continue',
                 isLoading: auth.isLoading,
-                onPressed: _verify,
+                onPressed: _otpComplete ? _verify : null,
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  const Text('Resend OTP in ',
+                      style: TextStyle(color: Color(0xFF757575), fontSize: 13)),
+                  Text(
+                    _timeLabel,
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              OtpResendChannels(
+                enabled: _resendIn <= 0,
+                onSms: _resend,
+                onWhatsapp: _resend,
               ),
             ],
           ),

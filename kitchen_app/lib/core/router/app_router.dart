@@ -2,8 +2,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../data/models/models.dart';
 import '../../presentation/providers/auth_provider.dart';
+import '../../presentation/screens/auth/name_screen.dart';
 import '../../presentation/screens/auth/otp_screen.dart';
 import '../../presentation/screens/auth/phone_screen.dart';
+import '../../presentation/screens/auth/splash_screen.dart';
 import '../../presentation/screens/corporate/add_kitchen_screen.dart';
 import '../../presentation/screens/corporate/corporate_home.dart';
 import '../../presentation/screens/kitchen/kitchen_shell.dart';
@@ -16,33 +18,36 @@ class AppRouter {
 
   static void init(AuthProvider auth) {
     router = GoRouter(
-      initialLocation: '/auth/phone',
+      initialLocation: '/',
       refreshListenable: auth,
       redirect: (context, state) {
         final loggedIn = auth.isAuthenticated;
         final loc = state.matchedLocation;
-        final inAuth = loc.startsWith('/auth');
+        final inAuth = loc.startsWith('/auth') || loc == '/';
 
         if (!loggedIn) {
-          return inAuth ? null : '/auth/phone';
+          if (inAuth) return null;
+          return '/';
         }
 
+        // Logged in but pending registration (no token yet shouldn't happen)
         if (auth.role == null) {
-          return loc == '/role' ? null : '/role';
+          return loc == '/role' || loc == '/auth/name' ? null : '/role';
         }
 
-        // Logged in with a chosen role: keep them out of auth/role screens.
         if (inAuth || loc == '/role') {
           return auth.role == SessionRole.corporate ? '/corporate' : '/kitchen';
         }
         return null;
       },
       routes: [
+        GoRoute(path: '/', builder: (_, __) => const SplashScreen()),
         GoRoute(path: '/auth/phone', builder: (_, __) => const PhoneScreen()),
         GoRoute(
           path: '/auth/otp',
           builder: (_, state) => OtpScreen(phone: state.extra as String?),
         ),
+        GoRoute(path: '/auth/name', builder: (_, __) => const NameScreen()),
         GoRoute(path: '/role', builder: (_, __) => const RoleSelectScreen()),
         GoRoute(
           path: '/corporate',

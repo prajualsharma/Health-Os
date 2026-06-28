@@ -83,9 +83,9 @@ class AuthApi {
   Future<PhoneVerifyResult> verifyPhone(String phone, String otp) async {
     if (_mock) {
       return const PhoneVerifyResult(
-          newUser: false,
-          accessToken: 'mock-access-token',
-          refreshToken: 'mock-refresh-token');
+        newUser: true,
+        registrationToken: 'mock-registration-token',
+      );
     }
     return _guarded(() async {
       final res = await _dio

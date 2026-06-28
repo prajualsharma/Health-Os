@@ -6,7 +6,9 @@ import '../core/session.dart';
 import '../features/attendance/attendance_screens.dart';
 import '../features/auth/forgot_password_screen.dart';
 import '../features/auth/login_screen.dart';
+import '../features/auth/name_screen.dart';
 import '../features/auth/otp_screen.dart';
+import '../features/auth/splash_screen.dart';
 import '../features/dashboard/dashboard_screen.dart';
 import '../features/gyms/gyms_screens.dart';
 import '../features/members/members_screens.dart';
@@ -29,23 +31,33 @@ class _SessionListenable extends ChangeNotifier {
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: '/login',
+    initialLocation: '/splash',
     refreshListenable: _SessionListenable(ref),
     redirect: (context, state) {
       final loggedIn = ref.read(sessionProvider).loggedIn;
-      final onAuthPage = state.uri.path == '/login' ||
-          state.uri.path == '/otp' ||
-          state.uri.path == '/forgot-password';
-      if (!loggedIn && !onAuthPage) return '/login';
-      if (loggedIn && state.uri.path == '/login') return '/';
+      final path = state.uri.path;
+      final onAuthPage = path == '/splash' ||
+          path == '/login' ||
+          path == '/otp' ||
+          path == '/name' ||
+          path == '/forgot-password';
+      if (!loggedIn && !onAuthPage) return '/splash';
+      if (loggedIn && path == '/login') return '/';
       return null;
     },
     routes: [
+      GoRoute(
+          path: '/splash', builder: (context, state) => const SplashScreen()),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/otp',
         builder: (context, state) =>
             OtpScreen(mobile: state.extra as String? ?? ''),
+      ),
+      GoRoute(
+        path: '/name',
+        builder: (context, state) =>
+            NameScreen(mobile: state.extra as String?),
       ),
       GoRoute(
         path: '/forgot-password',

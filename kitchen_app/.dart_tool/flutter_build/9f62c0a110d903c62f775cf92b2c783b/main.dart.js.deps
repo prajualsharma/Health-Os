@@ -570,8 +570,10 @@ file:///home/pras/Documents/Health-Os/kitchen_app/lib/data/services/mock_data.da
 file:///home/pras/Documents/Health-Os/kitchen_app/lib/main.dart
 file:///home/pras/Documents/Health-Os/kitchen_app/lib/presentation/providers/auth_provider.dart
 file:///home/pras/Documents/Health-Os/kitchen_app/lib/presentation/providers/kitchen_store.dart
+file:///home/pras/Documents/Health-Os/kitchen_app/lib/presentation/screens/auth/name_screen.dart
 file:///home/pras/Documents/Health-Os/kitchen_app/lib/presentation/screens/auth/otp_screen.dart
 file:///home/pras/Documents/Health-Os/kitchen_app/lib/presentation/screens/auth/phone_screen.dart
+file:///home/pras/Documents/Health-Os/kitchen_app/lib/presentation/screens/auth/splash_screen.dart
 file:///home/pras/Documents/Health-Os/kitchen_app/lib/presentation/screens/corporate/add_kitchen_screen.dart
 file:///home/pras/Documents/Health-Os/kitchen_app/lib/presentation/screens/corporate/corporate_home.dart
 file:///home/pras/Documents/Health-Os/kitchen_app/lib/presentation/screens/kitchen/kitchen_shell.dart
@@ -579,6 +581,9 @@ file:///home/pras/Documents/Health-Os/kitchen_app/lib/presentation/screens/kitch
 file:///home/pras/Documents/Health-Os/kitchen_app/lib/presentation/screens/kitchen/orders_screen.dart
 file:///home/pras/Documents/Health-Os/kitchen_app/lib/presentation/screens/kitchen/profile_screen.dart
 file:///home/pras/Documents/Health-Os/kitchen_app/lib/presentation/screens/role/role_select_screen.dart
+file:///home/pras/Documents/Health-Os/kitchen_app/lib/presentation/widgets/auth/auth_hero_scaffold.dart
+file:///home/pras/Documents/Health-Os/kitchen_app/lib/presentation/widgets/auth/otp_input_field.dart
+file:///home/pras/Documents/Health-Os/kitchen_app/lib/presentation/widgets/auth/phone_input_field.dart
 file:///home/pras/Documents/Health-Os/kitchen_app/lib/presentation/widgets/common.dart
 file:///home/pras/flutter/bin/cache/flutter_web_sdk/kernel/dart2js_platform.dill
 file:///home/pras/flutter/packages/flutter/lib/animation.dart

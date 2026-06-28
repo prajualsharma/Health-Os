@@ -9,7 +9,9 @@ import 'package:sms_autofill/sms_autofill.dart';
 
 import '../../app/theme.dart';
 import '../../core/api/auth_api.dart';
+import '../../core/auth_registration.dart';
 import '../../core/session.dart';
+import 'widgets/otp_input_field.dart';
 
 class OtpScreen extends ConsumerStatefulWidget {
   final String mobile;
@@ -24,12 +26,16 @@ class _OtpScreenState extends ConsumerState<OtpScreen> with CodeAutoFill {
   String _code = '';
   String? _error;
   bool _verifying = false;
-  int _resendIn = 30;
+  int _resendIn = 25;
   Timer? _timer;
 
   String get _e164 => '+91${widget.mobile}';
 
+  String get _displayPhone => '+91 - ${widget.mobile}';
+
   bool get _androidAutofill => !kIsWeb && Platform.isAndroid;
+
+  bool get _otpComplete => _code.length == _otpLength;
 
   @override
   void initState() {
@@ -42,7 +48,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> with CodeAutoFill {
 
   void _startResendTimer() {
     _timer?.cancel();
-    setState(() => _resendIn = 30);
+    setState(() => _resendIn = 25);
     _timer = Timer.periodic(const Duration(seconds: 1), (t) {
       if (_resendIn <= 1) {
         t.cancel();
@@ -55,13 +61,22 @@ class _OtpScreenState extends ConsumerState<OtpScreen> with CodeAutoFill {
 
   @override
   void codeUpdated() {
-    // Called by sms_autofill when an SMS code is auto-read on Android.
     setState(() => _code = code ?? '');
     if (_code.length == _otpLength) _verify();
   }
 
+  Future<void> _resend() async {
+    if (_resendIn > 0) return;
+    try {
+      await ref.read(authApiProvider).initiatePhone(_e164);
+      _startResendTimer();
+    } on AuthException catch (e) {
+      if (mounted) setState(() => _error = e.message);
+    }
+  }
+
   Future<void> _verify() async {
-    if (_verifying) return;
+    if (_verifying || !_otpComplete) return;
     setState(() {
       _error = null;
       _verifying = true;
@@ -70,16 +85,16 @@ class _OtpScreenState extends ConsumerState<OtpScreen> with CodeAutoFill {
       final api = ref.read(authApiProvider);
       final result = await api.verifyPhone(_e164, _code);
 
-      String? token = result.accessToken;
       if (result.newUser) {
-        // No B2B account yet — create a minimal one so login can proceed.
-        token = await api.register(
-          phone: _e164,
-          registrationToken: result.registrationToken ?? '',
-          name: 'Gym Owner',
-        );
+        ref.read(authRegistrationProvider.notifier).setPendingRegistration(
+              phone: _e164,
+              registrationToken: result.registrationToken ?? '',
+            );
+        if (mounted) context.go('/name', extra: widget.mobile);
+        return;
       }
 
+      final token = result.accessToken;
       if (token == null || token.isEmpty) {
         setState(() => _error = 'Login failed. Please try again.');
         return;
@@ -103,86 +118,122 @@ class _OtpScreenState extends ConsumerState<OtpScreen> with CodeAutoFill {
     super.dispose();
   }
 
+  String get _timeLabel {
+    final m = (_resendIn ~/ 60).toString();
+    final s = (_resendIn % 60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Verify OTP')),
-      body: Center(
+      backgroundColor: Colors.white,
+      body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Icon(Icons.sms_outlined, size: 40, color: AppColors.primary),
-                    const SizedBox(height: 16),
-                    Text('Enter the 6-digit code',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleLarge
-                            ?.copyWith(fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 4),
-                    Text('Sent to +91 ${widget.mobile}',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodySmall),
-                    if (_androidAutofill)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text('Auto-reading SMS…',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(color: AppColors.secondary)),
-                      ),
-                    const SizedBox(height: 24),
-                    PinFieldAutoFill(
-                      codeLength: _otpLength,
-                      currentCode: _code,
-                      decoration: BoxLooseDecoration(
-                        strokeColorBuilder:
-                            const FixedColorBuilder(AppColors.primary),
-                        radius: const Radius.circular(10),
-                      ),
-                      onCodeChanged: (code) {
-                        setState(() => _code = code ?? '');
-                        if ((code ?? '').length == _otpLength) _verify();
-                      },
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AuthBackButton(
+                  onPressed: () => context.go('/login')),
+              const SizedBox(height: 24),
+              Text(
+                'A verification code has been sent to',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF212121),
                     ),
-                    if (_error != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 12),
-                        child: Text(_error!,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: AppColors.danger, fontSize: 13)),
-                      ),
-                    const SizedBox(height: 24),
-                    FilledButton(
-                      onPressed: _verifying ? null : _verify,
-                      child: _verifying
-                          ? const SizedBox(
-                              height: 18,
-                              width: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('Verify & Login'),
-                    ),
-                    const SizedBox(height: 12),
-                    TextButton(
-                      onPressed: _resendIn == 0 ? _startResendTimer : null,
-                      child: Text(_resendIn == 0
-                          ? 'Resend OTP'
-                          : 'Resend OTP in ${_resendIn}s'),
-                    ),
-                  ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _displayPhone,
+                style: const TextStyle(
+                  color: AppColors.secondary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
                 ),
               ),
-            ),
+              if (_androidAutofill)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    'Auto-reading SMS…',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.secondary,
+                        ),
+                  ),
+                ),
+              const SizedBox(height: 32),
+              if (_androidAutofill)
+                SizedBox(
+                  height: 0,
+                  child: Opacity(
+                    opacity: 0,
+                    child: PinFieldAutoFill(
+                      codeLength: _otpLength,
+                      currentCode: _code,
+                      onCodeChanged: (c) => setState(() => _code = c ?? ''),
+                    ),
+                  ),
+                ),
+              OtpInputField(
+                onChanged: (v) => setState(() => _code = v),
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: 12),
+                Text(_error!,
+                    style: const TextStyle(
+                        color: AppColors.danger, fontSize: 13)),
+              ],
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: (_otpComplete && !_verifying) ? _verify : null,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.secondary,
+                    disabledBackgroundColor: const Color(0xFFBDBDBD),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: _verifying
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text('Continue',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w800, fontSize: 16)),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  const Text('Resend OTP in ',
+                      style: TextStyle(color: Color(0xFF757575), fontSize: 13)),
+                  Text(
+                    _timeLabel,
+                    style: const TextStyle(
+                      color: AppColors.secondary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              OtpResendChannels(
+                enabled: _resendIn <= 0,
+                onSms: _resend,
+                onWhatsapp: _resend,
+              ),
+            ],
           ),
         ),
       ),

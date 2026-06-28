@@ -38,3 +38,18 @@ class PhoneVerifyResult {
         refreshToken: json['refreshToken'] as String?,
       );
 }
+
+class RegisterResult {
+  const RegisterResult({
+    required this.accessToken,
+    this.refreshToken,
+  });
+
+  final String accessToken;
+  final String? refreshToken;
+
+  factory RegisterResult.fromJson(Map<String, dynamic> json) => RegisterResult(
+        accessToken: json['accessToken'] as String? ?? '',
+        refreshToken: json['refreshToken'] as String?,
+      );
+}

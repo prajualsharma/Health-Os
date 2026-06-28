@@ -13,7 +13,7 @@ void main() {
   final auth = AuthProvider();
   AppRouter.init(auth);
 
-  ApiService.instance.onUnauthorized = () => AppRouter.router.go('/auth/phone');
+  ApiService.instance.onUnauthorized = () => AppRouter.router.go('/');
 
   runApp(
     MultiProvider(

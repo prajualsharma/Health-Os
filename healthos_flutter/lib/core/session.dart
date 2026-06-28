@@ -68,7 +68,21 @@ class Session {
 
 class SessionNotifier extends Notifier<Session> {
   @override
-  Session build() => const Session();
+  Session build() {
+    _restore();
+    return const Session();
+  }
+
+  Future<void> _restore() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString(ApiConfig.tokenKey);
+    if (token == null || token.isEmpty) return;
+    try {
+      await loginFromBackend(token: token, contact: '');
+    } catch (_) {
+      state = Session(loggedIn: true, token: token);
+    }
+  }
 
   void login({required UserRole role, required String contact, String? name}) {
     state = Session(

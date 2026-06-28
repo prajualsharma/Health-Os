@@ -108,15 +108,36 @@ class ApiService {
     if (_mockAuth) {
       await _mockDelay();
       return const PhoneVerifyResult(
-        newUser: false,
-        accessToken: 'mock-access-token',
-        refreshToken: 'mock-refresh-token',
+        newUser: true,
+        registrationToken: 'mock-registration-token',
       );
     }
     return _guarded(() async {
       final res =
           await _dio.post('/auth/phone/verify', data: {'phone': phone, 'otp': otp});
       return PhoneVerifyResult.fromJson(res.data as Map<String, dynamic>);
+    });
+  }
+
+  Future<RegisterResult> registerPhone({
+    required String phone,
+    required String registrationToken,
+    required String name,
+  }) async {
+    if (_mockAuth) {
+      await _mockDelay();
+      return const RegisterResult(
+        accessToken: 'mock-access-token',
+        refreshToken: 'mock-refresh-token',
+      );
+    }
+    return _guarded(() async {
+      final res = await _dio.post('/auth/register-phone', data: {
+        'phone': phone,
+        'registrationToken': registrationToken,
+        'name': name,
+      });
+      return RegisterResult.fromJson(res.data as Map<String, dynamic>);
     });
   }
 

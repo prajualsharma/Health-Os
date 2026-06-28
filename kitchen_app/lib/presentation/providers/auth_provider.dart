@@ -7,23 +7,46 @@ import '../../data/models/models.dart';
 import '../../data/services/api_service.dart';
 
 class AuthProvider extends ChangeNotifier {
-  AuthProvider({ApiService? api}) : _api = api ?? ApiService.instance;
+  AuthProvider({ApiService? api}) : _api = api ?? ApiService.instance {
+    _loadSession();
+  }
 
   final ApiService _api;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   String? _token;
+  String? _registrationToken;
+  String? _pendingPhone;
   bool _isLoading = false;
   String? _error;
   bool _lastDevMode = false;
   SessionRole? _role;
 
   String? get token => _token;
+  String? get registrationToken => _registrationToken;
+  String? get pendingPhone => _pendingPhone;
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isAuthenticated => _token != null;
   bool get lastDevMode => _lastDevMode;
   SessionRole? get role => _role;
+
+  Future<void> _loadSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString(AppConstants.tokenKey);
+    final roleName = prefs.getString(AppConstants.roleKey);
+    if (token != null && token.isNotEmpty) {
+      _token = token;
+      if (roleName != null) {
+        try {
+          _role = SessionRole.values.byName(roleName);
+        } catch (_) {
+          _role = null;
+        }
+      }
+      notifyListeners();
+    }
+  }
 
   Future<bool> initiatePhone(String phone) async {
     _setLoading(true);
@@ -43,16 +66,52 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Verifies the OTP and logs in. Returns true on success.
-  Future<bool> verifyPhone(String phone, String otp) async {
+  /// Verifies OTP. Returns true for new user, false for returning user, null on error.
+  Future<bool?> verifyPhone(String phone, String otp) async {
     _setLoading(true);
     try {
       final res = await _api.verifyPhone(phone, otp);
       _error = null;
+      if (res.newUser) {
+        _registrationToken = res.registrationToken;
+        _pendingPhone = phone;
+        return true;
+      }
       await _persistTokens(
         res.accessToken ?? 'mock-access-token',
         res.refreshToken,
       );
+      return false;
+    } on ApiException catch (e) {
+      _error = e.message;
+      return null;
+    } catch (e) {
+      _error = e.toString();
+      return null;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<bool> registerPhone(String name) async {
+    final phone = _pendingPhone;
+    final token = _registrationToken;
+    if (phone == null || token == null) {
+      _error = 'Session expired. Please log in again.';
+      return false;
+    }
+
+    _setLoading(true);
+    try {
+      final res = await _api.registerPhone(
+        phone: phone,
+        registrationToken: token,
+        name: name,
+      );
+      _error = null;
+      await _persistTokens(res.accessToken, res.refreshToken);
+      _registrationToken = null;
+      _pendingPhone = null;
       return true;
     } on ApiException catch (e) {
       _error = e.message;
@@ -94,6 +153,8 @@ class AuthProvider extends ChangeNotifier {
     await prefs.remove(AppConstants.roleKey);
     _token = null;
     _role = null;
+    _registrationToken = null;
+    _pendingPhone = null;
     notifyListeners();
   }
 }

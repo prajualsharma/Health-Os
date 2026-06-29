@@ -56,11 +56,6 @@ class ServiceIconGrid extends StatelessWidget {
         route: '/cart',
         push: true,
         bg: Color(0xFFFFF6E0)),
-    ServiceItem(
-        emoji: '👤',
-        label: 'Profile',
-        route: '/home/profile',
-        bg: Color(0xFFFDEAF0)),
   ];
 
   @override

@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../../core/theme/app_colors.dart';
 
-/// Single full-width OTP field with dot placeholders (Swish-style).
+/// Six-box OTP input with visible digits and autofocus.
 class OtpInputField extends StatefulWidget {
   const OtpInputField({
     super.key,
@@ -23,6 +23,14 @@ class _OtpInputFieldState extends State<OtpInputField> {
   final _focusNode = FocusNode();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focusNode.requestFocus();
+    });
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     _focusNode.dispose();
@@ -31,54 +39,73 @@ class _OtpInputFieldState extends State<OtpInputField> {
 
   @override
   Widget build(BuildContext context) {
+    final text = _controller.text;
+    final focusedIndex = text.length.clamp(0, widget.length - 1);
+
     return GestureDetector(
       onTap: () => _focusNode.requestFocus(),
-      child: Container(
-        height: 56,
-        decoration: BoxDecoration(
-          color: const Color(0xFFF5F5F5),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(widget.length, (i) {
-                final filled = i < _controller.text.length;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Container(
-                    width: 10,
-                    height: 10,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Row(
+            children: List.generate(widget.length, (i) {
+              final filled = i < text.length;
+              final active = _focusNode.hasFocus && i == focusedIndex;
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    left: i == 0 ? 0 : 4,
+                    right: i == widget.length - 1 ? 0 : 4,
+                  ),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    height: 56,
+                    alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: filled ? AppColors.text : AppColors.dim,
-                      shape: BoxShape.circle,
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: active
+                            ? AppColors.primary
+                            : filled
+                                ? AppColors.text
+                                : AppColors.cardBorder,
+                        width: active ? 2 : 1,
+                      ),
+                    ),
+                    child: Text(
+                      filled ? text[i] : '',
+                      style: const TextStyle(
+                        color: AppColors.text,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
-                );
-              }),
-            ),
-            TextField(
+                ),
+              );
+            }),
+          ),
+          Opacity(
+            opacity: 0,
+            child: TextField(
               controller: _controller,
               focusNode: _focusNode,
+              autofocus: true,
               keyboardType: TextInputType.number,
               maxLength: widget.length,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              style: const TextStyle(color: Colors.transparent, fontSize: 1),
-              cursorColor: Colors.transparent,
               decoration: const InputDecoration(
                 counterText: '',
                 border: InputBorder.none,
-                contentPadding: EdgeInsets.zero,
               ),
               onChanged: (v) {
                 widget.onChanged(v);
                 setState(() {});
               },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

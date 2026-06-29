@@ -12,5 +12,4 @@ const List<NavDestinationItem> kNavDestinations = [
   NavDestinationItem(emoji: '🏠', label: 'Home'),
   NavDestinationItem(emoji: '🍱', label: 'Food'),
   NavDestinationItem(emoji: '💪', label: 'Gym'),
-  NavDestinationItem(emoji: '👤', label: 'Profile'),
 ];

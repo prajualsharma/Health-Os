@@ -144,7 +144,10 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-        AppAvatar(initials: d.initials, size: 44, accent: true),
+        GestureDetector(
+          onTap: () => context.push('/profile'),
+          child: AppAvatar(initials: d.initials, size: 44, accent: true),
+        ),
       ],
     );
   }

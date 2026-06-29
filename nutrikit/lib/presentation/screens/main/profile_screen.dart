@@ -60,22 +60,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.of(context).size.width > 900;
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: isWide ? 800 : 640),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Profile', style: AppTypography.h1),
-                const SizedBox(height: 16),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: _body(),
-                ),
-              ],
+    final canPop = context.canPop();
+    return Scaffold(
+      backgroundColor: AppColors.bg,
+      appBar: canPop
+          ? AppBar(
+              backgroundColor: AppColors.bg,
+              foregroundColor: AppColors.text,
+              elevation: 0,
+              title: const Text('Profile'),
+            )
+          : null,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: isWide ? 800 : 640),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (!canPop) ...[
+                    Text('Profile', style: AppTypography.h1),
+                    const SizedBox(height: 16),
+                  ],
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: _body(),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

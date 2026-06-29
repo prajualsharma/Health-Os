@@ -22,6 +22,7 @@ class _CalculatingScreenState extends State<CalculatingScreen>
   late final AnimationController _spin;
   Timer? _timer;
   int _step = 0;
+  bool _failed = false;
 
   static const _steps = [
     'Analyzing your body stats',
@@ -38,34 +39,57 @@ class _CalculatingScreenState extends State<CalculatingScreen>
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat();
-    _submit();
-    _revealSteps();
+    _run();
+  }
+
+  Future<void> _run() async {
+    final registrationFuture = _submit();
+    await _revealSteps();
+    await registrationFuture;
+    if (!mounted || _failed) return;
+    context.go('/onboarding/results');
   }
 
   Future<void> _submit() async {
     final auth = context.read<AuthProvider>();
     final res = await auth.registerPhone(OnboardingStore.instance.data);
+    if (!mounted) return;
     if (res != null) {
       OnboardingStore.instance.result = res.targets;
-      if (mounted) {
-        await context.read<ProfileProvider>().loadProfile();
-      }
+      await context.read<ProfileProvider>().loadProfile();
+      return;
     }
-    // On failure the results screen falls back to default targets; the user is
-    // still routed forward so the flow never dead-ends.
+
+    _failed = true;
+    _timer?.cancel();
+    final message = auth.error ?? 'Could not save your profile. Please try again.';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: AppColors.red,
+        content: Text(message),
+      ),
+    );
+    context.go('/auth/otp');
   }
 
-  void _revealSteps() {
+  Future<void> _revealSteps() async {
+    final completer = Completer<void>();
     _timer = Timer.periodic(const Duration(milliseconds: 700), (t) {
+      if (_failed) {
+        t.cancel();
+        if (!completer.isCompleted) completer.complete();
+        return;
+      }
       if (_step >= _steps.length) {
         t.cancel();
         Future<void>.delayed(const Duration(milliseconds: 900), () {
-          if (mounted) context.go('/onboarding/results');
+          if (!completer.isCompleted) completer.complete();
         });
       } else {
         setState(() => _step++);
       }
     });
+    return completer.future;
   }
 
   @override

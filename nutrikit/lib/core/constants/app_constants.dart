@@ -31,6 +31,8 @@ class AppConstants {
 
   static const String tokenKey = 'auth_token';
   static const String refreshTokenKey = 'refresh_token';
+  static const String registrationTokenKey = 'registration_token';
+  static const String registrationPhoneKey = 'registration_phone';
   static const String onboardingDoneKey = 'onboarding_done';
   static const String profileKey = 'profile_cache';
 }

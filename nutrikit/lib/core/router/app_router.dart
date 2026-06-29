@@ -133,20 +133,17 @@ class AppRouter {
               ),
             ],
           ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/home/profile',
-                builder: (context, state) => const ProfileScreen(),
-              ),
-            ],
-          ),
         ],
       ),
       // Plan and Progress are reachable from the Home grid as deep links.
       GoRoute(
         path: '/plan',
         redirect: (context, state) => '/home/food?segment=plan',
+      ),
+      GoRoute(
+        path: '/profile',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) => const ProfileScreen(),
       ),
       GoRoute(
         path: '/progress',

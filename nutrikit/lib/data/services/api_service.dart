@@ -122,7 +122,10 @@ class ApiService {
     if (_mockAuth) {
       await _mockDelay();
       return const PhoneInitiateResult(
-          exists: false, otpSent: true, devMode: true);
+          exists: false,
+          otpSent: true,
+          devMode: true,
+          otpDelivered: false);
     }
     return _guarded(() async {
       final res =

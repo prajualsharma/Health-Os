@@ -1,0 +1,49 @@
+name: Deploy HealthOS to EC2
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          command_timeout: 20m
+          script: |
+            # Clone or pull latest code
+            if [ -d "/home/ec2-user/Health-Os" ]; then
+              cd /home/ec2-user/Health-Os && git pull
+            else
+              git clone https://github.com/prajualsharma/Health-Os.git /home/ec2-user/Health-Os
+              cd /home/ec2-user/Health-Os
+            fi
+
+            cd /home/ec2-user/Health-Os
+
+            # Create .env file
+            cat > .env << EOF
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            POSTGRES_DB=healthos
+            POSTGRES_USER=healthos
+            POSTGRES_PASSWORD=healthos
+            NOTIFICATION_ENABLED=false
+            OTP_DEV_BYPASS=true
+            EOF
+
+            # Partial stack only (t2.micro ke liye)
+            docker compose down || true
+            docker compose up -d --build \
+              postgres redis \
+              user-management-service \
+              api-gateway \
+              web

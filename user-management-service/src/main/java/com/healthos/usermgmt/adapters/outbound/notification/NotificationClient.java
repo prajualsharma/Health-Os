@@ -7,49 +7,60 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 /**
- * Sends transactional messages (currently auth OTP) through notification-service.
+ * Sends auth OTP codes by email (SMTP direct, or notification-service when configured).
  *
- * <p>In dev (or when notification delivery is disabled / unreachable) the OTP is logged to the
- * server console so it can be read without a configured WhatsApp provider.
+ * <p>When delivery fails, the OTP is logged server-side so dev environments still work.
  */
 @Slf4j
 @Component
 public class NotificationClient {
   private final HealthOsProperties props;
+  private final EmailOtpSender emailOtpSender;
   private final RestClient restClient;
 
-  public NotificationClient(HealthOsProperties props, RestClient.Builder builder) {
+  public NotificationClient(
+      HealthOsProperties props, EmailOtpSender emailOtpSender, RestClient.Builder builder) {
     this.props = props;
+    this.emailOtpSender = emailOtpSender;
     this.restClient = builder.build();
   }
 
-  /**
-   * Attempts to deliver the OTP via WhatsApp. Returns {@code true} if it was handed off to the
-   * notification service, {@code false} if it was only logged (dev fallback).
-   */
+  /** Attempts email OTP delivery. Returns {@code true} when handed off successfully. */
   public boolean sendOtp(String phone, String code) {
     var notification = props.getNotification();
     if (!notification.isEnabled()) {
-      log.info("[DEV OTP] WhatsApp OTP for {} is {}", phone, code);
+      log.info("[DEV OTP] Email OTP for {} is {}", phone, code);
       return false;
+    }
+
+    var to = notification.getOtpEmailTo();
+    if (to == null || to.isBlank()) {
+      log.warn("OTP_EMAIL_TO is not set; logging OTP instead");
+      log.info("[DEV OTP] Email OTP for {} is {}", phone, code);
+      return false;
+    }
+
+    if (emailOtpSender.send(to, phone, code)) {
+      return true;
     }
 
     try {
       restClient
           .post()
-          .uri(notification.getBaseUrl() + "/internal/notifications/whatsapp")
+          .uri(notification.getBaseUrl() + "/internal/notifications/email")
           .body(
               Map.of(
                   "tenantId", notification.getTenantId(),
-                  "to", phone,
+                  "to", to,
+                  "phone", phone,
                   "topic", "auth.otp",
-                  "variables", Map.of("otp", code)))
+                  "variables", Map.of("otp", code, "phone", phone)))
           .retrieve()
           .toBodilessEntity();
       return true;
     } catch (Exception e) {
-      log.warn("WhatsApp OTP delivery failed for {}, falling back to log: {}", phone, e.getMessage());
-      log.info("[DEV OTP] WhatsApp OTP for {} is {}", phone, code);
+      log.warn("Email OTP delivery failed for {}, falling back to log: {}", phone, e.getMessage());
+      log.info("[DEV OTP] Email OTP for {} is {}", phone, code);
       return false;
     }
   }

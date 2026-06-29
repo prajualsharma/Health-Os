@@ -87,6 +87,8 @@ public class AuthDtos {
     private boolean exists;
     private boolean otpSent;
     private boolean devMode;
+    /** Email inbox where the OTP was sent (when not in dev mode). */
+    private String deliveryEmail;
   }
 
   @Data

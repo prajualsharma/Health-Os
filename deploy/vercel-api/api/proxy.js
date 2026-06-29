@@ -41,7 +41,16 @@ export default async function handler(req, res) {
     res.status(upstream.status);
 
     upstream.headers.forEach((value, key) => {
-      if (key.toLowerCase() === 'transfer-encoding') return;
+      const lower = key.toLowerCase();
+      // Node fetch decompresses gzip/br bodies; forwarding Content-Encoding
+      // would make browsers fail with ERR_CONTENT_DECODING_FAILED.
+      if (
+        lower === 'transfer-encoding' ||
+        lower === 'content-encoding' ||
+        lower === 'content-length'
+      ) {
+        return;
+      }
       res.setHeader(key, value);
     });
 

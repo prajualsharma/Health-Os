@@ -17,6 +17,7 @@ class AuthProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
   bool _lastDevMode = false;
+  String? _lastDeliveryEmail;
 
   String? get token => _token;
   String? get registrationToken => _registrationToken;
@@ -24,13 +25,15 @@ class AuthProvider extends ChangeNotifier {
   String? get error => _error;
   bool get isAuthenticated => _token != null;
   bool get lastDevMode => _lastDevMode;
+  String? get lastDeliveryEmail => _lastDeliveryEmail;
 
-  /// Step 1: request a WhatsApp OTP. Returns true if the OTP was sent.
+  /// Step 1: request an email OTP. Returns true if the OTP was sent.
   Future<bool> initiatePhone(String phone) async {
     _setLoading(true);
     try {
       final res = await _api.initiatePhone(phone);
       _lastDevMode = res.devMode;
+      _lastDeliveryEmail = res.deliveryEmail;
       _error = null;
       return res.otpSent;
     } on ApiException catch (e) {

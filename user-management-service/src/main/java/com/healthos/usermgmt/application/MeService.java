@@ -2,6 +2,7 @@ package com.healthos.usermgmt.application;
 
 import com.healthos.usermgmt.adapters.outbound.persistence.UserProfileRepository;
 import com.healthos.usermgmt.adapters.outbound.persistence.UserRepository;
+import com.healthos.usermgmt.domain.User;
 import com.healthos.usermgmt.domain.UserProfile;
 import jakarta.transaction.Transactional;
 import java.time.Instant;
@@ -19,6 +20,16 @@ public class MeService {
   public UserProfile getProfile(UUID userId) {
     return userProfileRepository.findById(userId).orElseGet(() -> createEmptyProfile(userId));
   }
+
+  public User getUser(UUID userId) {
+    return userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
+  }
+
+  public ProfileView getProfileView(UUID userId) {
+    return new ProfileView(getUser(userId), getProfile(userId));
+  }
+
+  public record ProfileView(User user, UserProfile profile) {}
 
   @Transactional
   public UserProfile upsertProfile(

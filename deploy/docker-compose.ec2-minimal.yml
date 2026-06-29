@@ -1,0 +1,27 @@
+# Minimal backend for t2.micro when Kafka cannot start (OOM).
+# Auth works with OTP logged in user-management-service console.
+#
+#   docker compose -f docker-compose.yml \
+#     -f deploy/docker-compose.backend.yml \
+#     -f deploy/docker-compose.ec2-minimal.yml up -d --no-build
+
+services:
+  user-management-service:
+    environment:
+      NOTIFICATION_ENABLED: "false"
+
+  api-gateway:
+    depends_on: !reset
+      redis:
+        condition: service_healthy
+      user-management-service:
+        condition: service_healthy
+
+  notification-service:
+    profiles: ["notification"]
+
+  mongo:
+    profiles: ["notification"]
+
+  kafka:
+    profiles: ["notification"]

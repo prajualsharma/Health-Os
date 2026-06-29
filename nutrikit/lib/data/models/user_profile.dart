@@ -29,21 +29,35 @@ class UserProfile {
   final String plan;
   final String gymName;
 
-  factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
-        name: json['name'] as String? ?? '',
-        email: json['email'] as String? ?? '',
-        initials: json['initials'] as String? ?? 'NK',
-        goal: json['goal'] as String? ?? 'Lose Weight',
-        currentWeight: (json['currentWeight'] as num?)?.toDouble() ?? 0,
-        targetWeight: (json['targetWeight'] as num?)?.toDouble() ?? 0,
-        height: (json['height'] as num?)?.toInt() ?? 0,
-        calorieTarget: (json['calorieTarget'] as num?)?.toInt() ?? 0,
-        proteinTarget: (json['proteinTarget'] as num?)?.toInt() ?? 0,
-        carbTarget: (json['carbTarget'] as num?)?.toInt() ?? 0,
-        fatTarget: (json['fatTarget'] as num?)?.toInt() ?? 0,
-        plan: json['plan'] as String? ?? 'Pro',
-        gymName: json['gymName'] as String? ?? 'FitHub Gym',
-      );
+  factory UserProfile.fromJson(Map<String, dynamic> json) {
+    final name = json['name'] as String? ?? '';
+    final initials = name.isNotEmpty
+        ? name
+            .trim()
+            .split(RegExp(r'\s+'))
+            .map((p) => p.isNotEmpty ? p[0] : '')
+            .take(2)
+            .join()
+            .toUpperCase()
+        : 'NK';
+    return UserProfile(
+      name: name,
+      email: json['email'] as String? ?? '',
+      initials: json['initials'] as String? ?? initials,
+      goal: json['goal'] as String? ?? 'Lose Weight',
+      currentWeight: (json['currentWeight'] as num?)?.toDouble() ??
+          (json['weight'] as num?)?.toDouble() ??
+          0,
+      targetWeight: (json['targetWeight'] as num?)?.toDouble() ?? 0,
+      height: (json['height'] as num?)?.toInt() ?? 0,
+      calorieTarget: (json['calorieTarget'] as num?)?.toInt() ?? 0,
+      proteinTarget: (json['proteinTarget'] as num?)?.toInt() ?? 0,
+      carbTarget: (json['carbTarget'] as num?)?.toInt() ?? 0,
+      fatTarget: (json['fatTarget'] as num?)?.toInt() ?? 0,
+      plan: json['plan'] as String? ?? 'Pro',
+      gymName: json['gymName'] as String? ?? 'FitHub Gym',
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         'name': name,

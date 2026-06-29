@@ -12,6 +12,8 @@ spring:
       port: ${REDIS_PORT:6379}
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    listener:
+      auto-startup: ${KAFKA_LISTENER_AUTO_STARTUP:true}
     consumer:
       group-id: notification-service
       auto-offset-reset: earliest
@@ -25,6 +27,8 @@ spring:
   mail:
     host: ${SPRING_MAIL_HOST:localhost}
     port: ${SPRING_MAIL_PORT:1025}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
 
 healthos:
   security:
@@ -47,6 +51,16 @@ healthos:
     phone-number-id: ${META_WHATSAPP_PHONE_NUMBER_ID:}
     access-token: ${META_WHATSAPP_TOKEN:}
     otp-message-template: ${META_WHATSAPP_OTP_TEMPLATE:Your NutriKit verification code is {{otp}}. It expires in 10 minutes.}
+  smtp:
+    enabled: ${SMTP_ENABLED:true}
+    host: ${SMTP_HOST:smtp.gmail.com}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    from: ${SMTP_FROM:${SMTP_USERNAME:}}
+    starttls: ${SMTP_STARTTLS:true}
+    otp-subject-template: ${SMTP_OTP_SUBJECT:Your NutriKit verification code}
+    otp-body-template: ${SMTP_OTP_BODY:Your NutriKit verification code for {{phone}} is {{otp}}. It expires in 10 minutes.}
 
 springdoc:
   swagger-ui:

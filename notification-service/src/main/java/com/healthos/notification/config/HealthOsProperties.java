@@ -9,6 +9,21 @@ public class HealthOsProperties {
   private Security security = new Security();
   private Notification notification = new Notification();
   private Whatsapp whatsapp = new Whatsapp();
+  private Smtp smtp = new Smtp();
+
+  @Data
+  public static class Smtp {
+    private boolean enabled = true;
+    private String host = "smtp.gmail.com";
+    private int port = 587;
+    private String username;
+    private String password;
+    private String from;
+    private boolean starttls = true;
+    private String otpSubjectTemplate = "Your NutriKit verification code";
+    private String otpBodyTemplate =
+        "Your NutriKit verification code for {{phone}} is {{otp}}.\n\nIt expires in 10 minutes.";
+  }
 
   @Data
   public static class Security {

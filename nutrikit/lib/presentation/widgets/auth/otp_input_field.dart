@@ -113,11 +113,15 @@ class OtpResendChannels extends StatelessWidget {
     required this.onSms,
     required this.onWhatsapp,
     this.enabled = true,
+    this.smsLabel = 'SMS',
+    this.whatsappLabel = 'Whatsapp',
   });
 
   final VoidCallback onSms;
   final VoidCallback onWhatsapp;
   final bool enabled;
+  final String smsLabel;
+  final String whatsappLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -126,7 +130,7 @@ class OtpResendChannels extends StatelessWidget {
         Expanded(
           child: _ChannelChip(
             icon: Icons.sms_outlined,
-            label: 'SMS',
+            label: smsLabel,
             onTap: enabled ? onSms : null,
           ),
         ),
@@ -134,7 +138,7 @@ class OtpResendChannels extends StatelessWidget {
         Expanded(
           child: _ChannelChip(
             icon: Icons.chat_bubble_outline,
-            label: 'Whatsapp',
+            label: whatsappLabel,
             onTap: enabled ? onWhatsapp : null,
           ),
         ),

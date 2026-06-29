@@ -8,6 +8,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/onboarding_store.dart';
+import '../../providers/profile_provider.dart';
 
 class CalculatingScreen extends StatefulWidget {
   const CalculatingScreen({super.key});
@@ -46,6 +47,9 @@ class _CalculatingScreenState extends State<CalculatingScreen>
     final res = await auth.registerPhone(OnboardingStore.instance.data);
     if (res != null) {
       OnboardingStore.instance.result = res.targets;
+      if (mounted) {
+        await context.read<ProfileProvider>().loadProfile();
+      }
     }
     // On failure the results screen falls back to default targets; the user is
     // still routed forward so the flow never dead-ends.

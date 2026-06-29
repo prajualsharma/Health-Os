@@ -3,47 +3,212 @@ name: Deploy HealthOS to EC2
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-ec2
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  build-images:
+    name: Build Docker images
+    needs: ci
     runs-on: ubuntu-latest
-
+    env:
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Deploy to EC2 via SSH
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend images
+        run: |
+          if [ -z "${JWT_SECRET}" ]; then
+            echo "JWT_SECRET secret is required"
+            exit 1
+          fi
+          docker compose \
+            -f docker-compose.yml \
+            -f deploy/docker-compose.backend.yml \
+            build user-management-service api-gateway notification-service
+
+      - name: Save images
+        run: |
+          docker save \
+            healthos-user-management-service \
+            healthos-api-gateway \
+            healthos-notification-service \
+            | gzip > healthos-backend-images.tar.gz
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          command_timeout: 20m
-          script: |
-            # Clone or pull latest code
-            if [ -d "/home/ec2-user/Health-Os" ]; then
-              cd /home/ec2-user/Health-Os && git pull
+          name: backend-docker-images
+          path: healthos-backend-images.tar.gz
+          retention-days: 3
+
+  deploy-ec2:
+    name: Deploy to EC2
+    needs: build-images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download images
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-docker-images
+
+      - name: Write SSH key
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2.pem
+          chmod 600 ~/.ssh/ec2.pem
+
+      - name: Sync repo to EC2
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+        run: |
+          HOST="${EC2_USER}@${EC2_HOST}"
+          ssh -i ~/.ssh/ec2.pem -o StrictHostKeyChecking=accept-new "$HOST" 'mkdir -p ~/healthos'
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/ec2.pem -o StrictHostKeyChecking=accept-new" \
+            --exclude '.git' \
+            --exclude '**/build/' \
+            --exclude '**/target/' \
+            --exclude '**/.dart_tool/' \
+            --exclude '**/node_modules/' \
+            --exclude '**/.vercel/' \
+            ./ "${HOST}:~/healthos/"
+
+      - name: Load images and restart stack
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          OTP_EMAIL_TO: ${{ secrets.OTP_EMAIL_TO }}
+        run: |
+          HOST="${EC2_USER}@${EC2_HOST}"
+          scp -i ~/.ssh/ec2.pem -o StrictHostKeyChecking=accept-new \
+            healthos-backend-images.tar.gz "${HOST}:~/healthos-backend-images.tar.gz"
+          ssh -i ~/.ssh/ec2.pem -o StrictHostKeyChecking=accept-new "$HOST" bash -s <<REMOTE
+          set -euo pipefail
+          cd ~/healthos
+
+          gunzip -c ~/healthos-backend-images.tar.gz | sudo docker load
+          rm -f ~/healthos-backend-images.tar.gz
+
+          if [ ! -f .env ]; then
+            cp .env.example .env
+          fi
+
+          upsert_env() {
+            local key="\$1" val="\$2"
+            if grep -q "^\${key}=" .env; then
+              sed -i "s|^\${key}=.*|\${key}=\${val}|" .env
             else
-              git clone https://github.com/prajualsharma/Health-Os.git /home/ec2-user/Health-Os
-              cd /home/ec2-user/Health-Os
+              echo "\${key}=\${val}" >> .env
             fi
+          }
 
-            cd /home/ec2-user/Health-Os
+          upsert_env JWT_SECRET "${JWT_SECRET}"
+          upsert_env NOTIFICATION_ENABLED "true"
+          upsert_env OTP_DEV_BYPASS "false"
+          upsert_env OTP_EMAIL_TO "${OTP_EMAIL_TO:-prajual.sharma.1559@gmail.com}"
+          upsert_env SMTP_HOST "smtp.gmail.com"
+          upsert_env SMTP_PORT "587"
+          upsert_env SMTP_USERNAME "${OTP_EMAIL_TO:-prajual.sharma.1559@gmail.com}"
+          upsert_env SMTP_FROM "${OTP_EMAIL_TO:-prajual.sharma.1559@gmail.com}"
+          upsert_env SMTP_ENABLED "true"
+          if [ -n "${SMTP_PASSWORD}" ]; then
+            upsert_env SMTP_PASSWORD "${SMTP_PASSWORD}"
+          fi
 
-            # Create .env file
-            cat > .env << EOF
-            JWT_SECRET=${{ secrets.JWT_SECRET }}
-            POSTGRES_DB=healthos
-            POSTGRES_USER=healthos
-            POSTGRES_PASSWORD=healthos
-            NOTIFICATION_ENABLED=false
-            OTP_DEV_BYPASS=true
-            EOF
+          sudo docker compose \
+            -f docker-compose.yml \
+            -f deploy/docker-compose.backend.yml \
+            -f deploy/docker-compose.ec2-minimal.yml \
+            -f deploy/docker-compose.ec2-email.yml \
+            up -d --no-build --force-recreate \
+            postgres redis user-management-service api-gateway
 
-            # Partial stack only (t2.micro ke liye)
-            docker compose down || true
-            docker compose up -d --build \
-              postgres redis \
-              user-management-service \
-              api-gateway \
-              web
+          for i in \$(seq 1 30); do
+            if curl -sf http://localhost:8080/actuator/health | grep -q UP; then
+              echo "api-gateway is UP"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "WARNING: api-gateway not healthy yet"
+          sudo docker compose ps
+          REMOTE
+
+      - name: Smoke test
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          curl -sf "http://${EC2_HOST}:8080/actuator/health" | grep -q UP || \
+            echo "Note: port 8080 may be blocked by security group; tunnel/proxy still works."
+
+  deploy-vercel-api:
+    name: Deploy API proxy (Vercel)
+    needs: deploy-ec2
+    runs-on: ubuntu-latest
+    if: ${{ vars.DEPLOY_VERCEL == 'true' }}
+    defaults:
+      run:
+        working-directory: deploy/vercel-api
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Vercel CLI
+        run: npm i -g vercel@54
+
+      - name: Deploy healthos-api
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: vercel deploy --prod --yes --token "$VERCEL_TOKEN"
+
+  deploy-nutrikit:
+    name: Deploy NutriKit (Vercel)
+    needs: deploy-ec2
+    runs-on: ubuntu-latest
+    if: ${{ vars.DEPLOY_VERCEL == 'true' }}
+    defaults:
+      run:
+        working-directory: nutrikit
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Build web
+        run: |
+          flutter pub get
+          flutter build web --release \
+            --dart-define=API_URL=https://healthos-api.vercel.app \
+            --dart-define=USE_MOCK=true \
+            --dart-define=MOCK_AUTH=false
+
+      - name: Stage prebuilt output
+        run: |
+          rm -rf .vercel/output
+          mkdir -p .vercel/output/static
+          cp -r build/web/* .vercel/output/static/
+          printf '%s\n' '{"version":3,"routes":[{"handle":"filesystem"},{"src":"/(.*)","dest":"/index.html"}]}' \
+            > .vercel/output/config.json
+
+      - name: Deploy to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: npx vercel deploy --prebuilt --prod --yes --token "$VERCEL_TOKEN"

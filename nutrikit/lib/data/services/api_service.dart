@@ -382,7 +382,7 @@ class ApiService {
       return MockData.profile();
     }
     return _guarded(() async {
-      final res = await _dio.get('/v1/profile/me');
+      final res = await _dio.get('/me/profile');
       return UserProfile.fromJson(res.data as Map<String, dynamic>);
     });
   }

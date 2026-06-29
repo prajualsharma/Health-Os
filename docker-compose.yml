@@ -106,6 +106,13 @@ services:
       OTP_DEV_BYPASS: ${OTP_DEV_BYPASS:-true}
       NOTIFICATION_ENABLED: ${NOTIFICATION_ENABLED:-false}
       NOTIFICATION_BASE_URL: http://notification-service:8082
+      OTP_EMAIL_TO: ${OTP_EMAIL_TO:-}
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-${SMTP_USERNAME:-}}
+      SMTP_ENABLED: ${SMTP_ENABLED:-true}
     depends_on:
       postgres:
         condition: service_healthy
@@ -135,6 +142,12 @@ services:
       NOTIFICATION_TOPIC: notification-topic
       NOTIFICATION_RETRY_TOPIC: notification-retry
       NOTIFICATION_DLT_TOPIC: notification-dlt
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-${SMTP_USERNAME:-}}
+      SMTP_ENABLED: ${SMTP_ENABLED:-true}
     depends_on:
       mongo:
         condition: service_healthy

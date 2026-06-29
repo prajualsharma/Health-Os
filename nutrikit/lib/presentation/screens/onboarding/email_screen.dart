@@ -20,6 +20,12 @@ class _EmailScreenState extends State<EmailScreen> {
   final _email = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    _email.text = 'prajual.sharma.1559@gmail.com';
+  }
+
+  @override
   void dispose() {
     _email.dispose();
     super.dispose();

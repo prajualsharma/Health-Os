@@ -107,17 +107,20 @@ class PhoneInitiateResult {
     required this.exists,
     required this.otpSent,
     required this.devMode,
+    this.deliveryEmail,
   });
 
   final bool exists;
   final bool otpSent;
   final bool devMode;
+  final String? deliveryEmail;
 
   factory PhoneInitiateResult.fromJson(Map<String, dynamic> json) =>
       PhoneInitiateResult(
         exists: json['exists'] as bool? ?? false,
         otpSent: json['otpSent'] as bool? ?? false,
         devMode: json['devMode'] as bool? ?? false,
+        deliveryEmail: json['deliveryEmail'] as String?,
       );
 }
 

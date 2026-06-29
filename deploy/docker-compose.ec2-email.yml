@@ -1,0 +1,38 @@
+# EC2 overlay: email OTP via Gmail SMTP (sent directly from user-management-service).
+# Does not require notification-service / Kafka on t2.micro.
+#
+#   docker compose -f docker-compose.yml \
+#     -f deploy/docker-compose.backend.yml \
+#     -f deploy/docker-compose.ec2-email.yml \
+#     -f deploy/docker-compose.ec2-minimal.yml up -d --no-build
+#
+# Set SMTP_PASSWORD in ~/healthos/.env (Gmail App Password).
+
+services:
+  user-management-service:
+    environment:
+      NOTIFICATION_ENABLED: "true"
+      OTP_DEV_BYPASS: "false"
+      OTP_EMAIL_TO: ${OTP_EMAIL_TO:-prajual.sharma.1559@gmail.com}
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-${SMTP_USERNAME:-}}
+      SMTP_ENABLED: "true"
+
+  api-gateway:
+    depends_on: !reset
+      redis:
+        condition: service_healthy
+      user-management-service:
+        condition: service_healthy
+
+  notification-service:
+    profiles: ["notification"]
+
+  mongo:
+    profiles: ["notification"]
+
+  kafka:
+    profiles: ["notification"]

@@ -1,0 +1,75 @@
+# Backend-only overlay for small VMs (EC2 t2.micro, etc.).
+# Excludes web frontend and kitchen-service; caps memory per container.
+#
+#   docker compose -f docker-compose.yml -f deploy/docker-compose.backend.yml up -d --build
+#
+# Services started: postgres, redis, mongo, kafka,
+#   user-management-service, notification-service, api-gateway
+
+services:
+  postgres:
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+
+  mongo:
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+
+  redis:
+    deploy:
+      resources:
+        limits:
+          memory: 80M
+
+  kafka:
+    environment:
+      KAFKA_HEAP_OPTS: "-Xmx200m -Xms128m"
+    deploy:
+      resources:
+        limits:
+          memory: 300M
+
+  user-management-service:
+    environment:
+      JAVA_OPTS: "-Xmx200m -XX:+UseSerialGC"
+      NOTIFICATION_ENABLED: ${NOTIFICATION_ENABLED:-true}
+    deploy:
+      resources:
+        limits:
+          memory: 280M
+
+  notification-service:
+    environment:
+      JAVA_OPTS: "-Xmx200m -XX:+UseSerialGC"
+    deploy:
+      resources:
+        limits:
+          memory: 280M
+
+  api-gateway:
+    environment:
+      JAVA_OPTS: "-Xmx200m -XX:+UseSerialGC"
+    depends_on: !reset
+      redis:
+        condition: service_healthy
+      user-management-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+
+  # Disable full-stack services not needed for API-only deploy.
+  kitchen-service:
+    profiles: ["full"]
+    restart: "no"
+
+  web:
+    profiles: ["full"]
+    restart: "no"

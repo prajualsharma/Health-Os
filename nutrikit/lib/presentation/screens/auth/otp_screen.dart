@@ -100,6 +100,7 @@ class _OTPScreenState extends State<OTPScreen> {
   @override
   Widget build(BuildContext context) {
     final devMode = context.watch<AuthProvider>().lastDevMode;
+    final deliveryEmail = context.watch<AuthProvider>().lastDeliveryEmail;
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -111,12 +112,16 @@ class _OTPScreenState extends State<OTPScreen> {
               AuthBackButton(onPressed: () => context.go('/auth/phone')),
               const SizedBox(height: 24),
               Text(
-                'A verification code has been sent to',
+                devMode
+                    ? 'A verification code has been sent to'
+                    : 'A verification code has been emailed to',
                 style: AppTypography.h2.copyWith(fontSize: 22),
               ),
               const SizedBox(height: 8),
               Text(
-                _displayPhone.isEmpty ? 'your phone' : _displayPhone,
+                devMode
+                    ? (_displayPhone.isEmpty ? 'your phone' : _displayPhone)
+                    : (deliveryEmail ?? 'your email'),
                 style: AppTypography.bodyBold.copyWith(
                   color: AppColors.primary,
                   fontSize: 16,
@@ -163,6 +168,8 @@ class _OTPScreenState extends State<OTPScreen> {
                 enabled: _seconds <= 0,
                 onSms: _resend,
                 onWhatsapp: _resend,
+                smsLabel: 'Resend email',
+                whatsappLabel: 'Resend code',
               ),
             ],
           ),

@@ -58,12 +58,13 @@ public class AuthService {
             || authMethodRepository.existsByMethodAndIdentifier(AuthMethodType.PHONE, phone);
     var code = otpService.generate(phone);
     boolean sent = notificationClient.sendOtp(phone, code);
-    boolean devMode = props.getOtp().isDevBypass() || !sent;
+    boolean devMode = props.getOtp().isDevBypass();
+    boolean otpDelivered = sent && !devMode;
     var deliveryEmail =
-        !devMode && props.getNotification().isEnabled()
+        otpDelivered && props.getNotification().isEnabled()
             ? props.getNotification().getOtpEmailTo()
             : null;
-    return new PhoneInitiateResult(phone, exists, true, devMode, deliveryEmail);
+    return new PhoneInitiateResult(phone, exists, true, devMode, otpDelivered, deliveryEmail);
   }
 
   /** Step 2: verify OTP. Returning users get tokens; new users get a registration token. */
@@ -383,7 +384,12 @@ public class AuthService {
   public record PasswordResetIssue(String resetToken, Instant expiresAt) {}
 
   public record PhoneInitiateResult(
-      String phone, boolean exists, boolean otpSent, boolean devMode, String deliveryEmail) {}
+      String phone,
+      boolean exists,
+      boolean otpSent,
+      boolean devMode,
+      boolean otpDelivered,
+      String deliveryEmail) {}
 
   public record PhoneVerifyResult(boolean newUser, AuthTokens tokens, String registrationToken) {
     static PhoneVerifyResult returningUser(AuthTokens tokens) {

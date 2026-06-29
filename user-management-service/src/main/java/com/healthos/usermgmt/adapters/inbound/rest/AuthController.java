@@ -59,6 +59,7 @@ public class AuthController {
     res.setExists(result.exists());
     res.setOtpSent(result.otpSent());
     res.setDevMode(result.devMode());
+    res.setOtpDelivered(result.otpDelivered());
     res.setDeliveryEmail(result.deliveryEmail());
     return res;
   }

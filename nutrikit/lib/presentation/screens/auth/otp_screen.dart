@@ -99,8 +99,10 @@ class _OTPScreenState extends State<OTPScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final devMode = context.watch<AuthProvider>().lastDevMode;
-    final deliveryEmail = context.watch<AuthProvider>().lastDeliveryEmail;
+    final auth = context.watch<AuthProvider>();
+    final devMode = auth.lastDevMode;
+    final otpDelivered = auth.lastOtpDelivered;
+    final deliveryEmail = auth.lastDeliveryEmail;
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -113,8 +115,10 @@ class _OTPScreenState extends State<OTPScreen> {
               const SizedBox(height: 24),
               Text(
                 devMode
-                    ? 'A verification code has been sent to'
-                    : 'A verification code has been emailed to',
+                    ? 'Enter the dev verification code for'
+                    : otpDelivered
+                        ? 'A verification code has been emailed to'
+                        : 'We could not send a verification code to',
                 style: AppTypography.h2.copyWith(fontSize: 22),
               ),
               const SizedBox(height: 8),
@@ -136,8 +140,36 @@ class _OTPScreenState extends State<OTPScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    'Dev mode: check the server logs for your code (default 123456).',
+                    'Dev mode: use code 123456.',
                     style: AppTypography.caption,
+                  ),
+                ),
+              ] else if (otpDelivered) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.accent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'Check your inbox (and spam) for the 6-digit code.',
+                    style: AppTypography.caption,
+                  ),
+                ),
+              ] else ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.red.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'Could not send the code. Tap Resend or try again in a moment.',
+                    style: AppTypography.caption.copyWith(
+                      color: AppColors.red,
+                    ),
                   ),
                 ),
               ],

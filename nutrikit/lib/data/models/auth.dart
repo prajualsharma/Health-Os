@@ -88,17 +88,47 @@ class OnboardingData {
         'phone': phone,
         'registrationToken': registrationToken,
         'name': name,
-        'goal': goal,
+        'goal': _mapGoal(goal),
         'gender': gender,
         'age': age,
         'height': height,
         'weight': currentWeight.round(),
         'targetWeight': targetWeight.round(),
-        'activity': activityLevel,
+        'activity': _mapActivity(activityLevel),
         'diet': dietType,
         'allergies': allergies,
         if (email.isNotEmpty) 'email': email,
       };
+
+  static String _mapGoal(String goal) {
+    switch (goal) {
+      case 'Lose Weight':
+        return 'lose_weight';
+      case 'Gain Muscle':
+        return 'build_muscle';
+      case 'Maintain Weight':
+        return 'maintain';
+      case 'Eat Healthier':
+        return 'eat_healthier';
+      default:
+        return goal;
+    }
+  }
+
+  static String _mapActivity(String activity) {
+    switch (activity) {
+      case 'Sedentary':
+        return 'sedentary';
+      case 'Lightly Active':
+        return 'lightly_active';
+      case 'Moderately Active':
+        return 'moderately_active';
+      case 'Very Active':
+        return 'very_active';
+      default:
+        return activity;
+    }
+  }
 }
 
 /// Result of `POST /auth/phone/initiate`.
@@ -107,12 +137,14 @@ class PhoneInitiateResult {
     required this.exists,
     required this.otpSent,
     required this.devMode,
+    required this.otpDelivered,
     this.deliveryEmail,
   });
 
   final bool exists;
   final bool otpSent;
   final bool devMode;
+  final bool otpDelivered;
   final String? deliveryEmail;
 
   factory PhoneInitiateResult.fromJson(Map<String, dynamic> json) =>
@@ -120,6 +152,7 @@ class PhoneInitiateResult {
         exists: json['exists'] as bool? ?? false,
         otpSent: json['otpSent'] as bool? ?? false,
         devMode: json['devMode'] as bool? ?? false,
+        otpDelivered: json['otpDelivered'] as bool? ?? false,
         deliveryEmail: json['deliveryEmail'] as String?,
       );
 }

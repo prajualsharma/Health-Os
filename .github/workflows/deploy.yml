@@ -79,6 +79,7 @@ jobs:
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/ec2.pem -o StrictHostKeyChecking=accept-new" \
             --exclude '.git' \
+            --exclude '.env' \
             --exclude '**/build/' \
             --exclude '**/target/' \
             --exclude '**/.dart_tool/' \
@@ -119,7 +120,6 @@ jobs:
 
           upsert_env JWT_SECRET "${JWT_SECRET}"
           upsert_env NOTIFICATION_ENABLED "true"
-          upsert_env OTP_DEV_BYPASS "false"
           upsert_env OTP_EMAIL_TO "${OTP_EMAIL_TO:-prajual.sharma.1559@gmail.com}"
           upsert_env SMTP_HOST "smtp.gmail.com"
           upsert_env SMTP_PORT "587"
@@ -128,6 +128,10 @@ jobs:
           upsert_env SMTP_ENABLED "true"
           if [ -n "${SMTP_PASSWORD}" ]; then
             upsert_env SMTP_PASSWORD "${SMTP_PASSWORD}"
+            upsert_env OTP_DEV_BYPASS "false"
+          else
+            echo "::warning::SMTP_PASSWORD secret not set — keeping OTP_DEV_BYPASS=true"
+            upsert_env OTP_DEV_BYPASS "true"
           fi
 
           sudo docker compose \

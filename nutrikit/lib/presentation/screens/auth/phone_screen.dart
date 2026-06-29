@@ -85,7 +85,7 @@ class _PhoneScreenState extends State<PhoneScreen> {
           const SizedBox(height: 20),
           PhoneInputField(controller: _phone, onChanged: _onPhoneChanged),
           const SizedBox(height: 10),
-          Text("We'll send a verification code here",
+          Text("We'll email a verification code to your inbox",
               style: AppTypography.caption),
           const SizedBox(height: 24),
           AppButton(

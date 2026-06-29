@@ -86,8 +86,11 @@ public class AuthDtos {
   public static class PhoneInitiateResponse {
     private boolean exists;
     private boolean otpSent;
+    /** True when OTP_DEV_BYPASS is on (fixed code 123456). */
     private boolean devMode;
-    /** Email inbox where the OTP was sent (when not in dev mode). */
+    /** True when the OTP was delivered via email/SMS (not dev bypass). */
+    private boolean otpDelivered;
+    /** Email inbox where the OTP was sent (when delivered). */
     private String deliveryEmail;
   }
 

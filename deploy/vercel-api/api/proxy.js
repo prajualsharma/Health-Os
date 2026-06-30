@@ -1,4 +1,28 @@
+const CORS_METHODS = 'GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD';
+const CORS_HEADERS =
+  'Content-Type, Authorization, Accept, Origin, X-Requested-With';
+
+function applyCors(req, res) {
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
+  res.setHeader('Access-Control-Allow-Methods', CORS_METHODS);
+  res.setHeader('Access-Control-Allow-Headers', CORS_HEADERS);
+  res.setHeader('Access-Control-Max-Age', '86400');
+}
+
 export default async function handler(req, res) {
+  applyCors(req, res);
+
+  if (req.method === 'OPTIONS') {
+    res.status(204).end();
+    return;
+  }
+
   const backend = process.env.BACKEND_URL?.replace(/\/$/, '');
   if (!backend) {
     res.status(500).json({ error: 'BACKEND_URL is not configured' });
@@ -47,12 +71,16 @@ export default async function handler(req, res) {
       if (
         lower === 'transfer-encoding' ||
         lower === 'content-encoding' ||
-        lower === 'content-length'
+        lower === 'content-length' ||
+        lower.startsWith('access-control-')
       ) {
         return;
       }
       res.setHeader(key, value);
     });
+
+    // Re-apply proxy CORS (browser talks to this origin, not the VM).
+    applyCors(req, res);
 
     const body = await upstream.arrayBuffer();
     res.send(Buffer.from(body));

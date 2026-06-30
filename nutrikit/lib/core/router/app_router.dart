@@ -36,6 +36,7 @@ import '../../presentation/screens/onboarding/sex_screen.dart';
 import '../../presentation/screens/onboarding/splash_screen.dart';
 import '../../presentation/screens/onboarding/target_weight_screen.dart';
 import '../../presentation/screens/onboarding/weight_screen.dart';
+import '../../presentation/providers/onboarding_store.dart';
 import '../constants/app_constants.dart';
 import '../theme/app_colors.dart';
 
@@ -48,6 +49,7 @@ class AppRouter {
   static final GoRouter router = GoRouter(
     navigatorKey: _rootKey,
     initialLocation: '/',
+    redirect: _guardRegistrationSession,
     routes: [
       GoRoute(
         path: '/',
@@ -233,6 +235,40 @@ class AppRouter {
       ),
     ],
   );
+
+  static const _postRegistrationOnboarding = {
+    '/onboarding/results',
+    '/onboarding/meal-system',
+  };
+
+  /// Blocks profile onboarding unless the user completed phone OTP verify.
+  static Future<String?> _guardRegistrationSession(
+    BuildContext context,
+    GoRouterState state,
+  ) async {
+    final loc = state.matchedLocation;
+    if (!loc.startsWith('/onboarding/') ||
+        _postRegistrationOnboarding.contains(loc)) {
+      return null;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final authToken = prefs.getString(AppConstants.tokenKey);
+    if (authToken != null && authToken.isNotEmpty) {
+      return null;
+    }
+
+    final regToken = prefs.getString(AppConstants.registrationTokenKey);
+    final phone = prefs.getString(AppConstants.registrationPhoneKey);
+    if (regToken == null || regToken.isEmpty || phone == null || phone.isEmpty) {
+      return '/auth/phone';
+    }
+
+    if (OnboardingStore.instance.data.phone.isEmpty) {
+      OnboardingStore.instance.update((d) => d.copyWith(phone: phone));
+    }
+    return null;
+  }
 }
 
 /// Wraps a shell screen in a standalone Scaffold (with a back button) so it can

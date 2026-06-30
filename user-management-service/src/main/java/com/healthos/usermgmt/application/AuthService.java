@@ -128,21 +128,21 @@ public class AuthService {
             resolvePrimaryGoal(cmd),
             cmd.goalPace());
 
-    var managedUser = userRepository.getReferenceById(user.getId());
+    final var savedUser = user;
     var profile =
         userProfileRepository
-            .findById(managedUser.getId())
+            .findById(savedUser.getId())
             .orElseGet(
                 () -> {
                   var created = new UserProfile();
-                  created.setUser(managedUser);
+                  created.setUser(savedUser);
                   return created;
                 });
     applyRegistrationToProfile(profile, cmd, targets, now);
     userProfileRepository.save(profile);
 
     otpService.consumeRegistrationToken(cmd.registrationToken());
-    return new RegistrationResult(issueTokens(managedUser, now), managedUser.getId(), targets);
+    return new RegistrationResult(issueTokens(savedUser, now), savedUser.getId(), targets);
   }
 
   // ---------------------------------------------------------------------------
@@ -325,7 +325,8 @@ public class AuthService {
     if (values == null || values.isEmpty()) {
       return null;
     }
-    return String.join(",", values);
+    var cleaned = values.stream().filter(v -> v != null && !v.isBlank()).toList();
+    return cleaned.isEmpty() ? null : String.join(",", cleaned);
   }
 
   private static String resolvePrimaryGoal(RegistrationCommand cmd) {

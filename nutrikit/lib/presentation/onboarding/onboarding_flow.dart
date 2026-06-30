@@ -3,7 +3,7 @@ class OnboardingFlow {
   OnboardingFlow._();
 
   static const steps = <String>[
-    '/onboarding/intro',
+    '/onboarding/name',
     '/onboarding/goals',
     '/onboarding/sex',
     '/onboarding/age',
@@ -13,7 +13,6 @@ class OnboardingFlow {
     '/onboarding/pace',
     '/onboarding/medical',
     '/onboarding/city',
-    '/onboarding/name',
     '/onboarding/activity',
     '/onboarding/diet',
     '/onboarding/email',

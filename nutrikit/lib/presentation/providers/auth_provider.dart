@@ -36,12 +36,30 @@ class AuthProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     _registrationToken = prefs.getString(AppConstants.registrationTokenKey);
     _token = prefs.getString(AppConstants.tokenKey);
-    final registrationPhone = prefs.getString(AppConstants.registrationPhoneKey);
-    if (registrationPhone != null && registrationPhone.isNotEmpty) {
-      OnboardingStore.instance.update((d) => d.copyWith(phone: registrationPhone));
-    }
+    await _hydrateOnboardingPhone(prefs);
     notifyListeners();
   }
+
+  /// Reloads phone + registration token from disk (survives refresh / deep links).
+  Future<void> ensureRegistrationSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    _registrationToken = prefs.getString(AppConstants.registrationTokenKey);
+    await _hydrateOnboardingPhone(prefs);
+    notifyListeners();
+  }
+
+  Future<void> _hydrateOnboardingPhone(SharedPreferences prefs) async {
+    final registrationPhone = prefs.getString(AppConstants.registrationPhoneKey);
+    if (registrationPhone != null && registrationPhone.isNotEmpty) {
+      final store = OnboardingStore.instance;
+      if (store.data.phone.isEmpty) {
+        store.update((d) => d.copyWith(phone: registrationPhone));
+      }
+    }
+  }
+
+  bool get hasRegistrationSession =>
+      _registrationToken != null && _registrationToken!.isNotEmpty;
 
   Future<void> _persistRegistrationSession(String phone, String token) async {
     _registrationToken = token;
@@ -87,8 +105,12 @@ class AuthProvider extends ChangeNotifier {
       _error = null;
       if (res.newUser) {
         _registrationToken = res.registrationToken;
+        OnboardingStore.instance.update((d) => d.copyWith(phone: phone));
         if (res.registrationToken != null && res.registrationToken!.isNotEmpty) {
           await _persistRegistrationSession(phone, res.registrationToken!);
+        } else {
+          _error = 'Could not start registration. Please try again.';
+          return null;
         }
         return true;
       }
@@ -110,10 +132,25 @@ class AuthProvider extends ChangeNotifier {
   Future<RegisterResult?> registerPhone(OnboardingData data) async {
     _setLoading(true);
     try {
-      final res = await _api.registerPhone(data, _registrationToken ?? '');
+      await ensureRegistrationSession();
+      final prefs = await SharedPreferences.getInstance();
+      final phone = data.phone.isNotEmpty
+          ? data.phone
+          : prefs.getString(AppConstants.registrationPhoneKey) ?? '';
+      final token = _registrationToken ??
+          prefs.getString(AppConstants.registrationTokenKey) ??
+          '';
+
+      if (phone.isEmpty || token.isEmpty) {
+        _error = 'Please verify your phone number before continuing.';
+        return null;
+      }
+
+      final payload =
+          data.phone.isEmpty ? data.copyWith(phone: phone) : data;
+      final res = await _api.registerPhone(payload, token);
       await _persistTokens(res.accessToken, res.refreshToken);
       await _clearRegistrationSession();
-      final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(AppConstants.onboardingDoneKey, true);
       _error = null;
       return res;

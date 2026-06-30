@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../providers/onboarding_store.dart';
 import '../../providers/profile_provider.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -46,7 +47,11 @@ class _SplashScreenState extends State<SplashScreen>
       if (!mounted) return;
       context.go('/home/dashboard');
     } else if (registrationToken != null && registrationToken.isNotEmpty) {
-      context.go('/onboarding/intro');
+      final phone = prefs.getString(AppConstants.registrationPhoneKey);
+      if (phone != null && phone.isNotEmpty) {
+        OnboardingStore.instance.update((d) => d.copyWith(phone: phone));
+      }
+      context.go('/onboarding/name');
     } else {
       context.go('/auth/phone');
     }

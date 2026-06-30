@@ -56,6 +56,7 @@ class _CalculatingScreenState extends State<CalculatingScreen> {
 
   Future<void> _submit() async {
     final auth = context.read<AuthProvider>();
+    await auth.ensureRegistrationSession();
     final res = await auth.registerPhone(OnboardingStore.instance.data);
     if (!mounted) return;
     if (res != null) {
@@ -69,9 +70,10 @@ class _CalculatingScreenState extends State<CalculatingScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(backgroundColor: AppColors.red, content: Text(message)),
     );
-    final expired = message.toLowerCase().contains('expired') ||
-        message.toLowerCase().contains('verify your phone');
-    context.go(expired ? '/auth/phone' : '/onboarding/email');
+    final needsPhone = message.toLowerCase().contains('verify your phone') ||
+        message.toLowerCase().contains('expired') ||
+        message.toLowerCase().contains('phone number');
+    context.go(needsPhone ? '/auth/phone' : '/onboarding/email');
   }
 
   @override

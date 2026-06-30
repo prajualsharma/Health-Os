@@ -90,7 +90,7 @@ class _OTPScreenState extends State<OTPScreen> {
       return;
     }
     if (newUser) {
-      context.go('/onboarding/intro');
+      context.go('/onboarding/name');
     } else {
       await context.read<ProfileProvider>().loadProfile();
       if (!mounted) return;

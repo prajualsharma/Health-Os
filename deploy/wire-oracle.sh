@@ -16,7 +16,8 @@ if [[ -z "$ORACLE_IP" ]]; then
 fi
 
 SSH_KEY="${SSH_KEY:-/home/pras/Downloads/ssh-key-2026-06-30.key}"
-ORACLE_HOST="ubuntu@${ORACLE_IP}"
+ORACLE_USER="${ORACLE_USER:-ubuntu}"
+ORACLE_HOST="${ORACLE_USER}@${ORACLE_IP}"
 BACKEND_URL="http://${ORACLE_IP}:8080"
 
 cat > "${REPO_DIR}/deploy/oracle-host.env" <<EOF
@@ -43,7 +44,7 @@ fi
 echo ""
 echo "==> GitHub Actions secrets (Settings → Secrets → Actions):"
 echo "    EC2_HOST=${ORACLE_IP}"
-echo "    EC2_USER=ubuntu"
+echo "    EC2_USER=${ORACLE_USER}"
 echo "    EC2_SSH_KEY=<contents of ${SSH_KEY}>"
 echo ""
 echo "==> Test: curl -s ${BACKEND_URL}/actuator/health"

@@ -16,22 +16,48 @@ COMPOSE="docker compose -f docker-compose.yml \
   -f deploy/docker-compose.ec2-email.yml \
   -f deploy/docker-compose.ec2-minimal.yml"
 
-echo "==> [1/6] Installing Docker engine + compose plugin (if missing)..."
-if ! command -v docker >/dev/null 2>&1; then
+# Podman on Oracle Linux uses the same CLI when podman-docker is installed.
+if command -v docker >/dev/null 2>&1; then
+  :
+elif command -v podman >/dev/null 2>&1; then
+  COMPOSE="podman compose -f docker-compose.yml \
+    -f deploy/docker-compose.backend.yml \
+    -f deploy/docker-compose.ec2-email.yml \
+    -f deploy/docker-compose.ec2-minimal.yml"
+fi
+
+echo "==> [1/6] Configuring swap (helps small E2.Micro shapes)..."
+if ! swapon --show | grep -q /swapfile2; then
+  if [[ ! -f /swapfile2 ]]; then
+    sudo fallocate -l 2G /swapfile2 2>/dev/null || sudo dd if=/dev/zero of=/swapfile2 bs=1M count=2048
+    sudo chmod 600 /swapfile2
+    sudo mkswap /swapfile2
+  fi
+  sudo swapon /swapfile2 || true
+  if ! grep -q '/swapfile2' /etc/fstab 2>/dev/null; then
+    echo '/swapfile2 none swap sw 0 0' | sudo tee -a /etc/fstab
+  fi
+fi
+free -h || true
+
+echo "==> [2/6] Installing container runtime (Docker or Podman)..."
+if ! command -v docker >/dev/null 2>&1 && ! command -v podman >/dev/null 2>&1; then
   if grep -qiE 'oracle|ol[89]' /etc/os-release 2>/dev/null; then
-    echo "    Oracle Linux detected — installing Docker via dnf..."
-    sudo dnf install -y dnf-plugins-core
-    sudo dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-    sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
-    sudo systemctl enable --now docker
+    echo "    Oracle Linux detected — installing Podman (lighter than Docker CE on micro VMs)..."
+    sudo dnf install -y podman podman-compose || sudo dnf install -y podman
+    if ! command -v docker >/dev/null 2>&1 && command -v podman >/dev/null 2>&1; then
+      sudo ln -sf "$(command -v podman)" /usr/local/bin/docker 2>/dev/null || true
+    fi
   else
     curl -fsSL https://get.docker.com | sudo sh
   fi
-  sudo usermod -aG docker "$USER" || true
-  echo "    Docker installed. You may need to log out/in for group changes."
+  sudo usermod -aG docker "$USER" 2>/dev/null || sudo usermod -aG podman "$USER" 2>/dev/null || true
+fi
+if command -v systemctl >/dev/null 2>&1; then
+  sudo systemctl enable --now docker 2>/dev/null || sudo systemctl enable --now podman.socket 2>/dev/null || true
 fi
 
-echo "==> [2/6] Opening host firewall (SSH, API, optional web)..."
+echo "==> [3/6] Opening host firewall (SSH, API, optional web)..."
 if command -v firewall-cmd >/dev/null 2>&1; then
   for port in 22 8080 80 443; do
     sudo firewall-cmd --permanent --add-port="${port}/tcp" 2>/dev/null || true
@@ -49,20 +75,6 @@ elif command -v iptables >/dev/null 2>&1; then
   fi
 fi
 echo "    NOTE: also allow TCP 22 and 8080 in the Oracle VCN Security List / NSG."
-
-echo "==> [3/6] Configuring swap (2 GB) for smaller shapes..."
-if ! swapon --show | grep -q /swapfile; then
-  if [[ ! -f /swapfile ]]; then
-    sudo fallocate -l 2G /swapfile 2>/dev/null || sudo dd if=/dev/zero of=/swapfile bs=1M count=2048
-    sudo chmod 600 /swapfile
-    sudo mkswap /swapfile
-  fi
-  sudo swapon /swapfile || true
-  if ! grep -q '/swapfile' /etc/fstab 2>/dev/null; then
-    echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-  fi
-fi
-free -h || true
 
 echo "==> [4/6] Preparing .env..."
 if [[ ! -f .env ]]; then
@@ -96,8 +108,13 @@ if [[ -n "${SMTP_PASSWORD:-}" ]]; then
   upsert_env OTP_DEV_BYPASS "false"
 fi
 
-echo "==> [5/6] Building and starting backend stack (builds natively on ARM A1.Flex)..."
-sudo $COMPOSE up -d --build \
+echo "==> [5/6] Starting backend stack (--no-build if images were pre-loaded)..."
+BUILD_FLAG="--build"
+if sudo $COMPOSE images 2>/dev/null | grep -q user-management-service; then
+  BUILD_FLAG="--no-build"
+  echo "    Using pre-loaded images."
+fi
+sudo $COMPOSE up -d $BUILD_FLAG \
   postgres redis user-management-service api-gateway
 
 echo "==> [6/6] Waiting for api-gateway health..."

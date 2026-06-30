@@ -49,7 +49,17 @@ rsync -avz --delete \
   --exclude 'deploy/oracle-host.env' \
   "$REPO_DIR/" "${ORACLE_HOST}:~/healthos/"
 
-echo "==> Running oracle-setup.sh on Oracle (first build may take 15–20 min on A1.Flex)..."
+if command -v docker >/dev/null 2>&1 \
+  && docker image inspect healthos-user-management-service >/dev/null 2>&1 \
+  && docker image inspect healthos-api-gateway >/dev/null 2>&1; then
+  echo "==> Transferring pre-built backend images (for micro VMs without RAM to build)..."
+  docker save healthos-user-management-service healthos-api-gateway \
+    | gzip \
+    | ssh -i "$SSH_KEY" -o StrictHostKeyChecking=accept-new "$ORACLE_HOST" \
+      'gunzip | (sudo docker load 2>/dev/null || sudo podman load 2>/dev/null || cat > /dev/null)'
+fi
+
+echo "==> Running oracle-setup.sh on Oracle..."
 ssh -i "$SSH_KEY" -o StrictHostKeyChecking=accept-new "$ORACLE_HOST" \
   'cd ~/healthos && bash deploy/oracle-setup.sh'
 

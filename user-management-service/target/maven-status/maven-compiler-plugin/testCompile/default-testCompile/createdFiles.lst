@@ -1,3 +1,4 @@
-com/healthos/usermgmt/application/AuthServiceTest.class
 com/healthos/usermgmt/application/ScopedMembershipServiceTest.class
 com/healthos/usermgmt/application/ScopeAuthorizationServiceTest.class
+com/healthos/usermgmt/integration/PhoneRegistrationIT.class
+com/healthos/usermgmt/application/AuthServiceTest.class

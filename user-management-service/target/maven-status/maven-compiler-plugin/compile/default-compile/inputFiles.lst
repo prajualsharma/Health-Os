@@ -21,6 +21,7 @@
 /home/pras/Documents/Health-Os/user-management-service/src/main/java/com/healthos/usermgmt/adapters/inbound/rest/security/JwtAuthenticationFilter.java
 /home/pras/Documents/Health-Os/user-management-service/src/main/java/com/healthos/usermgmt/adapters/inbound/rest/security/JwtAuthenticationProvider.java
 /home/pras/Documents/Health-Os/user-management-service/src/main/java/com/healthos/usermgmt/adapters/inbound/rest/security/JwtAuthenticationToken.java
+/home/pras/Documents/Health-Os/user-management-service/src/main/java/com/healthos/usermgmt/adapters/outbound/notification/EmailOtpSender.java
 /home/pras/Documents/Health-Os/user-management-service/src/main/java/com/healthos/usermgmt/adapters/outbound/notification/NotificationClient.java
 /home/pras/Documents/Health-Os/user-management-service/src/main/java/com/healthos/usermgmt/adapters/outbound/persistence/AuthMethodRepository.java
 /home/pras/Documents/Health-Os/user-management-service/src/main/java/com/healthos/usermgmt/adapters/outbound/persistence/PasswordResetTokenRepository.java

@@ -18,13 +18,26 @@ COMPOSE="docker compose -f docker-compose.yml \
 
 echo "==> [1/6] Installing Docker engine + compose plugin (if missing)..."
 if ! command -v docker >/dev/null 2>&1; then
-  curl -fsSL https://get.docker.com | sudo sh
+  if grep -qiE 'oracle|ol[89]' /etc/os-release 2>/dev/null; then
+    echo "    Oracle Linux detected — installing Docker via dnf..."
+    sudo dnf install -y dnf-plugins-core
+    sudo dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+    sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+    sudo systemctl enable --now docker
+  else
+    curl -fsSL https://get.docker.com | sudo sh
+  fi
   sudo usermod -aG docker "$USER" || true
   echo "    Docker installed. You may need to log out/in for group changes."
 fi
 
 echo "==> [2/6] Opening host firewall (SSH, API, optional web)..."
-if command -v iptables >/dev/null 2>&1; then
+if command -v firewall-cmd >/dev/null 2>&1; then
+  for port in 22 8080 80 443; do
+    sudo firewall-cmd --permanent --add-port="${port}/tcp" 2>/dev/null || true
+  done
+  sudo firewall-cmd --reload 2>/dev/null || true
+elif command -v iptables >/dev/null 2>&1; then
   for port in 22 8080 80 443; do
     sudo iptables -C INPUT -p tcp --dport "$port" -j ACCEPT 2>/dev/null \
       || sudo iptables -I INPUT 5 -p tcp --dport "$port" -m state --state NEW,ESTABLISHED -j ACCEPT || true
@@ -71,7 +84,7 @@ upsert_env() {
   fi
 }
 upsert_env NOTIFICATION_ENABLED "true"
-upsert_env OTP_DEV_BYPASS "${OTP_DEV_BYPASS:-false}"
+upsert_env OTP_DEV_BYPASS "${OTP_DEV_BYPASS:-true}"
 upsert_env OTP_EMAIL_TO "${OTP_EMAIL_TO:-prajual.sharma.1559@gmail.com}"
 upsert_env SMTP_HOST "smtp.gmail.com"
 upsert_env SMTP_PORT "587"

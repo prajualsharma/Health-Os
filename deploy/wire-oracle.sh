@@ -16,7 +16,7 @@ if [[ -z "$ORACLE_IP" ]]; then
 fi
 
 SSH_KEY="${SSH_KEY:-/home/pras/Downloads/ssh-key-2026-06-30.key}"
-ORACLE_USER="${ORACLE_USER:-ubuntu}"
+ORACLE_USER="${ORACLE_USER:-opc}"
 ORACLE_HOST="${ORACLE_USER}@${ORACLE_IP}"
 BACKEND_URL="http://${ORACLE_IP}:8080"
 

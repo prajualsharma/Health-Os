@@ -174,7 +174,25 @@ class ApiService {
   Future<DashboardData> getDashboard() async {
     if (_mock) {
       await _mockDelay();
-      return MockData.dashboard();
+      var data = MockData.dashboard();
+      if (!_mockAuth) {
+        final profile = await getProfile();
+        data = DashboardData(
+          userName: profile.name,
+          initials: profile.initials,
+          calorieTarget: profile.calorieTarget,
+          caloriesConsumed: data.caloriesConsumed,
+          proteinConsumed: data.proteinConsumed,
+          proteinTarget: profile.proteinTarget,
+          carbsConsumed: data.carbsConsumed,
+          carbTarget: profile.carbTarget,
+          fatConsumed: data.fatConsumed,
+          fatTarget: profile.fatTarget,
+          quickStats: data.quickStats,
+          meals: data.meals,
+        );
+      }
+      return data;
     }
     return _guarded(() async {
       final res = await _dio.get('/v1/dashboard');
@@ -380,7 +398,7 @@ class ApiService {
   }
 
   Future<UserProfile> getProfile() async {
-    if (_mock) {
+    if (_mockAuth) {
       await _mockDelay();
       return MockData.profile();
     }

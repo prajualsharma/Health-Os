@@ -18,16 +18,24 @@ import '../../presentation/screens/main/progress_screen.dart';
 import '../../presentation/screens/main/recipe_detail_screen.dart';
 import '../../presentation/screens/main/tracking_screen.dart';
 import '../../presentation/screens/onboarding/activity_screen.dart';
-import '../../presentation/screens/onboarding/body_screen.dart';
+import '../../presentation/screens/onboarding/age_screen.dart';
 import '../../presentation/screens/onboarding/calculating_screen.dart';
+import '../../presentation/screens/onboarding/city_screen.dart';
 import '../../presentation/screens/onboarding/diet_screen.dart';
 import '../../presentation/screens/onboarding/email_screen.dart';
 import '../../presentation/screens/onboarding/goal_screen.dart';
+import '../../presentation/screens/onboarding/height_screen.dart';
+import '../../presentation/screens/onboarding/intro_screen.dart';
+import '../../presentation/screens/onboarding/medical_screen.dart';
 import '../../presentation/screens/onboarding/meal_system_picker_screen.dart';
 import '../../presentation/screens/onboarding/name_screen.dart';
 import '../../presentation/screens/onboarding/onboarding_screen.dart';
+import '../../presentation/screens/onboarding/pace_screen.dart';
 import '../../presentation/screens/onboarding/results_screen.dart';
+import '../../presentation/screens/onboarding/sex_screen.dart';
 import '../../presentation/screens/onboarding/splash_screen.dart';
+import '../../presentation/screens/onboarding/target_weight_screen.dart';
+import '../../presentation/screens/onboarding/weight_screen.dart';
 import '../constants/app_constants.dart';
 import '../theme/app_colors.dart';
 
@@ -66,16 +74,48 @@ class AppRouter {
         builder: (context, state) => const OTPScreen(),
       ),
       GoRoute(
-        path: '/onboarding/name',
-        builder: (context, state) => const NameScreen(),
+        path: '/onboarding/intro',
+        builder: (context, state) => const IntroScreen(),
       ),
       GoRoute(
-        path: '/onboarding/goal',
+        path: '/onboarding/goals',
         builder: (context, state) => const GoalScreen(),
       ),
       GoRoute(
-        path: '/onboarding/body',
-        builder: (context, state) => const BodyScreen(),
+        path: '/onboarding/sex',
+        builder: (context, state) => const SexScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/age',
+        builder: (context, state) => const AgeScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/height',
+        builder: (context, state) => const HeightScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/weight',
+        builder: (context, state) => const WeightScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/target-weight',
+        builder: (context, state) => const TargetWeightScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/pace',
+        builder: (context, state) => const PaceScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/medical',
+        builder: (context, state) => const MedicalScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/city',
+        builder: (context, state) => const CityScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/name',
+        builder: (context, state) => const NameScreen(),
       ),
       GoRoute(
         path: '/onboarding/activity',
@@ -135,7 +175,6 @@ class AppRouter {
           ),
         ],
       ),
-      // Plan and Progress are reachable from the Home grid as deep links.
       GoRoute(
         path: '/plan',
         redirect: (context, state) => '/home/food?segment=plan',

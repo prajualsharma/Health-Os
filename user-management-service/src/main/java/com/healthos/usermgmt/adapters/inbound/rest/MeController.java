@@ -52,9 +52,15 @@ public class MeController {
     res.setGender(profile.getGender());
     res.setDateOfBirth(profile.getDateOfBirth());
     res.setGoal(profile.getGoal());
+    res.setGoals(parseCsv(profile.getGoals()));
     res.setActivityLevel(profile.getActivityLevel());
     res.setDietType(profile.getDietType());
     res.setAllergies(parseAllergies(profile.getAllergies()));
+    res.setMedicalConditions(parseAllergies(profile.getMedicalConditions()));
+    res.setCity(profile.getCity());
+    res.setGoalPace(profile.getGoalPace());
+    res.setHeightUnit(profile.getPreferredHeightUnit());
+    res.setWeightUnit(profile.getPreferredWeightUnit());
     res.setCalorieTarget(profile.getCalorieTarget());
     res.setProteinTarget(profile.getProteinTarget());
     res.setCarbTarget(profile.getCarbTarget());
@@ -75,6 +81,10 @@ public class MeController {
   }
 
   private static List<String> parseAllergies(String raw) {
+    return parseCsv(raw);
+  }
+
+  private static List<String> parseCsv(String raw) {
     if (raw == null || raw.isBlank()) {
       return Collections.emptyList();
     }

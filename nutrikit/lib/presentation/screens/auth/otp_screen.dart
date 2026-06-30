@@ -8,6 +8,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/onboarding_store.dart';
+import '../../providers/profile_provider.dart';
 import '../../widgets/auth/otp_input_field.dart';
 import '../../widgets/common/app_button.dart';
 
@@ -88,7 +89,13 @@ class _OTPScreenState extends State<OTPScreen> {
       );
       return;
     }
-    context.go(newUser ? '/onboarding/name' : '/home/dashboard');
+    if (newUser) {
+      context.go('/onboarding/intro');
+    } else {
+      await context.read<ProfileProvider>().loadProfile();
+      if (!mounted) return;
+      context.go('/home/dashboard');
+    }
   }
 
   String get _timeLabel {

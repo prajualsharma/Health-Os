@@ -21,7 +21,9 @@ import com.healthos.usermgmt.domain.UserStatus;
 import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -73,10 +75,14 @@ public class AuthService {
     var phone = normalizePhone(rawPhone);
     otpService.verify(phone, otp);
 
-    var userOpt = userRepository.findByPhone(phone);
+    var userOpt = resolveUserByPhone(phone);
     if (userOpt.isPresent()) {
-      ensurePhoneAuthMethod(userOpt.get(), phone);
-      return PhoneVerifyResult.returningUser(issueTokens(userOpt.get(), Instant.now()));
+      var user = userOpt.get();
+      var profile = userProfileRepository.findById(user.getId()).orElse(null);
+      if (isProfileComplete(profile)) {
+        ensurePhoneAuthMethod(user, phone);
+        return PhoneVerifyResult.returningUser(issueTokens(user, Instant.now()));
+      }
     }
     return PhoneVerifyResult.pendingRegistration(otpService.issueRegistrationToken(phone));
   }
@@ -85,69 +91,58 @@ public class AuthService {
   @Transactional
   public RegistrationResult registerFromPhone(RegistrationCommand cmd) {
     var phone = normalizePhone(cmd.phone());
-    var boundPhone = otpService.consumeRegistrationToken(cmd.registrationToken());
+    var boundPhone = otpService.peekRegistrationToken(cmd.registrationToken());
     if (!boundPhone.equals(phone)) {
       throw new IllegalArgumentException("Registration token does not match phone");
     }
-    if (userRepository.findByPhone(phone).isPresent()
-        || authMethodRepository.existsByMethodAndIdentifier(AuthMethodType.PHONE, phone)) {
-      throw new IllegalStateException("Phone already registered");
-    }
 
     var now = Instant.now();
-    var user = new User();
-    user.setId(UUID.randomUUID());
-    var names = splitName(cmd.name());
-    user.setFirstName(names[0]);
-    user.setLastName(names[1]);
-    user.setPhone(phone);
-    if (cmd.email() != null && !cmd.email().isBlank()) {
-      var email = cmd.email().toLowerCase();
-      if (userRepository.existsByEmail(email)) {
-        throw new IllegalStateException("Email already registered");
+    var existingUser = resolveUserByPhone(phone);
+    User user;
+    if (existingUser.isPresent()) {
+      user = existingUser.get();
+      var profile = userProfileRepository.findById(user.getId()).orElse(null);
+      if (isProfileComplete(profile)) {
+        throw new IllegalStateException("Phone already registered");
       }
-      user.setEmail(email);
+      applyNameToUser(user, cmd.name());
+      applyEmailToUser(user, cmd.email());
+      user.setPhone(phone);
+      user.setUpdatedAt(now);
+      user = userRepository.saveAndFlush(user);
+      ensurePhoneAuthMethod(user, phone);
+    } else {
+      user = createUserFromRegistration(cmd, phone, now);
+      user = userRepository.saveAndFlush(user);
+      saveAuthMethod(user, AuthMethodType.PHONE, phone, true);
     }
-    user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
-    user.setStatus(UserStatus.ACTIVE);
-    user.setCreatedAt(now);
-    user.setUpdatedAt(now);
-    var memberRole =
-        roleRepository
-            .findByName("MEMBER")
-            .orElseThrow(() -> new IllegalStateException("Seed role MEMBER not found"));
-    user.setRoles(Set.of(memberRole));
-    userRepository.save(user);
-
-    saveAuthMethod(user, AuthMethodType.PHONE, phone, true);
 
     var targets =
         NutritionCalculator.compute(
-            cmd.gender(), cmd.age(), cmd.height(), cmd.weight(), cmd.activity(), cmd.goal());
+            cmd.gender(),
+            cmd.age(),
+            cmd.height(),
+            cmd.weight(),
+            cmd.targetWeight(),
+            cmd.activity(),
+            resolvePrimaryGoal(cmd),
+            cmd.goalPace());
 
-    var profile = new UserProfile();
-    profile.setUser(user);
-    profile.setUserId(user.getId());
-    profile.setHeight(cmd.height());
-    profile.setWeight(cmd.weight());
-    profile.setGender(cmd.gender());
-    if (cmd.age() != null) {
-      profile.setDateOfBirth(LocalDate.now().minusYears(cmd.age()));
-    }
-    profile.setGoal(cmd.goal());
-    profile.setTargetWeight(cmd.targetWeight());
-    profile.setActivityLevel(cmd.activity());
-    profile.setDietType(cmd.diet());
-    profile.setAllergies(
-        cmd.allergies() == null || cmd.allergies().isEmpty() ? null : String.join(",", cmd.allergies()));
-    profile.setCalorieTarget(targets.calories());
-    profile.setProteinTarget(targets.protein());
-    profile.setCarbTarget(targets.carbs());
-    profile.setFatTarget(targets.fat());
-    profile.setUpdatedAt(now);
+    var managedUser = userRepository.getReferenceById(user.getId());
+    var profile =
+        userProfileRepository
+            .findById(managedUser.getId())
+            .orElseGet(
+                () -> {
+                  var created = new UserProfile();
+                  created.setUser(managedUser);
+                  return created;
+                });
+    applyRegistrationToProfile(profile, cmd, targets, now);
     userProfileRepository.save(profile);
 
-    return new RegistrationResult(issueTokens(user, now), user.getId(), targets);
+    otpService.consumeRegistrationToken(cmd.registrationToken());
+    return new RegistrationResult(issueTokens(managedUser, now), managedUser.getId(), targets);
   }
 
   // ---------------------------------------------------------------------------
@@ -169,6 +164,119 @@ public class AuthService {
       }
     }
     return OAuthResolveResult.noAccount();
+  }
+
+  private Optional<User> resolveUserByPhone(String phone) {
+    var byPhone = userRepository.findByPhone(phone);
+    if (byPhone.isPresent()) {
+      return byPhone;
+    }
+    return authMethodRepository
+        .findByMethodAndIdentifier(AuthMethodType.PHONE, phone)
+        .map(AuthMethod::getUser);
+  }
+
+  private static boolean isProfileComplete(UserProfile profile) {
+    if (profile == null) {
+      return false;
+    }
+    return profile.getGoal() != null
+        && !profile.getGoal().isBlank()
+        && profile.getHeight() != null
+        && profile.getWeight() != null
+        && profile.getActivityLevel() != null
+        && !profile.getActivityLevel().isBlank();
+  }
+
+  private User createUserFromRegistration(RegistrationCommand cmd, String phone, Instant now) {
+    var user = new User();
+    user.setId(UUID.randomUUID());
+    applyNameToUser(user, cmd.name());
+    user.setPhone(phone);
+    applyEmailToUser(user, cmd.email());
+    user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
+    user.setStatus(UserStatus.ACTIVE);
+    user.setCreatedAt(now);
+    user.setUpdatedAt(now);
+    var memberRole =
+        roleRepository
+            .findByName("MEMBER")
+            .orElseThrow(() -> new IllegalStateException("Seed role MEMBER not found"));
+    var roles = new HashSet<Role>();
+    roles.add(memberRole);
+    user.setRoles(roles);
+    return user;
+  }
+
+  private void applyNameToUser(User user, String name) {
+    var names = splitName(name);
+    user.setFirstName(names[0]);
+    user.setLastName(names[1]);
+  }
+
+  private static String toTitleCase(String input) {
+    if (input == null || input.isBlank()) {
+      return input;
+    }
+    var words = input.trim().split("\\s+");
+    var sb = new StringBuilder();
+    for (int i = 0; i < words.length; i++) {
+      if (i > 0) {
+        sb.append(' ');
+      }
+      var w = words[i];
+      if (!w.isEmpty()) {
+        sb.append(Character.toUpperCase(w.charAt(0)));
+        if (w.length() > 1) {
+          sb.append(w.substring(1).toLowerCase());
+        }
+      }
+    }
+    return sb.toString();
+  }
+
+  private void applyEmailToUser(User user, String rawEmail) {
+    if (rawEmail == null || rawEmail.isBlank()) {
+      return;
+    }
+    var email = rawEmail.toLowerCase();
+    if (user.getEmail() != null && user.getEmail().equalsIgnoreCase(email)) {
+      return;
+    }
+    if (userRepository.existsByEmail(email)) {
+      throw new IllegalStateException("Email already registered");
+    }
+    user.setEmail(email);
+  }
+
+  private static void applyRegistrationToProfile(
+      UserProfile profile,
+      RegistrationCommand cmd,
+      NutritionTargets targets,
+      Instant now) {
+    profile.setHeight(cmd.height());
+    profile.setWeight(cmd.weight());
+    profile.setGender(cmd.gender());
+    if (cmd.age() != null) {
+      profile.setDateOfBirth(LocalDate.now().minusYears(cmd.age()));
+    }
+    profile.setGoal(resolvePrimaryGoal(cmd));
+    profile.setGoals(joinList(cmd.goals()));
+    profile.setTargetWeight(cmd.targetWeight());
+    profile.setActivityLevel(cmd.activity());
+    profile.setDietType(cmd.diet());
+    profile.setAllergies(
+        cmd.allergies() == null || cmd.allergies().isEmpty() ? null : String.join(",", cmd.allergies()));
+    profile.setMedicalConditions(joinList(cmd.medicalConditions()));
+    profile.setCity(cmd.city());
+    profile.setGoalPace(cmd.goalPace());
+    profile.setPreferredHeightUnit(cmd.heightUnit() != null ? cmd.heightUnit() : "cm");
+    profile.setPreferredWeightUnit(cmd.weightUnit() != null ? cmd.weightUnit() : "kg");
+    profile.setCalorieTarget(targets.calories());
+    profile.setProteinTarget(targets.protein());
+    profile.setCarbTarget(targets.carbs());
+    profile.setFatTarget(targets.fat());
+    profile.setUpdatedAt(now);
   }
 
   private void ensurePhoneAuthMethod(User user, String phone) {
@@ -206,9 +314,44 @@ public class AuthService {
     var trimmed = name.trim();
     int idx = trimmed.indexOf(' ');
     if (idx < 0) {
-      return new String[] {trimmed, null};
+      return new String[] {toTitleCase(trimmed), null};
     }
-    return new String[] {trimmed.substring(0, idx), trimmed.substring(idx + 1).trim()};
+    return new String[] {
+      toTitleCase(trimmed.substring(0, idx)), toTitleCase(trimmed.substring(idx + 1).trim())
+    };
+  }
+
+  private static String joinList(List<String> values) {
+    if (values == null || values.isEmpty()) {
+      return null;
+    }
+    return String.join(",", values);
+  }
+
+  private static String resolvePrimaryGoal(RegistrationCommand cmd) {
+    if (cmd.goal() != null && !cmd.goal().isBlank()) {
+      return cmd.goal();
+    }
+    if (cmd.goals() == null || cmd.goals().isEmpty()) {
+      return null;
+    }
+    var priority =
+        List.of(
+            "lose_weight",
+            "build_muscle",
+            "maintain",
+            "eat_healthier",
+            "diet_plan",
+            "calorie_tracker",
+            "workouts");
+    for (var p : priority) {
+      for (var g : cmd.goals()) {
+        if (p.equalsIgnoreCase(g)) {
+          return g;
+        }
+      }
+    }
+    return cmd.goals().get(0);
   }
 
   @Transactional
@@ -220,8 +363,8 @@ public class AuthService {
     var now = Instant.now();
     var user = new User();
     user.setId(UUID.randomUUID());
-    user.setFirstName(firstName);
-    user.setLastName(lastName);
+    user.setFirstName(toTitleCase(firstName));
+    user.setLastName(lastName != null && !lastName.isBlank() ? toTitleCase(lastName) : null);
     user.setEmail(email.toLowerCase());
     user.setPhone(phone);
     user.setPassword(passwordEncoder.encode(rawPassword));
@@ -233,7 +376,9 @@ public class AuthService {
         roleRepository
             .findByName("MEMBER")
             .orElseThrow(() -> new IllegalStateException("Seed role MEMBER not found"));
-    user.setRoles(Set.of(memberRole));
+    var roles = new HashSet<Role>();
+    roles.add(memberRole);
+    user.setRoles(roles);
 
     userRepository.save(user);
     return issueTokens(user, now);
@@ -406,6 +551,7 @@ public class AuthService {
       String registrationToken,
       String name,
       String goal,
+      List<String> goals,
       String gender,
       Integer age,
       Integer height,
@@ -414,9 +560,14 @@ public class AuthService {
       String activity,
       String diet,
       List<String> allergies,
+      List<String> medicalConditions,
+      String city,
+      String goalPace,
+      String heightUnit,
+      String weightUnit,
       String email) {}
 
-  public record NutritionTargets(int calories, int protein, int carbs, int fat) {}
+  public record NutritionTargets(int calories, int protein, int carbs, int fat, int timelineWeeks) {}
 
   public record RegistrationResult(AuthTokens tokens, UUID userId, NutritionTargets targets) {}
 

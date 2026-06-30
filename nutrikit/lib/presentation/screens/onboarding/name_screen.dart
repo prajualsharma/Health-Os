@@ -3,10 +3,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/name_utils.dart';
 import '../../../core/utils/validators.dart';
+import '../../onboarding/onboarding_flow.dart';
 import '../../providers/onboarding_store.dart';
-import '../../widgets/common/app_button.dart';
-import '../../widgets/common/app_input.dart';
+import '../../widgets/onboarding/onboarding_scaffold.dart';
 
 class NameScreen extends StatefulWidget {
   const NameScreen({super.key});
@@ -27,41 +28,38 @@ class _NameScreenState extends State<NameScreen> {
 
   void _continue() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    OnboardingStore.instance.update((d) => d.copyWith(name: _name.text.trim()));
-    context.go('/onboarding/goal');
+    final formatted = toTitleCaseName(_name.text.trim());
+    OnboardingStore.instance.update((d) => d.copyWith(name: formatted));
+    context.push(OnboardingFlow.nextPath('/onboarding/name')!);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.bg,
-      appBar: AppBar(),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('STEP 1 OF 5',
-                    style: AppTypography.label.copyWith(color: AppColors.green)),
-                const SizedBox(height: 6),
-                Text("What's your name?", style: AppTypography.h1),
-                const SizedBox(height: 4),
-                Text('So we can personalise your plan',
-                    style: AppTypography.caption),
-                const SizedBox(height: 28),
-                AppInput(
-                  label: 'Full Name',
-                  placeholder: 'Arjun Mehta',
-                  controller: _name,
-                  validator: (v) => Validators.required(v, 'Name'),
-                ),
-                const SizedBox(height: 24),
-                AppButton(label: 'Continue', onPressed: _continue),
-              ],
+    return OnboardingScaffold(
+      routePath: '/onboarding/name',
+      title: "What's your name?",
+      subtitle: 'We will use this to personalize your plan.',
+      nextEnabled: _name.text.trim().isNotEmpty,
+      onNext: _continue,
+      body: Form(
+        key: _formKey,
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.primary, width: 1.5),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: TextFormField(
+            controller: _name,
+            onChanged: (_) => setState(() {}),
+            style: AppTypography.h2.copyWith(fontSize: 24),
+            decoration: const InputDecoration(
+              hintText: 'Your full name',
+              border: InputBorder.none,
             ),
+            validator: (v) => Validators.required(v, 'Name'),
+            textCapitalization: TextCapitalization.words,
           ),
         ),
       ),

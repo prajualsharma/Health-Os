@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/app_constants.dart';
 import '../../data/models/auth.dart';
 import '../../data/services/api_service.dart';
+import 'onboarding_store.dart';
 
 class AuthProvider extends ChangeNotifier {
   AuthProvider({ApiService? api}) : _api = api ?? ApiService.instance {
@@ -35,6 +36,10 @@ class AuthProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     _registrationToken = prefs.getString(AppConstants.registrationTokenKey);
     _token = prefs.getString(AppConstants.tokenKey);
+    final registrationPhone = prefs.getString(AppConstants.registrationPhoneKey);
+    if (registrationPhone != null && registrationPhone.isNotEmpty) {
+      OnboardingStore.instance.update((d) => d.copyWith(phone: registrationPhone));
+    }
     notifyListeners();
   }
 

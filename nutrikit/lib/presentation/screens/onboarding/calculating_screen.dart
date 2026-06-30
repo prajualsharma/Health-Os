@@ -17,34 +17,38 @@ class CalculatingScreen extends StatefulWidget {
   State<CalculatingScreen> createState() => _CalculatingScreenState();
 }
 
-class _CalculatingScreenState extends State<CalculatingScreen>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _spin;
-  Timer? _timer;
-  int _step = 0;
+class _CalculatingScreenState extends State<CalculatingScreen> {
+  Timer? _rotateTimer;
+  int _trustIndex = 0;
   bool _failed = false;
 
-  static const _steps = [
-    'Analyzing your body stats',
-    'Calculating your TDEE',
-    'Balancing your macros',
-    'Matching meals to your taste',
-    'Finalizing your daily plan',
+  static const _trustLines = [
+    '3 Crore Lives Transformed',
+    '2000+ elite coaches',
+    'Highly qualified in fitness and nutrition',
+    'With the help of our coaches',
+  ];
+
+  static const _trustSubs = [
+    'With the help of our coaches',
+    'Highly qualified in fitness and nutrition',
+    'With the help of our coaches',
+    'Building your personalized plan',
   ];
 
   @override
   void initState() {
     super.initState();
-    _spin = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat();
+    _rotateTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (mounted) setState(() => _trustIndex = (_trustIndex + 1) % _trustLines.length);
+    });
     _run();
   }
 
   Future<void> _run() async {
+    await Future<void>.delayed(const Duration(milliseconds: 800));
     final registrationFuture = _submit();
-    await _revealSteps();
+    await Future<void>.delayed(const Duration(seconds: 3));
     await registrationFuture;
     if (!mounted || _failed) return;
     context.go('/onboarding/results');
@@ -61,136 +65,94 @@ class _CalculatingScreenState extends State<CalculatingScreen>
     }
 
     _failed = true;
-    _timer?.cancel();
     final message = auth.error ?? 'Could not save your profile. Please try again.';
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: AppColors.red,
-        content: Text(message),
-      ),
+      SnackBar(backgroundColor: AppColors.red, content: Text(message)),
     );
-    context.go('/auth/otp');
-  }
-
-  Future<void> _revealSteps() async {
-    final completer = Completer<void>();
-    _timer = Timer.periodic(const Duration(milliseconds: 700), (t) {
-      if (_failed) {
-        t.cancel();
-        if (!completer.isCompleted) completer.complete();
-        return;
-      }
-      if (_step >= _steps.length) {
-        t.cancel();
-        Future<void>.delayed(const Duration(milliseconds: 900), () {
-          if (!completer.isCompleted) completer.complete();
-        });
-      } else {
-        setState(() => _step++);
-      }
-    });
-    return completer.future;
+    final expired = message.toLowerCase().contains('expired') ||
+        message.toLowerCase().contains('verify your phone');
+    context.go(expired ? '/auth/phone' : '/onboarding/email');
   }
 
   @override
   void dispose() {
-    _spin.dispose();
-    _timer?.cancel();
+    _rotateTimer?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final data = OnboardingStore.instance.data;
+    final goals = data.goals.take(2).toList();
+    final weightGoal = data.targetWeight > data.currentWeight
+        ? 'Gain ${(data.targetWeight - data.currentWeight).round()} kg'
+        : 'Lose ${(data.currentWeight - data.targetWeight).round()} kg';
+
     return Scaffold(
       backgroundColor: AppColors.bg,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: RadialGradient(
-            radius: 0.9,
-            colors: [AppColors.greenGlow, AppColors.bg],
-          ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                RotationTransition(
-                  turns: _spin,
-                  child: Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      gradient: AppColors.greenGradient,
-                      borderRadius: BorderRadius.circular(30),
-                      boxShadow: const [
-                        BoxShadow(color: AppColors.greenGlow, blurRadius: 30),
-                      ],
-                    ),
-                    child: const Center(
-                      child: Text('🧠', style: TextStyle(fontSize: 44)),
-                    ),
-                  ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            children: [
+              const SizedBox(height: 40),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (goals.isNotEmpty) _summaryTile(Icons.restaurant_menu, goals.first),
+                  if (goals.length > 1) ...[
+                    const SizedBox(width: 24),
+                    _summaryTile(Icons.monitor_weight_outlined, weightGoal),
+                  ] else ...[
+                    const SizedBox(width: 24),
+                    _summaryTile(Icons.monitor_weight_outlined, weightGoal),
+                  ],
+                ],
+              ),
+              const Spacer(),
+              const SizedBox(
+                width: 40,
+                height: 40,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  color: AppColors.primary,
                 ),
-                const SizedBox(height: 28),
-                Text('AI is working…', style: AppTypography.h2),
-                const SizedBox(height: 36),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 40),
-                  child: Column(
-                    children: List.generate(_steps.length, (i) {
-                      final done = i < _step;
-                      final active = i == _step;
-                      final visible = i <= _step;
-                      return AnimatedOpacity(
-                        opacity: visible ? 1 : 0.25,
-                        duration: const Duration(milliseconds: 300),
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: Row(
-                            children: [
-                              AnimatedContainer(
-                                duration: const Duration(milliseconds: 300),
-                                width: 20,
-                                height: 20,
-                                decoration: BoxDecoration(
-                                  color: done
-                                      ? AppColors.green
-                                      : active
-                                          ? AppColors.accent
-                                          : AppColors.surface,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: done
-                                    ? const Icon(Icons.check,
-                                        size: 13, color: Colors.white)
-                                    : null,
-                              ),
-                              const SizedBox(width: 14),
-                              Text(
-                                _steps[i],
-                                style: TextStyle(
-                                  color: done
-                                      ? AppColors.green
-                                      : active
-                                          ? AppColors.accent
-                                          : AppColors.muted,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-              ],
-            ),
+              ),
+              const Spacer(),
+              Text(
+                _trustLines[_trustIndex],
+                style: AppTypography.h2.copyWith(fontSize: 24),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _trustSubs[_trustIndex],
+                style: AppTypography.caption.copyWith(fontSize: 14),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 40),
+            ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _summaryTile(IconData icon, String label) {
+    return Column(
+      children: [
+        Container(
+          width: 64,
+          height: 64,
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Icon(icon, size: 28, color: AppColors.text),
+        ),
+        const SizedBox(height: 8),
+        Text(label, style: AppTypography.bodyBold.copyWith(fontSize: 13)),
+      ],
     );
   }
 }

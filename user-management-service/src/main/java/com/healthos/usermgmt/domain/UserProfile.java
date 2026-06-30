@@ -66,6 +66,24 @@ public class UserProfile {
   @Column(name = "fat_target_g")
   private Integer fatTarget;
 
+  @Column(name = "goals", columnDefinition = "text")
+  private String goals;
+
+  @Column(name = "medical_conditions", columnDefinition = "text")
+  private String medicalConditions;
+
+  @Column(length = 128)
+  private String city;
+
+  @Column(name = "goal_pace", length = 32)
+  private String goalPace;
+
+  @Column(name = "preferred_height_unit", length = 8)
+  private String preferredHeightUnit = "cm";
+
+  @Column(name = "preferred_weight_unit", length = 8)
+  private String preferredWeightUnit = "kg";
+
   @Column(name = "updated_at", nullable = false)
   private Instant updatedAt = Instant.now();
 }

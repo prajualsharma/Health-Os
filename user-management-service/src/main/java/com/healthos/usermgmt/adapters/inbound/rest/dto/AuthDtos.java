@@ -119,6 +119,12 @@ public class AuthDtos {
     @Size(max = 32) private String diet;
     private List<String> allergies;
     @Email @Size(max = 255) private String email;
+    private List<String> goals;
+    private List<String> medicalConditions;
+    @Size(max = 128) private String city;
+    @Size(max = 32) private String goalPace;
+    @Size(max = 8) private String heightUnit;
+    @Size(max = 8) private String weightUnit;
   }
 
   @Data
@@ -137,6 +143,7 @@ public class AuthDtos {
     private int protein;
     private int carbs;
     private int fat;
+    private int timelineWeeks;
   }
 }
 

@@ -76,14 +76,20 @@ public class OtpService {
     return token;
   }
 
-  /** Consumes a registration token and returns the phone it was bound to. Throws if invalid. */
-  public String consumeRegistrationToken(String token) {
+  /** Validates a registration token without consuming it. */
+  public String peekRegistrationToken(String token) {
     var key = REG_TOKEN_PREFIX + token;
     var phone = redis.opsForValue().get(key);
     if (phone == null) {
       throw new IllegalArgumentException("Registration session expired. Verify your phone again.");
     }
-    redis.delete(key);
+    return phone;
+  }
+
+  /** Consumes a registration token and returns the phone it was bound to. Throws if invalid. */
+  public String consumeRegistrationToken(String token) {
+    var phone = peekRegistrationToken(token);
+    redis.delete(REG_TOKEN_PREFIX + token);
     return phone;
   }
 }

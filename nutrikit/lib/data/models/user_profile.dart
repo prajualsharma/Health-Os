@@ -40,11 +40,12 @@ class UserProfile {
             .join()
             .toUpperCase()
         : 'NK';
+    final rawGoal = json['goal'] as String? ?? '';
     return UserProfile(
       name: name,
       email: json['email'] as String? ?? '',
       initials: json['initials'] as String? ?? initials,
-      goal: json['goal'] as String? ?? 'Lose Weight',
+      goal: _formatGoal(rawGoal),
       currentWeight: (json['currentWeight'] as num?)?.toDouble() ??
           (json['weight'] as num?)?.toDouble() ??
           0,
@@ -54,9 +55,29 @@ class UserProfile {
       proteinTarget: (json['proteinTarget'] as num?)?.toInt() ?? 0,
       carbTarget: (json['carbTarget'] as num?)?.toInt() ?? 0,
       fatTarget: (json['fatTarget'] as num?)?.toInt() ?? 0,
-      plan: json['plan'] as String? ?? 'Pro',
-      gymName: json['gymName'] as String? ?? 'FitHub Gym',
+      plan: json['plan'] as String? ?? 'NutriKit',
+      gymName: json['gymName'] as String? ?? '',
     );
+  }
+
+  static String _formatGoal(String raw) {
+    switch (raw.trim().toLowerCase()) {
+      case 'lose_weight':
+      case 'lose':
+      case 'weight_loss':
+        return 'Lose Weight';
+      case 'build_muscle':
+      case 'gain_muscle':
+      case 'muscle_gain':
+        return 'Gain Muscle';
+      case 'maintain':
+      case 'maintain_weight':
+        return 'Maintain Weight';
+      case 'eat_healthier':
+        return 'Eat Healthier';
+      default:
+        return raw.isEmpty ? 'Health Goal' : raw;
+    }
   }
 
   Map<String, dynamic> toJson() => {

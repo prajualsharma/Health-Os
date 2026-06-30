@@ -1,0 +1,34 @@
+/// Ordered onboarding steps after phone verification (for progress bar).
+class OnboardingFlow {
+  OnboardingFlow._();
+
+  static const steps = <String>[
+    '/onboarding/intro',
+    '/onboarding/goals',
+    '/onboarding/sex',
+    '/onboarding/age',
+    '/onboarding/height',
+    '/onboarding/weight',
+    '/onboarding/target-weight',
+    '/onboarding/pace',
+    '/onboarding/medical',
+    '/onboarding/city',
+    '/onboarding/name',
+    '/onboarding/activity',
+    '/onboarding/diet',
+    '/onboarding/email',
+  ];
+
+  static int indexOf(String path) {
+    final i = steps.indexOf(path);
+    return i < 0 ? 0 : i;
+  }
+
+  static double progress(String path) => (indexOf(path) + 1) / steps.length;
+
+  static String? nextPath(String path) {
+    final i = indexOf(path);
+    if (i < 0 || i >= steps.length - 1) return null;
+    return steps[i + 1];
+  }
+}

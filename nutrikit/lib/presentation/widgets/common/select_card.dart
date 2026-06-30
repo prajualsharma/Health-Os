@@ -27,7 +27,7 @@ class SelectCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: selected ? AppColors.greenGlow : AppColors.surface,
+          color: selected ? AppColors.primarySoft : AppColors.surface,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: selected ? AppColors.green : AppColors.cardBorder,

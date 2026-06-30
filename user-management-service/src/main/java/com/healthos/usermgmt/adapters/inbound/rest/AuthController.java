@@ -92,6 +92,7 @@ public class AuthController {
                 req.getRegistrationToken(),
                 req.getName(),
                 req.getGoal(),
+                req.getGoals(),
                 req.getGender(),
                 req.getAge(),
                 req.getHeight(),
@@ -100,6 +101,11 @@ public class AuthController {
                 req.getActivity(),
                 req.getDiet(),
                 req.getAllergies(),
+                req.getMedicalConditions(),
+                req.getCity(),
+                req.getGoalPace(),
+                req.getHeightUnit(),
+                req.getWeightUnit(),
                 req.getEmail()));
 
     var res = new AuthDtos.RegisterPhoneResponse();
@@ -115,6 +121,7 @@ public class AuthController {
     targets.setProtein(result.targets().protein());
     targets.setCarbs(result.targets().carbs());
     targets.setFat(result.targets().fat());
+    targets.setTimelineWeeks(result.targets().timelineWeeks());
     res.setTargets(targets);
     return res;
   }

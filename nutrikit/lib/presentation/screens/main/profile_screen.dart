@@ -5,8 +5,8 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/models/user_profile.dart';
-import '../../../data/services/api_service.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/profile_provider.dart';
 import '../../widgets/common/app_avatar.dart';
 import '../../widgets/common/app_card.dart';
 import '../../widgets/common/error_state.dart';
@@ -20,38 +20,18 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  UserProfile? _profile;
-  bool _loading = true;
-  String? _error;
-
   @override
   void initState() {
     super.initState();
-    _load();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProfileProvider>().loadProfile();
+    });
   }
 
-  Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      final p = await ApiService.instance.getProfile();
-      if (!mounted) return;
-      setState(() {
-        _profile = p;
-        _loading = false;
-      });
-    } on ApiException catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _error = e.message;
-        _loading = false;
-      });
-    }
-  }
+  Future<void> _load() => context.read<ProfileProvider>().loadProfile();
 
   Future<void> _logout() async {
+    context.read<ProfileProvider>().clear();
     await context.read<AuthProvider>().logout();
     if (!mounted) return;
     context.go('/onboarding');
@@ -98,17 +78,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _body() {
-    if (_error != null) {
+    final prov = context.watch<ProfileProvider>();
+    if (prov.error != null) {
       return SizedBox(
         key: const ValueKey('error'),
         height: 360,
-        child: ErrorState(message: _error!, onRetry: _load),
+        child: ErrorState(message: prov.error!, onRetry: _load),
       );
     }
-    if (_loading || _profile == null) {
+    if (prov.isLoading && prov.profile == null) {
       return const ShimmerList(key: ValueKey('loading'), count: 3, height: 120);
     }
-    final p = _profile!;
+    final p = prov.profile;
+    if (p == null) {
+      return const ShimmerList(key: ValueKey('loading'), count: 3, height: 120);
+    }
     return Column(
       key: const ValueKey('content'),
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -176,7 +160,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ['Target Weight', '${p.targetWeight} kg'],
       ['Height', '${p.height} cm'],
       ['Daily Target', '${p.calorieTarget} kcal'],
-      ['Plan', p.plan],
+      ['Plan', p.plan.isEmpty ? 'NutriKit' : p.plan],
     ];
     return AppCard(
       child: Column(

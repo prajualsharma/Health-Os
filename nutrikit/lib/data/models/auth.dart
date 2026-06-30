@@ -18,61 +18,110 @@ class OnboardingData {
     this.name = '',
     this.email = '',
     this.goal = '',
+    this.goals = const [],
     this.gender = '',
     this.age = 0,
     this.height = 0,
+    this.heightFeet = 5,
+    this.heightInches = 8,
     this.currentWeight = 0,
     this.targetWeight = 0,
     this.activityLevel = '',
     this.dietType = '',
     this.allergies = const [],
+    this.medicalConditions = const [],
+    this.city = '',
+    this.goalPace = 'moderate',
+    this.heightUnit = 'cm',
+    this.weightUnit = 'kg',
   });
 
   final String phone;
   final String name;
   final String email;
   final String goal;
+  final List<String> goals;
   final String gender;
   final int age;
   final int height;
+  final int heightFeet;
+  final int heightInches;
   final double currentWeight;
   final double targetWeight;
   final String activityLevel;
   final String dietType;
   final List<String> allergies;
+  final List<String> medicalConditions;
+  final String city;
+  final String goalPace;
+  final String heightUnit;
+  final String weightUnit;
 
   OnboardingData copyWith({
     String? phone,
     String? name,
     String? email,
     String? goal,
+    List<String>? goals,
     String? gender,
     int? age,
     int? height,
+    int? heightFeet,
+    int? heightInches,
     double? currentWeight,
     double? targetWeight,
     String? activityLevel,
     String? dietType,
     List<String>? allergies,
+    List<String>? medicalConditions,
+    String? city,
+    String? goalPace,
+    String? heightUnit,
+    String? weightUnit,
   }) {
     return OnboardingData(
       phone: phone ?? this.phone,
       name: name ?? this.name,
       email: email ?? this.email,
       goal: goal ?? this.goal,
+      goals: goals ?? this.goals,
       gender: gender ?? this.gender,
       age: age ?? this.age,
       height: height ?? this.height,
+      heightFeet: heightFeet ?? this.heightFeet,
+      heightInches: heightInches ?? this.heightInches,
       currentWeight: currentWeight ?? this.currentWeight,
       targetWeight: targetWeight ?? this.targetWeight,
       activityLevel: activityLevel ?? this.activityLevel,
       dietType: dietType ?? this.dietType,
       allergies: allergies ?? this.allergies,
+      medicalConditions: medicalConditions ?? this.medicalConditions,
+      city: city ?? this.city,
+      goalPace: goalPace ?? this.goalPace,
+      heightUnit: heightUnit ?? this.heightUnit,
+      weightUnit: weightUnit ?? this.weightUnit,
     );
+  }
+
+  static String primaryGoal(List<String> goals) {
+    const priority = [
+      'Weight Loss',
+      'Gain Muscle',
+      'Maintain Weight',
+      'Eat Healthier',
+      'Diet Plan',
+      'Calorie Tracker',
+      'Workouts',
+    ];
+    for (final p in priority) {
+      if (goals.contains(p)) return p;
+    }
+    return goals.isNotEmpty ? goals.first : '';
   }
 
   Map<String, dynamic> toJson() => {
         'goal': goal,
+        'goals': goals,
         'gender': gender,
         'age': age,
         'height': height,
@@ -81,28 +130,42 @@ class OnboardingData {
         'activityLevel': activityLevel,
         'dietType': dietType,
         'allergies': allergies,
+        'medicalConditions': medicalConditions,
+        'city': city,
+        'goalPace': goalPace,
+        'heightUnit': heightUnit,
+        'weightUnit': weightUnit,
       };
 
   /// Payload for the backend `POST /auth/register-phone` contract.
-  Map<String, dynamic> toRegisterJson(String registrationToken) => {
-        'phone': phone,
-        'registrationToken': registrationToken,
-        'name': name,
-        'goal': _mapGoal(goal),
-        'gender': gender,
-        'age': age,
-        'height': height,
-        'weight': currentWeight.round(),
-        'targetWeight': targetWeight.round(),
-        'activity': _mapActivity(activityLevel),
-        'diet': dietType,
-        'allergies': allergies,
-        if (email.isNotEmpty) 'email': email,
-      };
+  Map<String, dynamic> toRegisterJson(String registrationToken) {
+    final primary = goal.isNotEmpty ? goal : primaryGoal(goals);
+    return {
+      'phone': phone,
+      'registrationToken': registrationToken,
+      'name': name,
+      'goal': _mapGoal(primary),
+      'goals': goals.map(_mapGoal).toList(),
+      'gender': gender,
+      'age': age,
+      'height': height,
+      'weight': currentWeight.round(),
+      'targetWeight': targetWeight.round(),
+      'activity': _mapActivity(activityLevel),
+      'diet': dietType,
+      'allergies': allergies,
+      'medicalConditions': medicalConditions,
+      'city': city,
+      'goalPace': goalPace,
+      'heightUnit': heightUnit,
+      'weightUnit': weightUnit,
+      if (email.isNotEmpty) 'email': email,
+    };
+  }
 
   static String _mapGoal(String goal) {
     switch (goal) {
-      case 'Lose Weight':
+      case 'Weight Loss':
         return 'lose_weight';
       case 'Gain Muscle':
         return 'build_muscle';
@@ -110,6 +173,12 @@ class OnboardingData {
         return 'maintain';
       case 'Eat Healthier':
         return 'eat_healthier';
+      case 'Diet Plan':
+        return 'diet_plan';
+      case 'Calorie Tracker':
+        return 'calorie_tracker';
+      case 'Workouts':
+        return 'workouts';
       default:
         return goal;
     }
@@ -209,7 +278,7 @@ class RegisterResult {
         proteinTarget: (t['protein'] as num?)?.toInt() ?? 0,
         carbTarget: (t['carbs'] as num?)?.toInt() ?? 0,
         fatTarget: (t['fat'] as num?)?.toInt() ?? 0,
-        timelineWeeks: 10,
+        timelineWeeks: (t['timelineWeeks'] as num?)?.toInt() ?? 10,
         targetWeight: targetWeight,
       ),
     );

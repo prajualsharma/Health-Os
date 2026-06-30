@@ -3,12 +3,17 @@ package com.healthos.usermgmt.adapters.inbound.rest.exception;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
   @ExceptionHandler(IllegalArgumentException.class)
@@ -31,8 +36,29 @@ public class GlobalExceptionHandler {
     return error(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", "Validation failed", req);
   }
 
+  @ExceptionHandler(DataIntegrityViolationException.class)
+  public ResponseEntity<ApiError> dataConflict(DataIntegrityViolationException e, HttpServletRequest req) {
+    log.warn("Data integrity violation on {}: {}", req.getRequestURI(), e.getMessage());
+    return error(
+        HttpStatus.CONFLICT,
+        "CONFLICT",
+        "Phone or email already registered",
+        req);
+  }
+
+  @ExceptionHandler({RedisConnectionFailureException.class, DataAccessException.class})
+  public ResponseEntity<ApiError> dataStoreUnavailable(DataAccessException e, HttpServletRequest req) {
+    log.error("Data store unavailable on {}", req.getRequestURI(), e);
+    return error(
+        HttpStatus.SERVICE_UNAVAILABLE,
+        "SERVICE_UNAVAILABLE",
+        "Database or cache temporarily unavailable",
+        req);
+  }
+
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ApiError> server(Exception e, HttpServletRequest req) {
+    log.error("Unhandled error on {}", req.getRequestURI(), e);
     return error(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "Unexpected error", req);
   }
 
@@ -50,4 +76,3 @@ public class GlobalExceptionHandler {
                 .build());
   }
 }
-

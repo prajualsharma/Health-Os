@@ -46,39 +46,76 @@ docker compose down -v            # stop + wipe data volumes
 
 ---
 
-## Deploy free on Oracle Cloud (Always Free)
+## Deploy free on Oracle Cloud (Always Free) — recommended
 
-Oracle's **Always Free** tier includes an Ampere ARM VM with up to **4 OCPU / 24 GB
-RAM** — plenty for this stack (3 JVMs + Kafka + Mongo + Postgres + Redis). This is
-the recommended free host; the AMD `E2.1.Micro` (1 GB RAM) is **too small**.
+Oracle **Always Free** includes an Ampere **A1.Flex** VM (up to 4 OCPU / 24 GB RAM).
+Use **Ubuntu 22.04** — not Oracle Linux `opc` — so [`deploy/oracle-setup.sh`](deploy/oracle-setup.sh)
+matches. The AMD `E2.1.Micro` (1 GB RAM) is too small for Docker builds.
 
 ### 1. Create the VM
+
 1. Oracle Cloud Console → **Compute → Instances → Create instance**.
-2. Image: **Ubuntu 22.04** (or newer). Shape: **VM.Standard.A1.Flex**, 4 OCPU / 24 GB.
-3. Add your SSH public key, create.
+2. Image: **Ubuntu 22.04**. Shape: **VM.Standard.A1.Flex**, **2 OCPU / 12 GB** (or 4 / 24 GB).
+3. Assign a **public IPv4**, upload your SSH public key, create.
 
-### 2. Open port 80 in the VCN
-Networking → your VCN → Security List (or the instance's NSG) → **Add Ingress Rule**:
-- Source `0.0.0.0/0`, IP Protocol `TCP`, Destination port `80` (and `443` if you add TLS).
+### 2. Open ports in the VCN
 
-### 3. Bootstrap
+Security List or NSG → ingress from `0.0.0.0/0`:
+
+| Port | Purpose |
+|------|---------|
+| **22** | SSH |
+| **8080** | API gateway (NutriKit + Vercel proxy) |
+| **80** | Optional — full stack with nginx frontend |
+
+### 3. Deploy backend from your laptop
+
 ```bash
-ssh ubuntu@<vm-public-ip>
-git clone <your-repo-url> healthos && cd healthos
-bash deploy/oracle-setup.sh
+cp deploy/oracle-host.env.example deploy/oracle-host.env
+# edit ORACLE_HOST=ubuntu@<public-ip>
+
+export SSH_KEY=/home/pras/Downloads/ssh-key-2026-06-30.key
+export ORACLE_HOST=ubuntu@<public-ip>
+# optional: export SMTP_PASSWORD=<gmail-app-password>
+
+bash deploy/oracle-deploy.sh
 ```
-The script installs Docker, opens the host firewall (Ubuntu images DROP by default),
-generates a `JWT_SECRET`, and runs `docker compose up -d --build`.
 
-Then browse to `http://<vm-public-ip>/`.
+First build on A1.Flex takes ~15–20 minutes (native ARM). Stack:
 
-### 4. (Optional) HTTPS + domain
-Point a domain's A record at the VM IP, then add a TLS terminator. Easiest is to
-put Caddy in front, or add a `certbot` companion. Ask and I can wire it in.
+```bash
+docker compose -f docker-compose.yml \
+  -f deploy/docker-compose.backend.yml \
+  -f deploy/docker-compose.ec2-email.yml \
+  -f deploy/docker-compose.ec2-minimal.yml \
+  up -d --build
+```
+
+### 4. Wire NutriKit (Vercel)
+
+NutriKit uses `API_URL=https://healthos-api.vercel.app`. Point the proxy at Oracle:
+
+```bash
+bash deploy/wire-oracle.sh <public-ip>
+# or manually set BACKEND_URL=http://<public-ip>:8080 on the healthos-api Vercel project
+```
+
+### 5. Test
+
+```bash
+curl -s http://<public-ip>:8080/actuator/health
+```
+
+Dev OTP is **123456** when `OTP_DEV_BYPASS=true`; set `SMTP_PASSWORD` in `~/healthos/.env`
+on the VM for real email OTP.
+
+### Full stack (optional)
+
+For nginx frontend on port 80, use `docker compose up -d --build` without the EC2 overlays.
 
 ---
 
-## Deploy on AWS EC2 (Amazon Linux 2023)
+## Deploy on AWS EC2 (legacy — disk/RAM too small on t2.micro)
 
 Backend-only deploy: **api-gateway**, **user-management-service**, **notification-service**
 plus Postgres, Redis, Mongo, and Kafka. Tuned for small instances (`t2.micro`) with swap
@@ -163,7 +200,7 @@ Workflows live in [`.github/workflows/`](.github/workflows/):
 | Workflow | Trigger | What it does |
 |---|---|---|
 | **CI** | Push / PR to `main` | Maven tests (4 Java services) + `flutter analyze` for NutriKit |
-| **Deploy** | Push to `main` or manual | Build Docker images on GitHub → rsync to EC2 → `docker load` → compose up |
+| **Deploy** | Push to `main` or manual | rsync to VM → `docker compose up --build` on host (works on ARM Oracle) |
 
 Runs: [github.com/prajualsharma/Health-Os/actions](https://github.com/prajualsharma/Health-Os/actions)
 
@@ -173,9 +210,9 @@ Settings → Secrets and variables → Actions:
 
 | Secret | Example |
 |---|---|
-| `EC2_HOST` | `65.0.109.103` |
-| `EC2_USER` | `ec2-user` |
-| `EC2_SSH_KEY` | Full contents of `prajual-key.pem` |
+| `EC2_HOST` | Oracle or EC2 public IP (e.g. `129.x.x.x`) |
+| `EC2_USER` | `ubuntu` (Oracle Ubuntu) or `ec2-user` (AWS) |
+| `EC2_SSH_KEY` | Full contents of your deploy private key |
 | `JWT_SECRET` | 32+ char random string (same as EC2 `.env`) |
 | `SMTP_PASSWORD` | Gmail App Password (16 chars, no spaces) |
 
@@ -189,7 +226,7 @@ Optional:
 
 ### Manual deploy
 
-Actions → **Deploy HealthOS to EC2** → **Run workflow**.
+Actions → **Deploy HealthOS to VM** → **Run workflow**.
 
 ---
 

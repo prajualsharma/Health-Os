@@ -16,9 +16,15 @@ public class MeDtos {
     private String gender;
     private LocalDate dateOfBirth;
     private String goal;
+    private List<String> goals;
     private String activityLevel;
     private String dietType;
     private List<String> allergies;
+    private List<String> medicalConditions;
+    private String city;
+    private String goalPace;
+    private String heightUnit;
+    private String weightUnit;
     private Integer calorieTarget;
     private Integer proteinTarget;
     private Integer carbTarget;

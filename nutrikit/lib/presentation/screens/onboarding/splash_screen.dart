@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../providers/profile_provider.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -37,9 +39,14 @@ class _SplashScreenState extends State<SplashScreen>
     if (!mounted) return;
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString(AppConstants.tokenKey);
+    final registrationToken = prefs.getString(AppConstants.registrationTokenKey);
     if (!mounted) return;
     if (token != null && token.isNotEmpty) {
+      await context.read<ProfileProvider>().loadProfile();
+      if (!mounted) return;
       context.go('/home/dashboard');
+    } else if (registrationToken != null && registrationToken.isNotEmpty) {
+      context.go('/onboarding/intro');
     } else {
       context.go('/auth/phone');
     }

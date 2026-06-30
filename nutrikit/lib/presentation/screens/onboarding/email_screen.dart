@@ -5,8 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/validators.dart';
 import '../../providers/onboarding_store.dart';
-import '../../widgets/common/app_button.dart';
-import '../../widgets/common/app_input.dart';
+import '../../widgets/onboarding/onboarding_scaffold.dart';
 
 class EmailScreen extends StatefulWidget {
   const EmailScreen({super.key});
@@ -20,12 +19,6 @@ class _EmailScreenState extends State<EmailScreen> {
   final _email = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
-    _email.text = 'prajual.sharma.1559@gmail.com';
-  }
-
-  @override
   void dispose() {
     _email.dispose();
     super.dispose();
@@ -37,56 +30,59 @@ class _EmailScreenState extends State<EmailScreen> {
       return;
     }
     OnboardingStore.instance.update((d) => d.copyWith(email: text));
-    context.go('/onboarding/calculating');
+    context.push('/onboarding/calculating');
   }
 
   void _skip() {
     OnboardingStore.instance.update((d) => d.copyWith(email: ''));
-    context.go('/onboarding/calculating');
+    context.push('/onboarding/calculating');
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.bg,
-      appBar: AppBar(),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('ALMOST THERE',
-                    style: AppTypography.label.copyWith(color: AppColors.green)),
-                const SizedBox(height: 6),
-                Text('Add your email', style: AppTypography.h1),
-                const SizedBox(height: 4),
-                Text('Optional — only for receipts and order updates',
-                    style: AppTypography.caption),
-                const SizedBox(height: 28),
-                AppInput(
-                  label: 'Email (optional)',
-                  placeholder: 'you@email.com',
-                  controller: _email,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: Validators.email,
+    return OnboardingScaffold(
+      routePath: '/onboarding/email',
+      title: 'Add your email',
+      subtitle: 'Optional — only for receipts and order updates',
+      onNext: _continue,
+      nextLabel: 'Continue',
+      body: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.card,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.cardBorder),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: TextFormField(
+                controller: _email,
+                keyboardType: TextInputType.emailAddress,
+                style: AppTypography.body,
+                decoration: const InputDecoration(
+                  hintText: 'you@email.com',
+                  border: InputBorder.none,
                 ),
-                const SizedBox(height: 24),
-                AppButton(label: 'Continue', onPressed: _continue),
-                const SizedBox(height: 12),
-                Center(
-                  child: TextButton(
-                    onPressed: _skip,
-                    child: Text('Skip for now',
-                        style: AppTypography.caption
-                            .copyWith(fontWeight: FontWeight.w700)),
-                  ),
-                ),
-              ],
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return null;
+                  return Validators.email(v);
+                },
+              ),
             ),
-          ),
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: _skip,
+              child: Text(
+                'Skip for now',
+                style: AppTypography.caption.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

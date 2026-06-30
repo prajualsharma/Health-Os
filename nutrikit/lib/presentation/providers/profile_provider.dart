@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../data/models/user_profile.dart';
 import '../../data/services/api_service.dart';
 
 class ProfileProvider extends ChangeNotifier {
@@ -11,16 +12,17 @@ class ProfileProvider extends ChangeNotifier {
 
   final ApiService _api;
 
-  int calorieTarget = 1840;
-  int proteinTarget = 145;
-  int carbTarget = 180;
-  int fatTarget = 62;
-  double currentWeight = 76.5;
-  int todayCalories = 1240;
-  int todayProtein = 98;
-  int todayCarbs = 110;
-  int todayFat = 40;
-  String goal = 'Weight Loss';
+  UserProfile? profile;
+  int calorieTarget = 0;
+  int proteinTarget = 0;
+  int carbTarget = 0;
+  int fatTarget = 0;
+  double currentWeight = 0;
+  int todayCalories = 0;
+  int todayProtein = 0;
+  int todayCarbs = 0;
+  int todayFat = 0;
+  String goal = '';
 
   bool isLoading = false;
   String? error;
@@ -31,6 +33,7 @@ class ProfileProvider extends ChangeNotifier {
     notifyListeners();
     try {
       final p = await _api.getProfile();
+      profile = p;
       calorieTarget = p.calorieTarget;
       proteinTarget = p.proteinTarget;
       carbTarget = p.carbTarget;
@@ -57,27 +60,45 @@ class ProfileProvider extends ChangeNotifier {
 
   Future<void> logWeight(double weight) async {
     currentWeight = weight;
+    if (profile != null) {
+      profile = UserProfile(
+        name: profile!.name,
+        email: profile!.email,
+        initials: profile!.initials,
+        goal: profile!.goal,
+        currentWeight: weight,
+        targetWeight: profile!.targetWeight,
+        height: profile!.height,
+        calorieTarget: profile!.calorieTarget,
+        proteinTarget: profile!.proteinTarget,
+        carbTarget: profile!.carbTarget,
+        fatTarget: profile!.fatTarget,
+        plan: profile!.plan,
+        gymName: profile!.gymName,
+      );
+    }
     await _persist();
     notifyListeners();
   }
 
   Future<void> _persist() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      AppConstants.profileKey,
-      jsonEncode({
-        'calorieTarget': calorieTarget,
-        'proteinTarget': proteinTarget,
-        'carbTarget': carbTarget,
-        'fatTarget': fatTarget,
-        'currentWeight': currentWeight,
-        'todayCalories': todayCalories,
-        'todayProtein': todayProtein,
-        'todayCarbs': todayCarbs,
-        'todayFat': todayFat,
-        'goal': goal,
-      }),
-    );
+    final map = <String, dynamic>{
+      'calorieTarget': calorieTarget,
+      'proteinTarget': proteinTarget,
+      'carbTarget': carbTarget,
+      'fatTarget': fatTarget,
+      'currentWeight': currentWeight,
+      'todayCalories': todayCalories,
+      'todayProtein': todayProtein,
+      'todayCarbs': todayCarbs,
+      'todayFat': todayFat,
+      'goal': goal,
+    };
+    if (profile != null) {
+      map.addAll(profile!.toJson());
+    }
+    await prefs.setString(AppConstants.profileKey, jsonEncode(map));
   }
 
   Future<void> restoreFromCache() async {
@@ -95,6 +116,25 @@ class ProfileProvider extends ChangeNotifier {
     todayCarbs = (map['todayCarbs'] as num?)?.toInt() ?? todayCarbs;
     todayFat = (map['todayFat'] as num?)?.toInt() ?? todayFat;
     goal = map['goal'] as String? ?? goal;
+    if (map['name'] != null) {
+      profile = UserProfile.fromJson(map);
+    }
+    notifyListeners();
+  }
+
+  void clear() {
+    profile = null;
+    calorieTarget = 0;
+    proteinTarget = 0;
+    carbTarget = 0;
+    fatTarget = 0;
+    currentWeight = 0;
+    todayCalories = 0;
+    todayProtein = 0;
+    todayCarbs = 0;
+    todayFat = 0;
+    goal = '';
+    error = null;
     notifyListeners();
   }
 }

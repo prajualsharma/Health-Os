@@ -7,7 +7,9 @@ import '../../../core/theme/app_typography.dart';
 import '../../../data/models/dashboard.dart';
 import '../../../data/models/meal.dart';
 import '../../../data/services/api_service.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/food_subscription_provider.dart';
+import '../../providers/profile_provider.dart';
 import '../../widgets/common/app_avatar.dart';
 import '../../widgets/common/app_button.dart';
 import '../../widgets/common/app_card.dart';
@@ -32,7 +34,12 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _load();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (context.read<AuthProvider>().isAuthenticated) {
+        context.read<ProfileProvider>().loadProfile();
+      }
+      _load();
+    });
   }
 
   Future<void> _load() async {

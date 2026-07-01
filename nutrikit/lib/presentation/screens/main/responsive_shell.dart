@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../widgets/shell/app_bottom_nav.dart';
 import 'nav_destinations.dart';
 
 /// Adaptive navigation chrome. On wide (web desktop) screens it shows a left
@@ -37,8 +38,15 @@ class ResponsiveShell extends StatelessWidget {
         }
         return Scaffold(
           backgroundColor: AppColors.bg,
+          extendBody: true,
           body: child,
-          bottomNavigationBar: _bottomBar(),
+          floatingActionButton: AppBottomNav.centerFab(context),
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.centerDocked,
+          bottomNavigationBar: AppBottomNav(
+            currentIndex: currentIndex,
+            onSelect: onSelect,
+          ),
         );
       },
     );
@@ -81,36 +89,9 @@ class ResponsiveShell extends StatelessWidget {
         destinations: kNavDestinations
             .map(
               (d) => NavigationRailDestination(
-                icon: Text(d.emoji, style: const TextStyle(fontSize: 22)),
+                icon: Icon(d.icon),
+                selectedIcon: Icon(d.icon, color: AppColors.primary),
                 label: Text(d.label),
-              ),
-            )
-            .toList(),
-      ),
-    );
-  }
-
-  Widget _bottomBar() {
-    return Container(
-      decoration: const BoxDecoration(
-        border: Border(
-          top: BorderSide(color: AppColors.cardBorder, width: 1.5),
-        ),
-      ),
-      child: BottomNavigationBar(
-        currentIndex: currentIndex,
-        onTap: onSelect,
-        backgroundColor: AppColors.card,
-        selectedItemColor: AppColors.green,
-        unselectedItemColor: AppColors.muted,
-        type: BottomNavigationBarType.fixed,
-        elevation: 0,
-        showUnselectedLabels: true,
-        items: kNavDestinations
-            .map(
-              (d) => BottomNavigationBarItem(
-                icon: Text(d.emoji, style: const TextStyle(fontSize: 22)),
-                label: d.label,
               ),
             )
             .toList(),

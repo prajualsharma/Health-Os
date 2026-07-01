@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/onboarding_store.dart';
 import '../../providers/profile_provider.dart';
 
@@ -45,7 +46,14 @@ class _SplashScreenState extends State<SplashScreen>
     if (token != null && token.isNotEmpty) {
       await context.read<ProfileProvider>().loadProfile();
       if (!mounted) return;
-      context.go('/home/dashboard');
+      final profile = context.read<ProfileProvider>().profile;
+      if (profile != null) {
+        context.go('/home/dashboard');
+      } else {
+        await context.read<AuthProvider>().logout();
+        if (!mounted) return;
+        context.go('/auth/phone');
+      }
     } else if (registrationToken != null && registrationToken.isNotEmpty) {
       final phone = prefs.getString(AppConstants.registrationPhoneKey);
       if (phone != null && phone.isNotEmpty) {

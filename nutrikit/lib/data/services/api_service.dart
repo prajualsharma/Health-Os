@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../models/auth.dart';
@@ -11,6 +12,8 @@ import '../models/meal_system.dart';
 import '../models/order.dart';
 import '../models/progress.dart';
 import '../models/recipe.dart';
+import '../models/subscription_plan.dart';
+import '../models/tracker.dart';
 import '../models/user_profile.dart';
 import 'mock_data.dart';
 
@@ -48,9 +51,8 @@ class ApiService {
           handler.next(options);
         },
         onError: (error, handler) async {
-          if (error.response?.statusCode == 401) {
-            await _storage.deleteAll();
-            onUnauthorized?.call();
+          if (_isStaleSession(error)) {
+            await _handleUnauthorized();
           }
           handler.next(error);
         },
@@ -64,6 +66,19 @@ class ApiService {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   UnauthorizedHandler? onUnauthorized;
+  bool _handlingUnauthorized = false;
+
+  /// Prevents parallel profile failures from spamming logout/navigation.
+  Future<void> _handleUnauthorized() async {
+    if (_handlingUnauthorized) return;
+    _handlingUnauthorized = true;
+    try {
+      await clearSession();
+      onUnauthorized?.call();
+    } finally {
+      _handlingUnauthorized = false;
+    }
+  }
 
   bool get _mock => AppConstants.useMock;
 
@@ -76,7 +91,27 @@ class ApiService {
   Future<void> saveRefreshToken(String token) =>
       _storage.write(key: AppConstants.refreshTokenKey, value: token);
 
-  Future<void> clearToken() => _storage.deleteAll();
+  Future<void> clearToken() => clearSession();
+
+  /// Drops auth tokens and cached profile when the session is invalid.
+  Future<void> clearSession() async {
+    await _storage.deleteAll();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(AppConstants.tokenKey);
+    await prefs.remove(AppConstants.profileKey);
+  }
+
+  bool _isStaleSession(DioException error) {
+    final status = error.response?.statusCode;
+    if (status == 401) return true;
+    if (status != 400) return false;
+    final data = error.response?.data;
+    if (data is Map && data['message'] != null) {
+      final msg = data['message'].toString().toLowerCase();
+      return msg.contains('user not found');
+    }
+    return false;
+  }
 
   Future<T> _guarded<T>(Future<T> Function() call) async {
     try {
@@ -174,25 +209,7 @@ class ApiService {
   Future<DashboardData> getDashboard() async {
     if (_mock) {
       await _mockDelay();
-      var data = MockData.dashboard();
-      if (!_mockAuth) {
-        final profile = await getProfile();
-        data = DashboardData(
-          userName: profile.name,
-          initials: profile.initials,
-          calorieTarget: profile.calorieTarget,
-          caloriesConsumed: data.caloriesConsumed,
-          proteinConsumed: data.proteinConsumed,
-          proteinTarget: profile.proteinTarget,
-          carbsConsumed: data.carbsConsumed,
-          carbTarget: profile.carbTarget,
-          fatConsumed: data.fatConsumed,
-          fatTarget: profile.fatTarget,
-          quickStats: data.quickStats,
-          meals: data.meals,
-        );
-      }
-      return data;
+      return MockData.dashboard();
     }
     return _guarded(() async {
       final res = await _dio.get('/v1/dashboard');
@@ -405,6 +422,32 @@ class ApiService {
     return _guarded(() async {
       final res = await _dio.get('/me/profile');
       return UserProfile.fromJson(res.data as Map<String, dynamic>);
+    });
+  }
+
+  // ---- Trackers (separate endpoint per home box) ----
+  Future<TrackerSnapshot> getTracker(TrackerKind kind) async {
+    if (_mock) {
+      await _mockDelay();
+      return MockData.tracker(kind);
+    }
+    return _guarded(() async {
+      final res = await _dio.get(kind.apiPath);
+      return TrackerSnapshot.fromJson(res.data as Map<String, dynamic>);
+    });
+  }
+
+  Future<List<SubscriptionPlan>> getSubscriptionPlans() async {
+    if (_mock) {
+      await _mockDelay();
+      return MockData.subscriptionPlans();
+    }
+    return _guarded(() async {
+      final res = await _dio.get('/v1/plans');
+      final list = res.data as List<dynamic>;
+      return list
+          .map((e) => SubscriptionPlan.fromJson(e as Map<String, dynamic>))
+          .toList();
     });
   }
 }

@@ -53,6 +53,7 @@
 /home/pras/Documents/Health-Os/user-management-service/src/main/java/com/healthos/usermgmt/consumer/adapters/outbound/persistence/ConsumerRefreshTokenRepository.java
 /home/pras/Documents/Health-Os/user-management-service/src/main/java/com/healthos/usermgmt/consumer/adapters/outbound/persistence/ConsumerUserProfileRepository.java
 /home/pras/Documents/Health-Os/user-management-service/src/main/java/com/healthos/usermgmt/consumer/application/ConsumerAuthService.java
+/home/pras/Documents/Health-Os/user-management-service/src/main/java/com/healthos/usermgmt/consumer/application/ConsumerMeService.java
 /home/pras/Documents/Health-Os/user-management-service/src/main/java/com/healthos/usermgmt/consumer/domain/ConsumerAccount.java
 /home/pras/Documents/Health-Os/user-management-service/src/main/java/com/healthos/usermgmt/consumer/domain/ConsumerAuthMethod.java
 /home/pras/Documents/Health-Os/user-management-service/src/main/java/com/healthos/usermgmt/consumer/domain/ConsumerRefreshToken.java
@@ -75,6 +76,7 @@
 /home/pras/Documents/Health-Os/user-management-service/src/main/java/com/healthos/usermgmt/domain/UserStatus.java
 /home/pras/Documents/Health-Os/user-management-service/src/main/java/com/healthos/usermgmt/shared/domain/AccountType.java
 /home/pras/Documents/Health-Os/user-management-service/src/main/java/com/healthos/usermgmt/shared/domain/ClientId.java
+/home/pras/Documents/Health-Os/user-management-service/src/main/java/com/healthos/usermgmt/shared/exception/StaleSessionException.java
 /home/pras/Documents/Health-Os/user-management-service/src/main/java/com/healthos/usermgmt/staff/adapters/inbound/rest/StaffAuthController.java
 /home/pras/Documents/Health-Os/user-management-service/src/main/java/com/healthos/usermgmt/staff/adapters/inbound/rest/StaffMeMembershipController.java
 /home/pras/Documents/Health-Os/user-management-service/src/main/java/com/healthos/usermgmt/staff/adapters/inbound/rest/internal/StaffInternalScopedMembershipController.java

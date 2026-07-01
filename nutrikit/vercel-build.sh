@@ -18,7 +18,7 @@ FLUTTER_HOME="${FLUTTER_HOME:-$HOME/flutter}"
 
 API_URL="${API_URL:-}"
 USE_MOCK="${USE_MOCK:-true}"
-MOCK_AUTH="${MOCK_AUTH:-false}"
+MOCK_AUTH="${MOCK_AUTH:-true}"
 
 if [[ "${MOCK_AUTH}" != "true" && -z "${API_URL}" ]]; then
   echo "ERROR: MOCK_AUTH=${MOCK_AUTH} but API_URL is empty."

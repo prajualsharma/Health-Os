@@ -7,6 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/onboarding_store.dart';
+import '../../providers/profile_provider.dart';
 import '../../widgets/auth/auth_hero_scaffold.dart';
 import '../../widgets/auth/phone_input_field.dart';
 import '../../widgets/common/app_button.dart';
@@ -22,6 +23,17 @@ class _PhoneScreenState extends State<PhoneScreen> {
   final _phone = TextEditingController();
   bool _loading = false;
   bool _valid = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final auth = context.read<AuthProvider>();
+      if (!auth.isLoading && auth.token == null) {
+        context.read<ProfileProvider>().clear();
+      }
+    });
+  }
 
   @override
   void dispose() {

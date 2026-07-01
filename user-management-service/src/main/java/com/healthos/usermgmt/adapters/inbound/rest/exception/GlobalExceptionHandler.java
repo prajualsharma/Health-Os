@@ -1,5 +1,6 @@
 package com.healthos.usermgmt.adapters.inbound.rest.exception;
 
+import com.healthos.usermgmt.shared.exception.StaleSessionException;
 import jakarta.persistence.PersistenceException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
@@ -18,6 +19,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+  @ExceptionHandler(StaleSessionException.class)
+  public ResponseEntity<ApiError> staleSession(StaleSessionException e, HttpServletRequest req) {
+    return error(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", e.getMessage(), req);
+  }
+
   @ExceptionHandler(IllegalArgumentException.class)
   public ResponseEntity<ApiError> badRequest(IllegalArgumentException e, HttpServletRequest req) {
     return error(HttpStatus.BAD_REQUEST, "BAD_REQUEST", e.getMessage(), req);

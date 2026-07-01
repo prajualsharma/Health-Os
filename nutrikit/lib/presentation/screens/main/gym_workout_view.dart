@@ -5,10 +5,15 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/models/gym.dart';
 import '../../../data/services/api_service.dart';
+import '../../../data/services/mock_data.dart';
 import '../../providers/gym_membership_provider.dart';
 import '../../providers/onboarding_store.dart';
 import '../../widgets/common/app_button.dart';
 import '../../widgets/common/app_card.dart';
+import '../../widgets/common/gradient_hero_card.dart';
+import '../../widgets/common/section_header.dart';
+import '../../widgets/gym/achievement_grid.dart';
+import '../../widgets/gym/workout_day_card.dart';
 
 class GymWorkoutView extends StatefulWidget {
   const GymWorkoutView({super.key});
@@ -18,9 +23,11 @@ class GymWorkoutView extends StatefulWidget {
 }
 
 class _GymWorkoutViewState extends State<GymWorkoutView> {
+  static const _weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  static const _calorieTarget = 500;
+
+  List<String> _selectedDays = ['Mon', 'Wed', 'Fri'];
   List<WeeklyWorkoutPlan> _weeks = [];
-  int _selectedWeek = 0;
-  final Map<String, bool> _done = {};
   bool _loading = true;
 
   @override
@@ -41,8 +48,31 @@ class _GymWorkoutViewState extends State<GymWorkoutView> {
     });
   }
 
-  void _toggle(String id) {
-    setState(() => _done[id] = !(_done[id] ?? false));
+  void _toggleDay(String day) {
+    setState(() {
+      if (_selectedDays.contains(day)) {
+        _selectedDays = _selectedDays.where((d) => d != day).toList();
+      } else {
+        _selectedDays = [..._selectedDays, day];
+      }
+    });
+  }
+
+  DailyWorkoutPlan? _planForDay(String day) {
+    if (MockData.gymDailyPlans.containsKey(day)) {
+      return MockData.gymDailyPlans[day];
+    }
+    if (_weeks.isEmpty) return null;
+    for (final d in _weeks.first.days) {
+      if (d.dayLabel == day) {
+        return DailyWorkoutPlan(
+          day: day,
+          focus: d.exercises.isNotEmpty ? d.exercises.first.name : 'Workout',
+          exercises: d.exercises,
+        );
+      }
+    }
+    return null;
   }
 
   @override
@@ -55,93 +85,277 @@ class _GymWorkoutViewState extends State<GymWorkoutView> {
         ),
       );
     }
-    if (_weeks.isEmpty) return const SizedBox.shrink();
 
-    final week = _weeks[_selectedWeek];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Your workout plan', style: AppTypography.h3),
-        const SizedBox(height: 10),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: List.generate(_weeks.length, (i) {
-              final selected = i == _selectedWeek;
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: GestureDetector(
-                  onTap: () => setState(() => _selectedWeek = i),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 10),
-                    decoration: BoxDecoration(
-                      color:
-                          selected ? AppColors.greenGlow : AppColors.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color:
-                            selected ? AppColors.green : AppColors.cardBorder,
-                      ),
-                    ),
-                    child: Text(
-                      'Week ${i + 1}',
-                      style: TextStyle(
-                        color: selected ? AppColors.green : AppColors.muted,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }),
+        _burnHero(),
+        const SizedBox(height: 24),
+        if (_selectedDays.isNotEmpty) ...[
+          SectionHeader(
+            title: 'Your Personalized Plan',
+            subtitle: 'AI-generated to burn $_calorieTarget cal/day',
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(week.title, style: AppTypography.caption),
-        const SizedBox(height: 14),
-        ...week.days.map(_dayCard),
+          const SizedBox(height: 12),
+          ..._selectedDays.take(3).map((day) {
+            final plan = _planForDay(day);
+            if (plan == null) return const SizedBox.shrink();
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: WorkoutDayCard(
+                day: plan.day,
+                focus: plan.focus,
+                exercises: plan.exercises,
+                onStart: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Starting ${plan.day}'s workout")),
+                  );
+                },
+              ),
+            );
+          }),
+          if (_selectedDays.length > 3)
+            OutlinedButton(
+              onPressed: () {},
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 48),
+                side: const BorderSide(color: AppColors.cardBorder, width: 1.5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                'View All ${_selectedDays.length} Days',
+                style: AppTypography.bodyBold.copyWith(color: AppColors.text),
+              ),
+            ),
+          const SizedBox(height: 24),
+        ],
+        _weeklyProgressCard(),
+        const SizedBox(height: 24),
+        const AchievementGrid(),
       ],
     );
   }
 
-  Widget _dayCard(WorkoutDay day) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: AppCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(day.dayLabel, style: AppTypography.bodyBold),
-            const SizedBox(height: 10),
-            ...day.exercises.map((e) => _exerciseRow(e)),
-          ],
-        ),
+  Widget _burnHero() {
+    return GradientHeroCard(
+      gradient: GradientHeroCard.orangeGradient,
+      borderRadius: 24,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Daily Burn Target',
+                      style: AppTypography.caption.copyWith(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      '$_calorieTarget',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 40,
+                        fontWeight: FontWeight.w900,
+                        height: 1.1,
+                      ),
+                    ),
+                    Text(
+                      'calories per day',
+                      style: AppTypography.caption.copyWith(
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.local_fire_department,
+                  color: Colors.white,
+                  size: 32,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Select your workout days:',
+                  style: AppTypography.caption.copyWith(color: Colors.white70),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    for (final day in _weekDays)
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2),
+                          child: GestureDetector(
+                            onTap: () => _toggleDay(day),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 180),
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              decoration: BoxDecoration(
+                                color: _selectedDays.contains(day)
+                                    ? Colors.white
+                                    : Colors.white.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                day,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  color: _selectedDays.contains(day)
+                                      ? AppColors.orange
+                                      : Colors.white70,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  '${_selectedDays.length} days/week · ${_selectedDays.length * _calorieTarget} cal/week total',
+                  style: AppTypography.caption.copyWith(
+                    color: Colors.white70,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _exerciseRow(WorkoutExercise e) {
-    final done = _done[e.id] ?? e.done;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
+  Widget _weeklyProgressCard() {
+    return GradientHeroCard(
+      gradient: GradientHeroCard.blueGradient,
+      borderRadius: 24,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(e.name, style: AppTypography.bodyBold),
-                Text('${e.detail} · ~${e.caloriesBurn} kcal burn',
-                    style: AppTypography.caption),
-              ],
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'This Week',
+                      style: AppTypography.caption.copyWith(
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                    const Text(
+                      '4 / 5',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    Text(
+                      'workouts completed',
+                      style: AppTypography.caption.copyWith(
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Center(
+                  child: Text(
+                    '80%',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(child: _statTile(Icons.timer_outlined, '180', 'Minutes')),
+              const SizedBox(width: 10),
+              Expanded(
+                  child: _statTile(Icons.local_fire_department, '1.4k', 'Calories')),
+              const SizedBox(width: 10),
+              Expanded(
+                  child: _statTile(Icons.trending_up, '+12%', 'Progress')),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statTile(IconData icon, String value, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: Colors.white, size: 20),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+              fontSize: 16,
             ),
           ),
-          Switch(
-            value: done,
-            activeThumbColor: AppColors.green,
-            onChanged: (_) => _toggle(e.id),
+          Text(
+            label.toUpperCase(),
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.7),
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+            ),
           ),
         ],
       ),

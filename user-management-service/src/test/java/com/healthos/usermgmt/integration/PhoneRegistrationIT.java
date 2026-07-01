@@ -1,6 +1,7 @@
 package com.healthos.usermgmt.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -74,12 +75,13 @@ class PhoneRegistrationIT {
     var verifyJson = objectMapper.readTree(verifyRes.getResponse().getContentAsString());
     var registrationToken = verifyJson.get("registrationToken").asText();
 
-    mockMvc
-        .perform(
-            post("/auth/nutrikit/register-phone")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(
-                    """
+    var registerRes =
+        mockMvc
+            .perform(
+                post("/auth/nutrikit/register-phone")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
                     {
                       "phone":"%s",
                       "registrationToken":"%s",
@@ -102,12 +104,24 @@ class PhoneRegistrationIT {
                       "email":"test.user@example.com"
                     }
                     """
-                        .formatted(phone, registrationToken)))
+                            .formatted(phone, registrationToken)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.accessToken").isNotEmpty())
+            .andExpect(jsonPath("$.userId").isNotEmpty())
+            .andExpect(jsonPath("$.targets.calories").isNumber())
+            .andExpect(jsonPath("$.targets.timelineWeeks").isNumber())
+            .andReturn();
+
+    var registerJson = objectMapper.readTree(registerRes.getResponse().getContentAsString());
+    var accessToken = registerJson.get("accessToken").asText();
+
+    mockMvc
+        .perform(get("/me/profile").header("Authorization", "Bearer " + accessToken))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.accessToken").isNotEmpty())
-        .andExpect(jsonPath("$.userId").isNotEmpty())
-        .andExpect(jsonPath("$.targets.calories").isNumber())
-        .andExpect(jsonPath("$.targets.timelineWeeks").isNumber());
+        .andExpect(jsonPath("$.name").value("Ayushi Naidu"))
+        .andExpect(jsonPath("$.email").value("test.user@example.com"))
+        .andExpect(jsonPath("$.calorieTarget").isNumber())
+        .andExpect(jsonPath("$.proteinTarget").isNumber());
 
     var user = consumerAccountRepository.findByPhone(phone);
     assertThat(user).isPresent();

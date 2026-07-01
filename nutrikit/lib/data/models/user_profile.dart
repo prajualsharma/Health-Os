@@ -31,20 +31,12 @@ class UserProfile {
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     final name = json['name'] as String? ?? '';
-    final initials = name.isNotEmpty
-        ? name
-            .trim()
-            .split(RegExp(r'\s+'))
-            .map((p) => p.isNotEmpty ? p[0] : '')
-            .take(2)
-            .join()
-            .toUpperCase()
-        : 'NK';
+    final initials = json['initials'] as String? ?? _initialsFromName(name);
     final rawGoal = json['goal'] as String? ?? '';
     return UserProfile(
       name: name,
       email: json['email'] as String? ?? '',
-      initials: json['initials'] as String? ?? initials,
+      initials: initials,
       goal: _formatGoal(rawGoal),
       currentWeight: (json['currentWeight'] as num?)?.toDouble() ??
           (json['weight'] as num?)?.toDouble() ??
@@ -58,6 +50,24 @@ class UserProfile {
       plan: json['plan'] as String? ?? 'NutriKit',
       gymName: json['gymName'] as String? ?? '',
     );
+  }
+
+  static String _initialsFromName(String name) {
+    final parts =
+        name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+    if (parts.isEmpty) return 'NK';
+    if (parts.length == 1) {
+      final word = parts.first;
+      if (word.length >= 2) {
+        return word.substring(0, 2);
+      }
+      return word.toUpperCase();
+    }
+    return parts
+        .take(2)
+        .map((p) => p[0])
+        .join()
+        .toUpperCase();
   }
 
   static String _formatGoal(String raw) {

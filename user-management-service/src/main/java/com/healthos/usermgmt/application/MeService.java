@@ -4,6 +4,7 @@ import com.healthos.usermgmt.adapters.outbound.persistence.UserProfileRepository
 import com.healthos.usermgmt.adapters.outbound.persistence.UserRepository;
 import com.healthos.usermgmt.domain.User;
 import com.healthos.usermgmt.domain.UserProfile;
+import com.healthos.usermgmt.shared.exception.StaleSessionException;
 import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -22,7 +23,7 @@ public class MeService {
   }
 
   public User getUser(UUID userId) {
-    return userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
+    return userRepository.findById(userId).orElseThrow(() -> new StaleSessionException("User not found"));
   }
 
   public ProfileView getProfileView(UUID userId) {
@@ -45,7 +46,7 @@ public class MeService {
   }
 
   private UserProfile createEmptyProfile(UUID userId) {
-    var user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
+    var user = userRepository.findById(userId).orElseThrow(() -> new StaleSessionException("User not found"));
     var p = new UserProfile();
     p.setUser(user);
     p.setUserId(userId);

@@ -53,10 +53,12 @@ com/healthos/usermgmt/domain/MembershipStatus.class
 com/healthos/usermgmt/adapters/inbound/rest/dto/AuthDtos$OtpRequest.class
 com/healthos/usermgmt/adapters/inbound/rest/mappers/ScopedMembershipMapper.class
 com/healthos/usermgmt/staff/domain/StaffRefreshToken.class
+com/healthos/usermgmt/shared/exception/StaleSessionException.class
 com/healthos/usermgmt/domain/AuthMethodType.class
 com/healthos/usermgmt/adapters/inbound/rest/dto/ScopedMembershipDtos$MyMembershipsResponse.class
 com/healthos/usermgmt/application/AuthService$RegistrationResult.class
 com/healthos/usermgmt/UserManagementServiceApplication.class
+com/healthos/usermgmt/consumer/application/ConsumerMeService$ProfileView.class
 com/healthos/usermgmt/adapters/inbound/rest/dto/AdminDtos$UpdateUserStatusRequest.class
 com/healthos/usermgmt/application/AuthService$RegistrationCommand.class
 com/healthos/usermgmt/adapters/inbound/rest/dto/AuthDtos$RegisterRequest.class
@@ -92,6 +94,7 @@ com/healthos/usermgmt/adapters/inbound/rest/dto/AuthDtos$OtpVerifyRequest.class
 com/healthos/usermgmt/adapters/inbound/rest/mappers/AdminMapperImpl.class
 com/healthos/usermgmt/adapters/inbound/rest/admin/AdminPermissionsController.class
 com/healthos/usermgmt/adapters/inbound/rest/dto/ScopedMembershipDtos$MembershipClaimResponse.class
+com/healthos/usermgmt/consumer/application/ConsumerMeService.class
 com/healthos/usermgmt/config/HealthOsProperties$Security.class
 com/healthos/usermgmt/domain/UserStatus.class
 com/healthos/usermgmt/adapters/outbound/persistence/AuthMethodRepository.class

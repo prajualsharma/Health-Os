@@ -15,8 +15,16 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   configurePlatform();
 
-  // Global 401 handling: drop the user back to the phone entry screen.
-  ApiService.instance.onUnauthorized = () => AppRouter.router.go('/auth/phone');
+  // Global stale-session handling: clear cache and return to phone login.
+  ApiService.instance.onUnauthorized = () {
+    final ctx = AppRouter.router.routerDelegate.navigatorKey.currentContext;
+    if (ctx != null) {
+      ctx.read<AuthProvider>().logout();
+      ctx.read<ProfileProvider>().clear();
+      ctx.read<ProfileProvider>().clearCache();
+    }
+    AppRouter.router.go('/auth/phone');
+  };
 
   runApp(
     MultiProvider(

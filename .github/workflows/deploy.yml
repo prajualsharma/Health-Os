@@ -1,12 +1,43 @@
-name: Deploy HealthOS to VM
+name: CD
+
+# CI runs on PR/push; this workflow deploys to the Oracle/EC2 VM after CI passes.
+#
+# Required GitHub secrets (Settings → Secrets and variables → Actions):
+#   VM_SSH_KEY   — private SSH key (PEM) for the VM
+#   VM_HOST      — public IP or hostname (e.g. 152.67.28.189)
+#   VM_USER      — SSH user (optional, defaults to ubuntu)
+#   JWT_SECRET   — 32+ char signing secret (persist across deploys)
+#
+# Optional secrets:
+#   SMTP_PASSWORD, OTP_EMAIL_TO — real OTP email in minimal/full stacks
+#   VERCEL_TOKEN                — when DEPLOY_VERCEL repo variable is true
+#
+# Legacy secret names EC2_SSH_KEY / EC2_HOST / EC2_USER are still accepted.
+#
+# Repository variable (optional):
+#   ORACLE_STACK — dev (default) | minimal | full
+#   DEPLOY_VERCEL — true to deploy Vercel frontends after VM deploy
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      oracle_stack:
+        description: Backend stack profile
+        type: choice
+        options:
+          - dev
+          - minimal
+          - full
+        default: dev
+      reset_db:
+        description: Wipe Postgres/Mongo volumes before deploy (destructive)
+        type: boolean
+        default: false
 
 concurrency:
-  group: deploy-vm
+  group: deploy-vm-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -14,25 +45,41 @@ jobs:
     uses: ./.github/workflows/ci.yml
 
   deploy-vm:
-    name: Deploy to VM (Oracle or EC2)
+    name: Deploy to VM
     needs: ci
     runs-on: ubuntu-latest
+    env:
+      ORACLE_STACK: ${{ github.event.inputs.oracle_stack || vars.ORACLE_STACK || 'dev' }}
+      RESET_DB: ${{ github.event.inputs.reset_db == true && 'true' || 'false' }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Write SSH key
+      - name: Resolve deploy credentials
+        id: creds
+        env:
+          VM_SSH_KEY: ${{ secrets.VM_SSH_KEY }}
+          VM_HOST: ${{ secrets.VM_HOST }}
+          VM_USER: ${{ secrets.VM_USER }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
         run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/deploy.pem
+          KEY="${VM_SSH_KEY:-$EC2_SSH_KEY}"
+          HOST="${VM_HOST:-$EC2_HOST}"
+          USER="${VM_USER:-${EC2_USER:-ubuntu}}"
+          if [[ -z "$KEY" || -z "$HOST" ]]; then
+            echo "::error::Set VM_SSH_KEY + VM_HOST (or EC2_SSH_KEY + EC2_HOST) in repository secrets."
+            exit 1
+          fi
+          echo "user=$USER" >> "$GITHUB_OUTPUT"
+          echo "host=$HOST" >> "$GITHUB_OUTPUT"
+          printf '%s\n' "$KEY" > ~/.ssh/deploy.pem
           chmod 600 ~/.ssh/deploy.pem
 
       - name: Sync repo to VM
-        env:
-          DEPLOY_HOST: ${{ secrets.EC2_HOST }}
-          DEPLOY_USER: ${{ secrets.EC2_USER }}
         run: |
-          HOST="${DEPLOY_USER}@${DEPLOY_HOST}"
-          ssh -i ~/.ssh/deploy.pem -o StrictHostKeyChecking=accept-new "$HOST" 'mkdir -p ~/healthos'
+          TARGET="${{ steps.creds.outputs.user }}@${{ steps.creds.outputs.host }}"
+          ssh -i ~/.ssh/deploy.pem -o StrictHostKeyChecking=accept-new "$TARGET" 'mkdir -p ~/healthos'
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/deploy.pem -o StrictHostKeyChecking=accept-new" \
             --exclude '.git' \
@@ -43,81 +90,51 @@ jobs:
             --exclude '**/node_modules/' \
             --exclude '**/.vercel/' \
             --exclude 'deploy/oracle-host.env' \
-            ./ "${HOST}:~/healthos/"
+            --exclude 'deploy/oracle-create.log' \
+            --exclude 'deploy/oracle-deploy.log' \
+            ./ "${TARGET}:~/healthos/"
 
       - name: Build and restart stack on VM
         env:
-          DEPLOY_HOST: ${{ secrets.EC2_HOST }}
-          DEPLOY_USER: ${{ secrets.EC2_USER }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           OTP_EMAIL_TO: ${{ secrets.OTP_EMAIL_TO }}
         run: |
-          HOST="${DEPLOY_USER}@${DEPLOY_HOST}"
-          ssh -i ~/.ssh/deploy.pem -o StrictHostKeyChecking=accept-new "$HOST" bash -s <<REMOTE
-          set -euo pipefail
-          cd ~/healthos
+          TARGET="${{ steps.creds.outputs.user }}@${{ steps.creds.outputs.host }}"
+          ssh -i ~/.ssh/deploy.pem -o StrictHostKeyChecking=accept-new "$TARGET" \
+            "ORACLE_STACK=${ORACLE_STACK} RESET_DB=${RESET_DB} \
+             JWT_SECRET=$(printf '%q' "${JWT_SECRET:-}") \
+             SMTP_PASSWORD=$(printf '%q' "${SMTP_PASSWORD:-}") \
+             OTP_EMAIL_TO=$(printf '%q' "${OTP_EMAIL_TO:-}") \
+             bash ~/healthos/deploy/ci-remote-deploy.sh"
 
-          if [ ! -f .env ]; then
-            cp .env.example .env
-          fi
-
-          upsert_env() {
-            local key="\$1" val="\$2"
-            if grep -q "^\${key}=" .env; then
-              sed -i "s|^\${key}=.*|\${key}=\${val}|" .env
-            else
-              echo "\${key}=\${val}" >> .env
-            fi
-          }
-
-          upsert_env JWT_SECRET "${JWT_SECRET}"
-          upsert_env NOTIFICATION_ENABLED "true"
-          upsert_env OTP_EMAIL_TO "${OTP_EMAIL_TO:-prajual.sharma.1559@gmail.com}"
-          upsert_env SMTP_HOST "smtp.gmail.com"
-          upsert_env SMTP_PORT "587"
-          upsert_env SMTP_USERNAME "${OTP_EMAIL_TO:-prajual.sharma.1559@gmail.com}"
-          upsert_env SMTP_FROM "${OTP_EMAIL_TO:-prajual.sharma.1559@gmail.com}"
-          upsert_env SMTP_ENABLED "true"
-          if [ -n "${SMTP_PASSWORD}" ]; then
-            upsert_env SMTP_PASSWORD "${SMTP_PASSWORD}"
-            upsert_env OTP_DEV_BYPASS "false"
-          else
-            echo "::warning::SMTP_PASSWORD secret not set — keeping OTP_DEV_BYPASS=true"
-            upsert_env OTP_DEV_BYPASS "true"
-          fi
-
-          COMPOSE="docker compose -f docker-compose.yml \
-            -f deploy/docker-compose.backend.yml \
-            -f deploy/docker-compose.ec2-email.yml \
-            -f deploy/docker-compose.ec2-minimal.yml"
-
-          sudo \$COMPOSE up -d --build \
-            postgres redis user-management-service api-gateway
-
-          for i in \$(seq 1 36); do
-            if curl -sf http://localhost:8080/actuator/health | grep -q UP; then
-              echo "api-gateway is UP"
+      - name: Smoke test API gateway
+        run: |
+          HOST="${{ steps.creds.outputs.host }}"
+          for i in $(seq 1 24); do
+            if curl -sf "http://${HOST}:8080/actuator/health" | grep -q UP; then
+              echo "api-gateway is UP at http://${HOST}:8080"
               exit 0
             fi
             sleep 5
           done
-          echo "WARNING: api-gateway not healthy yet"
-          sudo \$COMPOSE ps
-          REMOTE
+          echo "::error::api-gateway did not become healthy"
+          exit 1
 
-      - name: Smoke test
-        env:
-          DEPLOY_HOST: ${{ secrets.EC2_HOST }}
+      - name: Smoke test NutriKit auth (dev stack)
+        if: env.ORACLE_STACK == 'dev'
         run: |
-          curl -sf "http://${DEPLOY_HOST}:8080/actuator/health" | grep -q UP || \
-            echo "Note: port 8080 may be blocked by VCN/security group; check Oracle ingress rules."
+          HOST="${{ steps.creds.outputs.host }}"
+          curl -sf -X POST "http://${HOST}:8080/auth/nutrikit/phone/initiate" \
+            -H 'Content-Type: application/json' \
+            -d '{"phone":"+919999999999","clientId":"nutrikit"}' \
+            | grep -q '"otpSent":true'
 
   deploy-vercel-api:
     name: Deploy API proxy (Vercel)
     needs: deploy-vm
     runs-on: ubuntu-latest
-    if: ${{ vars.DEPLOY_VERCEL == 'true' }}
+    if: vars.DEPLOY_VERCEL == 'true'
     defaults:
       run:
         working-directory: deploy/vercel-api
@@ -136,7 +153,7 @@ jobs:
     name: Deploy NutriKit (Vercel)
     needs: deploy-vm
     runs-on: ubuntu-latest
-    if: ${{ vars.DEPLOY_VERCEL == 'true' }}
+    if: vars.DEPLOY_VERCEL == 'true'
     defaults:
       run:
         working-directory: nutrikit

@@ -1,0 +1,391 @@
+==> Syncing Health-Os to ubuntu@152.67.28.189 (stack: dev)...
+sending incremental file list
+deleting .env
+./
+.github/workflows/ci.yml
+.github/workflows/deploy.yml
+api-gateway/src/main/resources/application.yml
+deploy/
+deploy/ci-remote-deploy.sh
+deploy/docker-compose.oracle-6gb.yml
+deploy/oci-credentials.env
+deploy/oci-credentials.env.example
+deploy/oci-go.sh
+deploy/oci-setup.sh
+deploy/oracle-create-daemon.sh
+deploy/oracle-create-instance.sh
+deploy/oracle-deploy-20260701-213444.log
+deploy/oracle-deploy.sh
+deploy/oracle-setup.sh
+deploy/wire-oracle.sh
+kitchen-service/Dockerfile
+kitchen_app/README.md
+kitchen_app/analysis_options.yaml
+kitchen_app/pubspec.yaml
+kitchen_app/vercel-build.sh
+kitchen_app/vercel.json
+kitchen_app/lib/app.dart
+kitchen_app/lib/main.dart
+kitchen_app/lib/core/constants/app_constants.dart
+kitchen_app/lib/core/router/app_router.dart
+kitchen_app/lib/core/theme/app_colors.dart
+kitchen_app/lib/core/theme/app_theme.dart
+kitchen_app/lib/data/models/auth.dart
+kitchen_app/lib/data/models/models.dart
+kitchen_app/lib/data/services/api_service.dart
+kitchen_app/lib/data/services/mock_data.dart
+kitchen_app/lib/presentation/providers/auth_provider.dart
+kitchen_app/lib/presentation/providers/kitchen_store.dart
+kitchen_app/lib/presentation/screens/auth/otp_screen.dart
+kitchen_app/lib/presentation/screens/auth/phone_screen.dart
+kitchen_app/lib/presentation/screens/corporate/add_kitchen_screen.dart
+kitchen_app/lib/presentation/screens/corporate/corporate_home.dart
+kitchen_app/lib/presentation/screens/kitchen/kitchen_shell.dart
+kitchen_app/lib/presentation/screens/kitchen/menu_screen.dart
+kitchen_app/lib/presentation/screens/kitchen/orders_screen.dart
+kitchen_app/lib/presentation/screens/kitchen/profile_screen.dart
+kitchen_app/lib/presentation/screens/role/role_select_screen.dart
+kitchen_app/lib/presentation/widgets/common.dart
+kitchen_app/web/index.html
+kitchen_app/web/manifest.json
+nutrikit/.flutter-plugins-dependencies
+nutrikit/vercel-build.sh
+nutrikit/android/local.properties
+nutrikit/ios/Flutter/ephemeral/Packages/
+nutrikit/ios/Flutter/ephemeral/Packages/.packages/
+nutrikit/ios/Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage/Package.swift
+nutrikit/lib/main.dart
+nutrikit/lib/core/router/app_router.dart
+nutrikit/lib/data/models/
+nutrikit/lib/data/models/gym.dart
+nutrikit/lib/data/models/subscription_plan.dart
+nutrikit/lib/data/models/tracker.dart
+nutrikit/lib/data/models/user_profile.dart
+nutrikit/lib/data/services/api_service.dart
+nutrikit/lib/data/services/mock_data.dart
+nutrikit/lib/presentation/providers/profile_provider.dart
+nutrikit/lib/presentation/screens/auth/phone_screen.dart
+nutrikit/lib/presentation/screens/main/
+nutrikit/lib/presentation/screens/main/cart_screen.dart
+nutrikit/lib/presentation/screens/main/couple_plan_screen.dart
+nutrikit/lib/presentation/screens/main/food_cook_view.dart
+nutrikit/lib/presentation/screens/main/food_order_view.dart
+nutrikit/lib/presentation/screens/main/food_plan_upsell_view.dart
+nutrikit/lib/presentation/screens/main/food_screen.dart
+nutrikit/lib/presentation/screens/main/food_tomorrow_view.dart
+nutrikit/lib/presentation/screens/main/gym_screen.dart
+nutrikit/lib/presentation/screens/main/gym_workout_view.dart
+nutrikit/lib/presentation/screens/main/home_screen.dart
+nutrikit/lib/presentation/screens/main/nav_destinations.dart
+nutrikit/lib/presentation/screens/main/plans_screen.dart
+nutrikit/lib/presentation/screens/main/profile_screen.dart
+nutrikit/lib/presentation/screens/main/responsive_shell.dart
+nutrikit/lib/presentation/screens/onboarding/age_screen.dart
+nutrikit/lib/presentation/screens/onboarding/city_screen.dart
+nutrikit/lib/presentation/screens/onboarding/email_screen.dart
+nutrikit/lib/presentation/screens/onboarding/height_screen.dart
+nutrikit/lib/presentation/screens/onboarding/name_screen.dart
+nutrikit/lib/presentation/screens/onboarding/splash_screen.dart
+nutrikit/lib/presentation/screens/onboarding/target_weight_screen.dart
+nutrikit/lib/presentation/screens/onboarding/weight_screen.dart
+nutrikit/lib/presentation/widgets/
+nutrikit/lib/presentation/widgets/common/
+nutrikit/lib/presentation/widgets/common/gradient_hero_card.dart
+nutrikit/lib/presentation/widgets/common/insight_banner.dart
+nutrikit/lib/presentation/widgets/common/meal_summary_tile.dart
+nutrikit/lib/presentation/widgets/common/pill_chip.dart
+nutrikit/lib/presentation/widgets/common/section_header.dart
+nutrikit/lib/presentation/widgets/food/
+nutrikit/lib/presentation/widgets/food/food_delivery_header.dart
+nutrikit/lib/presentation/widgets/food/food_nutriplan_view.dart
+nutrikit/lib/presentation/widgets/gym/
+nutrikit/lib/presentation/widgets/gym/achievement_grid.dart
+nutrikit/lib/presentation/widgets/gym/workout_day_card.dart
+nutrikit/lib/presentation/widgets/home/
+nutrikit/lib/presentation/widgets/home/home_ai_fab.dart
+nutrikit/lib/presentation/widgets/home/home_plans_section.dart
+nutrikit/lib/presentation/widgets/home/home_top_bar.dart
+nutrikit/lib/presentation/widgets/home/home_track_food_card.dart
+nutrikit/lib/presentation/widgets/home/home_tracker_list_card.dart
+nutrikit/lib/presentation/widgets/home/quick_action_grid.dart
+nutrikit/lib/presentation/widgets/home/weekly_streak_card.dart
+nutrikit/lib/presentation/widgets/onboarding/onboarding_field.dart
+nutrikit/lib/presentation/widgets/shell/
+nutrikit/lib/presentation/widgets/shell/app_bottom_nav.dart
+user-management-service/src/main/java/com/healthos/usermgmt/adapters/inbound/rest/MeController.java
+user-management-service/src/main/java/com/healthos/usermgmt/adapters/inbound/rest/exception/GlobalExceptionHandler.java
+user-management-service/src/main/java/com/healthos/usermgmt/application/MeService.java
+user-management-service/src/main/java/com/healthos/usermgmt/consumer/application/
+user-management-service/src/main/java/com/healthos/usermgmt/consumer/application/ConsumerMeService.java
+user-management-service/src/main/java/com/healthos/usermgmt/shared/
+user-management-service/src/main/java/com/healthos/usermgmt/shared/exception/
+user-management-service/src/main/java/com/healthos/usermgmt/shared/exception/StaleSessionException.java
+user-management-service/src/main/resources/db/migration/V4__kitchen_and_dynamic_roles.sql
+user-management-service/src/test/java/com/healthos/usermgmt/integration/PhoneRegistrationIT.java
+
+sent 80,788 bytes  received 5,365 bytes  57,435.33 bytes/sec
+total size is 12,456,741  speedup is 144.59
+==> Skipping image transfer (remote aarch64 != local x86_64); will build on VM.
+==> Running oracle-setup.sh on Oracle...
+==> Stack mode: dev
+==> [1/6] Configuring swap (helps small E2.Micro shapes)...
+               total        used        free      shared  buff/cache   available
+Mem:            23Gi       1.5Gi        16Gi        28Mi       5.0Gi        21Gi
+Swap:          2.0Gi       344Mi       1.7Gi
+==> [2/6] Installing container runtime (Docker or Podman)...
+==> [3/6] Opening host firewall (SSH, API, optional web)...
+run-parts: executing /usr/share/netfilter-persistent/plugins.d/15-ip4tables save
+run-parts: executing /usr/share/netfilter-persistent/plugins.d/25-ip6tables save
+    NOTE: also allow TCP 22 and 8080 in the Oracle VCN Security List / NSG.
+==> [4/6] Preparing .env...
+    Wrote .env with a freshly generated JWT_SECRET.
+==> [5/6] Starting backend stack (dev, --no-build if images were pre-loaded)...
+ Image healthos-kitchen-service Building 
+ Image healthos-api-gateway Building 
+ Image healthos-user-management-service Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.53kB done
+#1 DONE 0.0s
+
+#2 [api-gateway internal] load build definition from Dockerfile
+#2 transferring dockerfile: 710B done
+#2 DONE 0.0s
+
+#3 [kitchen-service internal] load build definition from Dockerfile
+#3 transferring dockerfile: 670B done
+#3 DONE 0.0s
+
+#4 [user-management-service internal] load build definition from Dockerfile
+#4 transferring dockerfile: 581B done
+#4 DONE 0.0s
+
+#5 [user-management-service] resolve image config for docker-image://docker.io/docker/dockerfile:1
+#5 DONE 1.1s
+
+#6 [kitchen-service] docker-image://docker.io/docker/dockerfile:1@sha256:87999aa3d42bdc6bea60565083ee17e86d1f3339802f543c0d03998580f9cb89
+#6 resolve docker.io/docker/dockerfile:1@sha256:87999aa3d42bdc6bea60565083ee17e86d1f3339802f543c0d03998580f9cb89 0.0s done
+#6 CACHED
+
+#7 [kitchen-service internal] load metadata for docker.io/library/golang:1.22-alpine
+#7 DONE 1.0s
+
+#8 [api-gateway internal] load metadata for docker.io/library/maven:3.9-eclipse-temurin-21
+#8 DONE 1.0s
+
+#9 [user-management-service internal] load metadata for docker.io/library/eclipse-temurin:21-jre
+#9 DONE 1.0s
+
+#10 [user-management-service internal] load .dockerignore
+#10 transferring context: 2B done
+#10 DONE 0.0s
+
+#11 [api-gateway internal] load .dockerignore
+#11 transferring context: 2B done
+#11 DONE 0.0s
+
+#12 [kitchen-service internal] load metadata for docker.io/library/alpine:3.20
+#12 DONE 1.1s
+
+#13 [kitchen-service internal] load .dockerignore
+#13 transferring context: 2B done
+#13 DONE 0.0s
+
+#14 [user-management-service internal] load build context
+#14 DONE 0.0s
+
+#15 [user-management-service stage-1 1/3] FROM docker.io/library/eclipse-temurin:21-jre@sha256:8ec353b20d3aab0758572236b81b967c7077c40c4d0819ce97f9a1329d684603
+#15 resolve docker.io/library/eclipse-temurin:21-jre@sha256:8ec353b20d3aab0758572236b81b967c7077c40c4d0819ce97f9a1329d684603
+#15 resolve docker.io/library/eclipse-temurin:21-jre@sha256:8ec353b20d3aab0758572236b81b967c7077c40c4d0819ce97f9a1329d684603 0.0s done
+#15 DONE 0.1s
+
+#16 [kitchen-service internal] load build context
+#16 transferring context: 3.33kB done
+#16 DONE 0.0s
+
+#17 [kitchen-service build 1/8] FROM docker.io/library/golang:1.22-alpine@sha256:1699c10032ca2582ec89a24a1312d986a3f094aed3d5c1147b19880afe40e052
+#17 resolve docker.io/library/golang:1.22-alpine@sha256:1699c10032ca2582ec89a24a1312d986a3f094aed3d5c1147b19880afe40e052 0.0s done
+#17 DONE 0.1s
+
+#18 [kitchen-service stage-1 1/5] FROM docker.io/library/alpine:3.20@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc
+#18 resolve docker.io/library/alpine:3.20@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc 0.0s done
+#18 DONE 0.1s
+
+#19 [kitchen-service build 2/8] WORKDIR /src
+#19 CACHED
+
+#20 [kitchen-service build 3/8] RUN apk add --no-cache git ca-certificates
+#20 CACHED
+
+#21 [kitchen-service stage-1 4/5] COPY --from=build /kitchen-service /app/kitchen-service
+#21 CACHED
+
+#22 [kitchen-service build 7/8] RUN go mod download
+#22 CACHED
+
+#23 [kitchen-service build 4/8] COPY pkg/healthos ./pkg/healthos
+#23 CACHED
+
+#24 [kitchen-service stage-1 3/5] WORKDIR /app
+#24 CACHED
+
+#25 [kitchen-service build 8/8] RUN CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -ldflags="-s -w" -o /kitchen-service ./cmd/server
+#25 CACHED
+
+#26 [kitchen-service build 6/8] WORKDIR /src/kitchen-service
+#26 CACHED
+
+#27 [kitchen-service build 5/8] COPY kitchen-service ./kitchen-service
+#27 CACHED
+
+#28 [kitchen-service stage-1 2/5] RUN apk add --no-cache ca-certificates wget
+#28 CACHED
+
+#29 [kitchen-service stage-1 5/5] COPY kitchen-service/migrations /app/migrations
+#29 CACHED
+
+#30 [api-gateway build 1/6] FROM docker.io/library/maven:3.9-eclipse-temurin-21@sha256:d7e7f57407437c014571f1ad5a9955f03fc3edcb1d964067ef351fa38e798665
+#30 resolve docker.io/library/maven:3.9-eclipse-temurin-21@sha256:d7e7f57407437c014571f1ad5a9955f03fc3edcb1d964067ef351fa38e798665 0.0s done
+#30 DONE 0.1s
+
+#31 [api-gateway internal] load build context
+#31 transferring context: 4.61kB done
+#31 DONE 0.0s
+
+#14 [user-management-service internal] load build context
+#14 transferring context: 37.36kB done
+#14 DONE 0.0s
+
+#32 [api-gateway build 5/6] COPY src ./src
+#32 CACHED
+
+#33 [api-gateway stage-1 2/3] WORKDIR /app
+#33 CACHED
+
+#34 [api-gateway build 3/6] COPY pom.xml .
+#34 CACHED
+
+#35 [api-gateway build 4/6] RUN mvn -q -B dependency:go-offline
+#35 CACHED
+
+#36 [api-gateway build 6/6] RUN mvn -q -B clean package -DskipTests
+#36 CACHED
+
+#37 [api-gateway stage-1 3/3] COPY --from=build /workspace/target/*.jar app.jar
+#37 CACHED
+
+#38 [user-management-service build 3/6] COPY pom.xml .
+#38 CACHED
+
+#39 [user-management-service build 2/6] WORKDIR /workspace
+#39 CACHED
+
+#40 [user-management-service build 4/6] RUN mvn -q -B dependency:go-offline
+#40 CACHED
+
+#41 [api-gateway] exporting to image
+#41 exporting layers done
+#41 exporting manifest sha256:4e4c8d48487fe46e16ad700989ffc1d1b932ffb4cd7a9093d323db6e54beb8a3 done
+#41 exporting config sha256:f7b571c6ae2d47f86a26cbc1ba5890f53e6fd70f62011b568ef1d020c51e3446 done
+#41 exporting attestation manifest sha256:920661987e6fcbc4292f7bfc01375f96bb4bb9c1204e73817b96f575a68d2fe8
+#41 exporting attestation manifest sha256:920661987e6fcbc4292f7bfc01375f96bb4bb9c1204e73817b96f575a68d2fe8 0.0s done
+#41 exporting manifest list sha256:1a9bdc008888c13280690d3434547373a53f03c3fcdb4316d413a9b1e02baa03 0.0s done
+#41 naming to docker.io/library/healthos-api-gateway:latest done
+#41 unpacking to docker.io/library/healthos-api-gateway:latest 0.0s done
+#41 DONE 0.2s
+
+#42 [user-management-service build 5/6] COPY src ./src
+#42 DONE 0.1s
+
+#43 [kitchen-service] exporting to image
+#43 exporting layers done
+#43 exporting manifest sha256:6327b27548507524a54a820510ca3417fa8351e465854074ecdceafa70bbb816 done
+#43 exporting config sha256:b1c03ee9f5c1b42fb30ee6a1ee7813a5731215ec1115ada4bd105a815057cc21 done
+#43 exporting attestation manifest sha256:c254615d282b9d31d1838e91ed20912a0e68faf64a813515a68494f30d6a0657 0.0s done
+#43 exporting manifest list sha256:e35e4301c8252d94c58f3ddb08a55037dca62d9a27821ab87e3f9f28e2b30438 0.0s done
+#43 naming to docker.io/library/healthos-kitchen-service:latest done
+#43 unpacking to docker.io/library/healthos-kitchen-service:latest 0.0s done
+#43 DONE 0.1s
+
+#44 [user-management-service build 6/6] RUN mvn -q -B clean package -DskipTests
+#44 ...
+
+#45 [kitchen-service] resolving provenance for metadata file
+#45 DONE 0.0s
+
+#46 [api-gateway] resolving provenance for metadata file
+#46 DONE 0.0s
+
+#44 [user-management-service build 6/6] RUN mvn -q -B clean package -DskipTests
+#44 DONE 12.4s
+
+#33 [user-management-service stage-1 2/3] WORKDIR /app
+#33 CACHED
+
+#47 [user-management-service stage-1 3/3] COPY --from=build /workspace/target/*.jar app.jar
+#47 DONE 1.0s
+
+#48 [user-management-service] exporting to image
+#48 exporting layers
+#48 exporting layers 2.9s done
+#48 exporting manifest sha256:de749dfc63ffdbfd2609fdb40a927d65bdba46b96d0172b8e14a16b7c00dbd9d 0.0s done
+#48 exporting config sha256:16da0177fc71c004ef754152e6fd971c8044e8a693d1a26de5063a1a333ae508 0.0s done
+#48 exporting attestation manifest sha256:2170f110abb1e6c4def4d44ca0b3d04f8abc8b4f4d9bc4521d62f5aab5427329 0.0s done
+#48 exporting manifest list sha256:b5bc806ad6e17b5f1fb122c59b4df366371dff3321361be6d06d42c0b0d6eed5 0.0s done
+#48 naming to docker.io/library/healthos-user-management-service:latest done
+#48 unpacking to docker.io/library/healthos-user-management-service:latest
+#48 unpacking to docker.io/library/healthos-user-management-service:latest 0.3s done
+#48 DONE 3.3s
+
+#49 [user-management-service] resolving provenance for metadata file
+#49 DONE 0.0s
+ Image healthos-user-management-service Built 
+ Image healthos-api-gateway Built 
+ Image healthos-kitchen-service Built 
+ Container healthos-postgres Running 
+ Container healthos-kafka Running 
+ Container healthos-redis Running 
+ Container healthos-mongo Running 
+ Container healthos-api-gateway Recreate 
+ Container healthos-user-management-service Recreate 
+ Container healthos-api-gateway Recreated 
+ Container healthos-user-management-service Recreated 
+ Container healthos-kitchen-service Recreate 
+ Container healthos-kitchen-service Recreated 
+ Container healthos-api-gateway Starting 
+ Container healthos-postgres Waiting 
+ Container healthos-redis Waiting 
+ Container healthos-api-gateway Started 
+ Container healthos-redis Healthy 
+ Container healthos-postgres Healthy 
+ Container healthos-user-management-service Starting 
+ Container healthos-user-management-service Started 
+ Container healthos-user-management-service Waiting 
+ Container healthos-postgres Waiting 
+ Container healthos-postgres Healthy 
+ Container healthos-user-management-service Healthy 
+ Container healthos-kitchen-service Starting 
+ Container healthos-kitchen-service Started 
+==> [6/6] Waiting for api-gateway health...
+    api-gateway is UP
+NAME                               IMAGE                              COMMAND                  SERVICE                   CREATED          STATUS                                     PORTS
+healthos-api-gateway               healthos-api-gateway               "sh -c 'java $JAVA_O…"   api-gateway               35 seconds ago   Up 23 seconds (healthy)                    0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp
+healthos-kafka                     apache/kafka:3.7.0                 "/__cacert_entrypoin…"   kafka                     4 hours ago      Up 4 hours (healthy)                       0.0.0.0:9092->9092/tcp, [::]:9092->9092/tcp
+healthos-kitchen-service           healthos-kitchen-service           "/app/kitchen-service"   kitchen-service           24 seconds ago   Up Less than a second (health: starting)   8083/tcp
+healthos-mongo                     mongo:7                            "docker-entrypoint.s…"   mongo                     4 hours ago      Up 4 hours (healthy)                       0.0.0.0:27017->27017/tcp, [::]:27017->27017/tcp
+healthos-postgres                  postgres:16                        "docker-entrypoint.s…"   postgres                  4 hours ago      Up 4 hours (healthy)                       0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp
+healthos-redis                     redis:7-alpine                     "docker-entrypoint.s…"   redis                     4 hours ago      Up 4 hours (healthy)                       0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp
+healthos-user-management-service   healthos-user-management-service   "sh -c 'java $JAVA_O…"   user-management-service   35 seconds ago   Up 23 seconds (healthy)                    8081/tcp
+
+============================================================
+HealthOS backend is starting on Oracle Cloud.
+
+  API health : http://152.67.28.189:8080/actuator/health
+  Swagger    : http://152.67.28.189:8080/swagger-ui.html
+
+Set Vercel healthos-api BACKEND_URL=http://152.67.28.189:8080
+
+Watch logs:    sudo docker compose -f docker-compose.yml -f deploy/docker-compose.backend.yml -f deploy/docker-compose.dev-stack.yml -f deploy/docker-compose.oracle-6gb.yml logs -f user-management-service
+Stop stack:    sudo docker compose -f docker-compose.yml -f deploy/docker-compose.backend.yml -f deploy/docker-compose.dev-stack.yml -f deploy/docker-compose.oracle-6gb.yml down
+============================================================
+==> Done. Test: curl -s http://152.67.28.189:8080/actuator/health
+    Then set Vercel healthos-api BACKEND_URL=http://152.67.28.189:8080

@@ -183,19 +183,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _menu() {
     final items = [
-      ['📦', 'Order History', false],
-      ['🔔', 'Notifications', false],
-      ['🏋️', 'My Gym', false],
-      ['🛡️', 'Privacy & Terms', false],
-      ['🚪', 'Logout', true],
+      ['📋', 'Plans', false, '/plans'],
+      ['📦', 'Order History', false, null],
+      ['🔔', 'Notifications', false, null],
+      ['🏋️', 'My Gym', false, null],
+      ['🛡️', 'Privacy & Terms', false, null],
+      ['🚪', 'Logout', true, null],
     ];
     return Column(
       children: items.map((item) {
         final isLogout = item[2] as bool;
+        final route = item[3] as String?;
         return Padding(
           padding: const EdgeInsets.only(bottom: 10),
           child: AppCard(
-            onTap: isLogout ? _logout : () {},
+            onTap: isLogout
+                ? _logout
+                : route != null
+                    ? () => context.push(route)
+                    : () {},
             child: Row(
               children: [
                 Text(item[0] as String, style: const TextStyle(fontSize: 20)),

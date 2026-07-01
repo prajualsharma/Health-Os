@@ -3,6 +3,7 @@ package com.healthos.usermgmt.adapters.inbound.rest;
 import com.healthos.usermgmt.adapters.inbound.rest.dto.MeDtos;
 import com.healthos.usermgmt.adapters.inbound.rest.security.AuthPrincipal;
 import com.healthos.usermgmt.application.MeService;
+import com.healthos.usermgmt.consumer.application.ConsumerMeService;
 import com.healthos.usermgmt.domain.User;
 import com.healthos.usermgmt.domain.UserProfile;
 import jakarta.validation.Valid;
@@ -18,18 +19,33 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class MeController {
   private final MeService meService;
+  private final ConsumerMeService consumerMeService;
 
   @GetMapping("/profile")
   public MeDtos.ProfileResponse getProfile(Authentication authentication) {
     var principal = (AuthPrincipal) authentication.getPrincipal();
+    if (principal.isConsumer()) {
+      return consumerMeService.toResponse(consumerMeService.getProfileView(principal.userId()));
+    }
     var view = meService.getProfileView(principal.userId());
-    return toResponse(view.user(), view.profile());
+    return toStaffResponse(view.user(), view.profile());
   }
 
   @PutMapping("/profile")
   public MeDtos.ProfileResponse updateProfile(
       Authentication authentication, @Valid @RequestBody MeDtos.UpdateProfileRequest req) {
     var principal = (AuthPrincipal) authentication.getPrincipal();
+    if (principal.isConsumer()) {
+      var view =
+          consumerMeService.upsertProfile(
+              principal.userId(),
+              req.getHeight(),
+              req.getWeight(),
+              req.getGender(),
+              req.getDateOfBirth(),
+              req.getGoal());
+      return consumerMeService.toResponse(view);
+    }
     var profile =
         meService.upsertProfile(
             principal.userId(),
@@ -39,10 +55,10 @@ public class MeController {
             req.getDateOfBirth(),
             req.getGoal());
     var user = meService.getUser(principal.userId());
-    return toResponse(user, profile);
+    return toStaffResponse(user, profile);
   }
 
-  private static MeDtos.ProfileResponse toResponse(User user, UserProfile profile) {
+  private static MeDtos.ProfileResponse toStaffResponse(User user, UserProfile profile) {
     var res = new MeDtos.ProfileResponse();
     res.setName(formatName(user));
     res.setEmail(user.getEmail());
@@ -55,8 +71,8 @@ public class MeController {
     res.setGoals(parseCsv(profile.getGoals()));
     res.setActivityLevel(profile.getActivityLevel());
     res.setDietType(profile.getDietType());
-    res.setAllergies(parseAllergies(profile.getAllergies()));
-    res.setMedicalConditions(parseAllergies(profile.getMedicalConditions()));
+    res.setAllergies(parseCsv(profile.getAllergies()));
+    res.setMedicalConditions(parseCsv(profile.getMedicalConditions()));
     res.setCity(profile.getCity());
     res.setGoalPace(profile.getGoalPace());
     res.setHeightUnit(profile.getPreferredHeightUnit());
@@ -78,10 +94,6 @@ public class MeController {
       return first;
     }
     return first + " " + last;
-  }
-
-  private static List<String> parseAllergies(String raw) {
-    return parseCsv(raw);
   }
 
   private static List<String> parseCsv(String raw) {

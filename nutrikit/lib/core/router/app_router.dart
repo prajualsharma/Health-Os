@@ -7,12 +7,14 @@ import '../../data/models/recipe.dart';
 import '../../presentation/screens/auth/otp_screen.dart';
 import '../../presentation/screens/auth/phone_screen.dart';
 import '../../presentation/screens/main/cart_screen.dart';
+import '../../presentation/screens/main/couple_plan_screen.dart';
 import '../../presentation/screens/main/food_screen.dart';
 import '../../presentation/screens/main/gym_screen.dart';
 import '../../presentation/screens/main/home_screen.dart';
 import '../../presentation/screens/main/main_shell.dart';
 import '../../presentation/screens/main/meal_detail_screen.dart';
 import '../../presentation/screens/main/order_confirm_screen.dart';
+import '../../presentation/screens/main/plans_screen.dart';
 import '../../presentation/screens/main/profile_screen.dart';
 import '../../presentation/screens/main/progress_screen.dart';
 import '../../presentation/screens/main/recipe_detail_screen.dart';
@@ -54,14 +56,6 @@ class AppRouter {
       GoRoute(
         path: '/',
         builder: (context, state) => const SplashScreen(),
-        redirect: (context, state) async {
-          final prefs = await SharedPreferences.getInstance();
-          final token = prefs.getString(AppConstants.tokenKey);
-          if (token != null && token.isNotEmpty) {
-            return '/home/dashboard';
-          }
-          return null;
-        },
       ),
       GoRoute(
         path: '/onboarding',
@@ -175,6 +169,14 @@ class AppRouter {
               ),
             ],
           ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home/plans',
+                builder: (context, state) => const PlansScreen(embedded: true),
+              ),
+            ],
+          ),
         ],
       ),
       GoRoute(
@@ -185,6 +187,16 @@ class AppRouter {
         path: '/profile',
         parentNavigatorKey: _rootKey,
         builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/plans',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) => const PlansScreen(),
+      ),
+      GoRoute(
+        path: '/plans/couple',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) => const CouplePlanScreen(),
       ),
       GoRoute(
         path: '/progress',

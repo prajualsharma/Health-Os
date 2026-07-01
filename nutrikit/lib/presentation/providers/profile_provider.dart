@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/app_constants.dart';
 import '../../data/models/user_profile.dart';
 import '../../data/services/api_service.dart';
+import '../../data/services/mock_data.dart';
 
 class ProfileProvider extends ChangeNotifier {
   ProfileProvider({ApiService? api}) : _api = api ?? ApiService.instance;
@@ -42,7 +43,23 @@ class ProfileProvider extends ChangeNotifier {
       goal = p.goal;
       await _persist();
     } on ApiException catch (e) {
-      error = e.message;
+      if (_isStaleSession(e)) {
+        await clearCache();
+        profile = null;
+        error = null;
+      } else if (AppConstants.useMock) {
+        final p = MockData.profile();
+        profile = p;
+        calorieTarget = p.calorieTarget;
+        proteinTarget = p.proteinTarget;
+        carbTarget = p.carbTarget;
+        fatTarget = p.fatTarget;
+        currentWeight = p.currentWeight;
+        goal = p.goal;
+        error = null;
+      } else {
+        error = e.message;
+      }
     } finally {
       isLoading = false;
       notifyListeners();
@@ -122,6 +139,19 @@ class ProfileProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> clearCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(AppConstants.profileKey);
+  }
+
+  bool _isStaleSession(ApiException e) {
+    if (e.statusCode == 401) return true;
+    if (e.statusCode == 400) {
+      return e.message.toLowerCase().contains('user not found');
+    }
+    return false;
+  }
+
   void clear() {
     profile = null;
     calorieTarget = 0;
@@ -135,6 +165,7 @@ class ProfileProvider extends ChangeNotifier {
     todayFat = 0;
     goal = '';
     error = null;
+    clearCache();
     notifyListeners();
   }
 }

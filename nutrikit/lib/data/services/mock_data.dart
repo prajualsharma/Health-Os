@@ -8,6 +8,8 @@ import '../models/meal_system.dart';
 import '../models/order.dart';
 import '../models/progress.dart';
 import '../models/recipe.dart';
+import '../models/subscription_plan.dart';
+import '../models/tracker.dart';
 import '../models/user_profile.dart';
 
 /// In-app mock data so the app runs standalone without a live backend.
@@ -472,6 +474,135 @@ class MockData {
     });
   }
 
+  static const Map<String, DailyWorkoutPlan> gymDailyPlans = {
+    'Mon': DailyWorkoutPlan(
+      day: 'Mon',
+      focus: 'Chest & Triceps',
+      exercises: [
+        WorkoutExercise(
+          id: 'mon1',
+          name: 'Cardio Warmup',
+          detail: 'Treadmill - 10 min at 6 km/h',
+          caloriesBurn: 80,
+        ),
+        WorkoutExercise(
+          id: 'mon2',
+          name: 'Bench Press',
+          detail: '4 sets × 10 reps',
+          caloriesBurn: 120,
+        ),
+        WorkoutExercise(
+          id: 'mon3',
+          name: 'Incline Dumbbell Press',
+          detail: '3 sets × 12 reps',
+          caloriesBurn: 90,
+        ),
+        WorkoutExercise(
+          id: 'mon4',
+          name: 'Cable Flyes',
+          detail: '3 sets × 15 reps',
+          caloriesBurn: 70,
+        ),
+        WorkoutExercise(
+          id: 'mon5',
+          name: 'Tricep Dips',
+          detail: '3 sets × 12 reps',
+          caloriesBurn: 80,
+        ),
+        WorkoutExercise(
+          id: 'mon6',
+          name: 'Cardio Cooldown',
+          detail: 'Treadmill - 8 min at 6.5 km/h',
+          caloriesBurn: 60,
+        ),
+      ],
+    ),
+    'Wed': DailyWorkoutPlan(
+      day: 'Wed',
+      focus: 'Back & Biceps',
+      exercises: [
+        WorkoutExercise(
+          id: 'wed1',
+          name: 'Cardio Warmup',
+          detail: 'Cycling - 10 min at moderate pace',
+          caloriesBurn: 85,
+        ),
+        WorkoutExercise(
+          id: 'wed2',
+          name: 'Pull-ups',
+          detail: '4 sets × 8 reps',
+          caloriesBurn: 100,
+        ),
+        WorkoutExercise(
+          id: 'wed3',
+          name: 'Barbell Rows',
+          detail: '4 sets × 10 reps',
+          caloriesBurn: 110,
+        ),
+        WorkoutExercise(
+          id: 'wed4',
+          name: 'Lat Pulldown',
+          detail: '3 sets × 12 reps',
+          caloriesBurn: 80,
+        ),
+        WorkoutExercise(
+          id: 'wed5',
+          name: 'Bicep Curls',
+          detail: '3 sets × 15 reps',
+          caloriesBurn: 65,
+        ),
+        WorkoutExercise(
+          id: 'wed6',
+          name: 'Cardio Finish',
+          detail: 'Rowing machine - 8 min',
+          caloriesBurn: 70,
+        ),
+      ],
+    ),
+    'Fri': DailyWorkoutPlan(
+      day: 'Fri',
+      focus: 'Legs & Shoulders',
+      exercises: [
+        WorkoutExercise(
+          id: 'fri1',
+          name: 'Cardio Warmup',
+          detail: 'Jump rope - 5 min',
+          caloriesBurn: 70,
+        ),
+        WorkoutExercise(
+          id: 'fri2',
+          name: 'Squats',
+          detail: '4 sets × 12 reps',
+          caloriesBurn: 140,
+        ),
+        WorkoutExercise(
+          id: 'fri3',
+          name: 'Leg Press',
+          detail: '3 sets × 15 reps',
+          caloriesBurn: 100,
+        ),
+        WorkoutExercise(
+          id: 'fri4',
+          name: 'Shoulder Press',
+          detail: '4 sets × 10 reps',
+          caloriesBurn: 90,
+        ),
+        WorkoutExercise(
+          id: 'fri5',
+          name: 'Lateral Raises',
+          detail: '3 sets × 15 reps',
+          caloriesBurn: 50,
+        ),
+        WorkoutExercise(
+          id: 'fri6',
+          name: 'HIIT Cardio',
+          detail: '15 min intervals',
+          caloriesBurn: 180,
+        ),
+      ],
+    ),
+  };
+
   static const List<PartnerGym> partnerGyms = [
     PartnerGym(
       id: 'pg1',
@@ -675,4 +806,124 @@ class MockData {
       ],
     ),
   ];
+
+  // ---- Trackers (one endpoint per box on home) ----
+  static TrackerSnapshot tracker(TrackerKind kind) => switch (kind) {
+        TrackerKind.nutrition => const TrackerSnapshot(
+              id: 'nutrition',
+              title: 'Track Food',
+              subtitle: 'Eat 1,840 Cal',
+            ),
+        TrackerKind.weight => const TrackerSnapshot(
+              id: 'weight',
+              title: 'Weight',
+              subtitle: '0 kg gained',
+            ),
+        TrackerKind.workout => const TrackerSnapshot(
+              id: 'workout',
+              title: 'Workout',
+              subtitle: 'Goal: 440 cal',
+            ),
+        TrackerKind.steps => const TrackerSnapshot(
+              id: 'steps',
+              title: 'Steps',
+              subtitle: 'Set Up Auto-Tracking',
+              action: TrackerAction.navigate,
+            ),
+        TrackerKind.sleep => const TrackerSnapshot(
+              id: 'sleep',
+              title: 'Sleep',
+              subtitle: 'Set Up Sleep Goal',
+              action: TrackerAction.navigate,
+            ),
+        TrackerKind.water => const TrackerSnapshot(
+              id: 'water',
+              title: 'Water',
+              subtitle: 'Goal: 8 glasses',
+            ),
+      };
+
+  static List<SubscriptionPlan> subscriptionPlans() => const [
+        SubscriptionPlan(
+          id: 'home-pro',
+          name: 'NutriKit Home',
+          tagline: 'Trackers, insights & AI coaching',
+          pricePerMonth: 299,
+          category: PlanCategory.home,
+          features: [
+            'All health trackers',
+            'Weekly AI insights',
+            'Progress sharing',
+          ],
+          route: '/home/dashboard',
+        ),
+        SubscriptionPlan(
+          id: 'meal-2',
+          name: '2-Meal Plan',
+          tagline: 'Lunch + Dinner delivered daily',
+          pricePerMonth: 5999,
+          category: PlanCategory.diet,
+          highlight: true,
+          features: [
+            'Macro-matched meals',
+            'Free delivery',
+            'Skip or swap anytime',
+          ],
+          route: '/home/food?segment=nutriplan',
+        ),
+        SubscriptionPlan(
+          id: 'meal-3',
+          name: '3-Meal Plan',
+          tagline: 'Breakfast, lunch & dinner',
+          pricePerMonth: 7999,
+          category: PlanCategory.diet,
+          features: [
+            'Full-day nutrition',
+            'Chef-crafted menu',
+            'NutriPlan AI sync',
+          ],
+          route: '/home/food?segment=nutriplan',
+        ),
+        SubscriptionPlan(
+          id: 'couple',
+          name: 'Couple Plan',
+          tagline: 'One subscription, order for both',
+          pricePerMonth: 9999,
+          category: PlanCategory.couple,
+          highlight: true,
+          features: [
+            'Add your partner',
+            'Order meals for both',
+            'Shared progress like Apple Health',
+            'Single billing',
+          ],
+          route: '/plans/couple',
+        ),
+        SubscriptionPlan(
+          id: 'gym-pro',
+          name: 'Gym Pro',
+          tagline: 'Unlimited classes + meal sync',
+          pricePerMonth: 2499,
+          category: PlanCategory.gym,
+          features: [
+            'Unlimited group classes',
+            '2 PT sessions / month',
+            'NutriKit meal plan sync',
+          ],
+          route: '/home/gym',
+        ),
+        SubscriptionPlan(
+          id: 'gym-elite',
+          name: 'Gym Elite',
+          tagline: 'Personal training, all in',
+          pricePerMonth: 4999,
+          category: PlanCategory.gym,
+          features: [
+            'Unlimited personal training',
+            'Body composition analysis',
+            'Priority class booking',
+          ],
+          route: '/home/gym',
+        ),
+      ];
 }

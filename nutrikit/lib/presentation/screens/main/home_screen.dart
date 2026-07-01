@@ -5,19 +5,15 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/models/dashboard.dart';
-import '../../../data/models/meal.dart';
+import '../../../data/models/tracker.dart';
 import '../../../data/services/api_service.dart';
-import '../../providers/auth_provider.dart';
-import '../../providers/food_subscription_provider.dart';
+import '../../../data/services/mock_data.dart';
 import '../../providers/profile_provider.dart';
-import '../../widgets/common/app_avatar.dart';
-import '../../widgets/common/app_button.dart';
-import '../../widgets/common/app_card.dart';
-import '../../widgets/common/calorie_ring.dart';
-import '../../widgets/common/error_state.dart';
-import '../../widgets/common/macro_bar.dart';
-import '../../widgets/common/service_icon_grid.dart';
 import '../../widgets/common/shimmer_card.dart';
+import '../../widgets/home/home_plans_section.dart';
+import '../../widgets/home/home_top_bar.dart';
+import '../../widgets/home/home_track_food_card.dart';
+import '../../widgets/home/home_tracker_list_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,36 +24,34 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   DashboardData? _data;
+  TrackerSnapshot? _nutrition;
   bool _loading = true;
-  String? _error;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (context.read<AuthProvider>().isAuthenticated) {
-        context.read<ProfileProvider>().loadProfile();
-      }
-      _load();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
   }
 
   Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+    setState(() => _loading = true);
+    await context.read<ProfileProvider>().loadProfile();
     try {
-      final data = await ApiService.instance.getDashboard();
+      final results = await Future.wait([
+        ApiService.instance.getDashboard(),
+        ApiService.instance.getTracker(TrackerKind.nutrition),
+      ]);
       if (!mounted) return;
       setState(() {
-        _data = data;
+        _data = results[0] as DashboardData;
+        _nutrition = results[1] as TrackerSnapshot;
         _loading = false;
       });
-    } on ApiException catch (e) {
+    } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = e.message;
+        _data = MockData.dashboard();
+        _nutrition = MockData.tracker(TrackerKind.nutrition);
         _loading = false;
       });
     }
@@ -65,21 +59,26 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isWide = MediaQuery.of(context).size.width > 900;
-    return SafeArea(
-      child: RefreshIndicator(
-        color: AppColors.green,
-        backgroundColor: AppColors.card,
-        onRefresh: _load,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: isWide ? 1200 : 640),
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: _buildBody(isWide),
+    final profile = context.watch<ProfileProvider>().profile;
+    final initials = profile?.initials ?? _data?.initials ?? '…';
+
+    return Container(
+      color: AppColors.bg,
+      child: SafeArea(
+        bottom: false,
+        child: RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: _load,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 480),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: _buildBody(initials),
+                ),
               ),
             ),
           ),
@@ -88,253 +87,122 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildBody(bool isWide) {
-    if (_error != null) {
-      return SizedBox(
-        key: const ValueKey('error'),
-        height: 400,
-        child: ErrorState(message: _error!, onRetry: _load),
-      );
-    }
+  Widget _buildBody(String initials) {
     if (_loading || _data == null) {
       return const ShimmerList(
         key: ValueKey('loading'),
-        count: 4,
-        height: 110,
+        count: 3,
+        height: 120,
       );
     }
+
     final d = _data!;
+    final proteinPct = d.proteinTarget <= 0
+        ? 0.0
+        : (d.proteinConsumed / d.proteinTarget) * 100;
+    final fatPct =
+        d.fatTarget <= 0 ? 0.0 : (d.fatConsumed / d.fatTarget) * 100;
+    final carbsPct =
+        d.carbTarget <= 0 ? 0.0 : (d.carbsConsumed / d.carbTarget) * 100;
+
+    final profile = context.watch<ProfileProvider>().profile;
+    final calorieTarget = profile?.calorieTarget ?? d.calorieTarget;
+
     return Column(
       key: const ValueKey('content'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _header(d),
+        HomeTopBar(
+          initials: initials,
+          onProfileTap: () => context.push('/profile'),
+          onDateTap: () {},
+        ),
         const SizedBox(height: 20),
-        if (isWide)
-          _wideLayout(d)
-        else
-          _narrowLayout(d),
-        const SizedBox(height: 22),
-        _sectionHeader('Explore'),
-        const SizedBox(height: 12),
-        const ServiceIconGrid(items: ServiceIconGrid.defaults),
-        const SizedBox(height: 18),
-        _sectionHeader("Today's Meals"),
-        const SizedBox(height: 12),
-        ...d.meals.map(_mealTile),
-        const SizedBox(height: 8),
-        AppButton(
-          label: context.watch<FoodSubscriptionProvider>().isSubscribed
-              ? "Plan Tomorrow's Meals 🍱"
-              : "Order Today's Plan 🛒",
-          onPressed: () => context.go(
-            context.read<FoodSubscriptionProvider>().isSubscribed
-                ? '/home/food?segment=tomorrow'
-                : '/home/food?segment=order',
-          ),
-        ),
-        const SizedBox(height: 24),
-      ],
-    );
-  }
-
-  Widget _header(DashboardData d) {
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Good morning 👋', style: AppTypography.caption),
-              const SizedBox(height: 2),
-              Text(d.userName, style: AppTypography.h1),
-            ],
-          ),
-        ),
-        GestureDetector(
-          onTap: () => context.push('/profile'),
-          child: AppAvatar(initials: d.initials, size: 44, accent: true),
-        ),
-      ],
-    );
-  }
-
-  Widget _narrowLayout(DashboardData d) {
-    return Column(
-      children: [
-        _calorieCard(d),
+        Text('Your Trackers', style: AppTypography.h1.copyWith(fontSize: 22)),
         const SizedBox(height: 14),
-        Row(
-          children: [
-            for (final s in d.quickStats) ...[
-              _quickStat(s),
-              if (s != d.quickStats.last) const SizedBox(width: 12),
-            ],
-          ],
+        HomeTrackFoodCard(
+          calorieTarget: calorieTarget,
+          eatSubtitle: _nutrition?.subtitle,
+          proteinPct: proteinPct,
+          fatPct: fatPct,
+          carbsPct: carbsPct,
         ),
+        const SizedBox(height: 12),
+        const HomeTrackerListCard(),
+        const SizedBox(height: 20),
+        const HomePlansSection(),
+        const SizedBox(height: 16),
+        _todayLogsEmpty(),
       ],
     );
   }
 
-  Widget _wideLayout(DashboardData d) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(flex: 3, child: _calorieCard(d, inlineStats: true)),
-        const SizedBox(width: 16),
-        Expanded(
-          flex: 2,
-          child: Column(
-            children: [
-              for (final s in d.quickStats) ...[
-                _quickStat(s, fullWidth: true),
-                if (s != d.quickStats.last) const SizedBox(height: 12),
-              ],
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _calorieCard(DashboardData d, {bool inlineStats = false}) {
+  Widget _todayLogsEmpty() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
       decoration: BoxDecoration(
-        gradient: AppColors.cardGradient,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: AppColors.green.withValues(alpha: 0.25),
-          width: 1.5,
-        ),
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.cardBorder),
       ),
       child: Column(
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Today's Progress", style: AppTypography.caption),
-                    const SizedBox(height: 4),
-                    Text('${d.caloriesConsumed} / ${d.calorieTarget} kcal',
-                        style: AppTypography.h3),
-                  ],
-                ),
-              ),
-              CalorieRing(
-                pct: d.caloriePct,
-                size: 84,
-                strokeWidth: 9,
-                color: AppColors.green,
-                label: '${d.caloriePct.round()}%',
-                sub: 'done',
-              ),
+              _logCard(const Color(0xFFFFE4EC), Icons.directions_run_outlined,
+                  const Color(0xFF9333EA)),
+              const SizedBox(width: 8),
+              _logCard(const Color(0xFFFFE8D6), Icons.restaurant_outlined,
+                  AppColors.orange),
+              const SizedBox(width: 8),
+              _logCard(const Color(0xFFDBEAFE), Icons.nightlight_round_outlined,
+                  AppColors.blue),
             ],
+          ),
+          const SizedBox(height: 16),
+          Text('Nothing Tracked Yet!', style: AppTypography.h3.copyWith(fontSize: 16)),
+          const SizedBox(height: 6),
+          Text(
+            'Log your meal, workout, water or sleep',
+            style: AppTypography.caption,
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: MacroBar(
-                  label: 'Protein',
-                  val: d.proteinConsumed.toDouble(),
-                  max: d.proteinTarget.toDouble(),
-                  color: AppColors.success,
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => context.go('/home/tracking'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                elevation: 0,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: MacroBar(
-                  label: 'Carbs',
-                  val: d.carbsConsumed.toDouble(),
-                  max: d.carbTarget.toDouble(),
-                  color: AppColors.accent,
-                ),
+              child: const Text(
+                'Track Now',
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: MacroBar(
-                  label: 'Fat',
-                  val: d.fatConsumed.toDouble(),
-                  max: d.fatTarget.toDouble(),
-                  color: AppColors.orange,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _quickStat(QuickStat s, {bool fullWidth = false}) {
-    final card = AppCard(
-      child: Column(
-        children: [
-          Text(s.emoji, style: const TextStyle(fontSize: 22)),
-          const SizedBox(height: 6),
-          Text(s.value,
-              style: const TextStyle(
-                color: AppColors.text,
-                fontWeight: FontWeight.w900,
-                fontSize: 16,
-              )),
-          const SizedBox(height: 2),
-          Text(s.label, style: AppTypography.caption),
-        ],
-      ),
-    );
-    return fullWidth ? card : Expanded(child: card);
-  }
-
-  Widget _sectionHeader(String title) {
-    return Text(title, style: AppTypography.h2);
-  }
-
-  Widget _mealTile(Meal meal) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Opacity(
-        opacity: meal.done ? 0.65 : 1,
-        child: GestureDetector(
-          onTap: () => context.push('/meal-detail', extra: meal),
-          child: AppCard(
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: meal.done
-                        ? AppColors.green.withValues(alpha: 0.15)
-                        : AppColors.surface,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Center(
-                    child: Text(meal.emoji,
-                        style: const TextStyle(fontSize: 24)),
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(meal.name, style: AppTypography.bodyBold),
-                      const SizedBox(height: 2),
-                      Text('${meal.slot} · ${meal.calories} kcal',
-                          style: AppTypography.caption),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.chevron_right, color: AppColors.muted),
-              ],
             ),
           ),
-        ),
+        ],
       ),
+    );
+  }
+
+  Widget _logCard(Color bg, IconData icon, Color fg) {
+    return Container(
+      width: 56,
+      height: 68,
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Icon(icon, color: fg, size: 26),
     );
   }
 }

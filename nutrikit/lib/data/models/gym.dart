@@ -105,3 +105,16 @@ class WeeklyWorkoutPlan {
   final String title;
   final List<WorkoutDay> days;
 }
+
+/// Rich per-day plan used by the gym UI (focus label + exercises).
+class DailyWorkoutPlan {
+  const DailyWorkoutPlan({
+    required this.day,
+    required this.focus,
+    required this.exercises,
+  });
+
+  final String day;
+  final String focus;
+  final List<WorkoutExercise> exercises;
+}

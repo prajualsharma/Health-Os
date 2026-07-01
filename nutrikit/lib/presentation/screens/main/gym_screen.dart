@@ -5,6 +5,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../data/models/gym.dart';
 import '../../../data/services/mock_data.dart';
 import '../../widgets/common/app_button.dart';
+import '../../widgets/common/gradient_hero_card.dart';
 import 'gym_workout_view.dart';
 
 /// Gym tab: workout plan, partner gyms, and membership plans.
@@ -14,30 +15,85 @@ class GymScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.of(context).size.width > 900;
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: isWide ? 900 : 640),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Gym', style: AppTypography.h1),
-                const SizedBox(height: 2),
-                Text('Workout plan, partner gyms & membership',
-                    style: AppTypography.caption),
-                const SizedBox(height: 20),
-                const GymWorkoutView(),
-                const SizedBox(height: 24),
-                const GymPartnersView(),
-                const SizedBox(height: 24),
-                Text('Membership plans', style: AppTypography.h3),
-                const SizedBox(height: 12),
-                ...MockData.gymPlans.map((p) => _PlanCard(plan: p)),
-                const SizedBox(height: 24),
-              ],
+    return Column(
+      children: [
+        _gymHeader(),
+        Expanded(
+          child: SafeArea(
+            top: false,
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(20, 16, 20, isWide ? 24 : 96),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: isWide ? 640 : 640),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const GymWorkoutView(),
+                      const SizedBox(height: 24),
+                      const GymPartnersView(),
+                      const SizedBox(height: 24),
+                      Text('Membership plans', style: AppTypography.h3),
+                      const SizedBox(height: 12),
+                      ...MockData.gymPlans.map((p) => _PlanCard(plan: p)),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
+              ),
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _gymHeader() {
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: GradientHeroCard.blueGradient,
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Fitness',
+                      style: AppTypography.h1.copyWith(
+                        color: Colors.white,
+                        fontSize: 26,
+                      ),
+                    ),
+                    Text(
+                      'Your personalized journey',
+                      style: AppTypography.caption.copyWith(
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(
+                  Icons.fitness_center,
+                  color: Colors.white,
+                  size: 26,
+                ),
+              ),
+            ],
           ),
         ),
       ),

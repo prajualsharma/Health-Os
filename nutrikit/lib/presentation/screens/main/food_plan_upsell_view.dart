@@ -42,7 +42,7 @@ class _FoodPlanUpsellViewState extends State<FoodPlanUpsellView> {
   Future<void> _startPlan(MealSystemType type) async {
     await context.read<FoodSubscriptionProvider>().subscribe(type);
     if (!mounted) return;
-    context.go('/home/food?segment=tomorrow');
+    context.go('/home/food?segment=nutriplan');
   }
 
   @override

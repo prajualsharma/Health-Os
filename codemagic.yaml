@@ -1,0 +1,71 @@
+# NutriKit iOS → TestFlight (Codemagic)
+# Prerequisites in Codemagic UI (Team settings):
+#   1. Integrations → App Store Connect API key (note the integration NAME below)
+#   2. Code signing identities → iOS → automatic fetch for bundle com.nutrikit.nutrikit
+#   3. App Store Connect → create app "NutriKit" with bundle ID com.nutrikit.nutrikit
+#
+# Rename `app_store_connect` if your integration uses a different name in Codemagic.
+
+workflows:
+  nutrikit-ios-testflight:
+    name: NutriKit iOS TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 120
+    working_directory: nutrikit
+
+    integrations:
+      app_store_connect: codemagic
+
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.nutrikit.nutrikit
+      vars:
+        API_URL: https://healthos-api.vercel.app
+        USE_MOCK: "true"
+        MOCK_AUTH: "false"
+        BUNDLE_ID: com.nutrikit.nutrikit
+        XCODE_SCHEME: Runner
+        XCODE_WORKSPACE: ios/Runner.xcworkspace
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+      cancel_previous_builds: true
+
+    scripts:
+      - name: Set up code signing
+        script: xcode-project use-profiles
+
+      - name: Flutter dependencies
+        script: flutter pub get
+
+      - name: CocoaPods
+        script: |
+          find . -name "Podfile" -execdir pod install \;
+
+      - name: Build IPA
+        script: |
+          flutter build ipa --release \
+            --build-name=1.0.${PROJECT_BUILD_NUMBER} \
+            --build-number=${PROJECT_BUILD_NUMBER} \
+            --dart-define=API_URL="${API_URL}" \
+            --dart-define=USE_MOCK="${USE_MOCK}" \
+            --dart-define=MOCK_AUTH="${MOCK_AUTH}" \
+            --export-options-plist=/Users/builder/export_options.plist
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true

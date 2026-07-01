@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../screens/main/nav_destinations.dart';
 
-/// Bottom navigation chrome: Home · Diet · + · Gym · Plans with a centered docked FAB.
+/// Bottom navigation: Home · Diet · + · Gym · Plans — FAB inline with tabs.
 class AppBottomNav extends StatelessWidget {
   const AppBottomNav({
     super.key,
@@ -17,61 +17,63 @@ class AppBottomNav extends StatelessWidget {
   final ValueChanged<int> onSelect;
   final VoidCallback? onCenterTap;
 
+  static const _barHeight = 64.0;
+
   @override
   Widget build(BuildContext context) {
-    return BottomAppBar(
-      color: AppColors.card,
-      elevation: 0,
-      shadowColor: Colors.black.withValues(alpha: 0.08),
-      surfaceTintColor: Colors.transparent,
-      notchMargin: 8,
-      height: 62,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      shape: const CircularNotchedRectangle(),
-      child: Row(
-        children: [
-          Expanded(
-            child: _NavTab(
-              item: kNavDestinations[0],
-              selected: currentIndex == 0,
-              onTap: () => onSelect(0),
-            ),
-          ),
-          Expanded(
-            child: _NavTab(
-              item: kNavDestinations[1],
-              selected: currentIndex == 1,
-              onTap: () => onSelect(1),
-            ),
-          ),
-          const SizedBox(width: 52),
-          Expanded(
-            child: _NavTab(
-              item: kNavDestinations[2],
-              selected: currentIndex == 2,
-              onTap: () => onSelect(2),
-            ),
-          ),
-          Expanded(
-            child: _NavTab(
-              item: kNavDestinations[3],
-              selected: currentIndex == 3,
-              onTap: () => onSelect(3),
-            ),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        border: Border(
+          top: BorderSide(color: AppColors.cardBorder.withValues(alpha: 0.8)),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, -2),
           ),
         ],
       ),
-    );
-  }
-
-  static Widget centerFab(BuildContext context, {VoidCallback? onTap}) {
-    return FloatingActionButton(
-      onPressed: onTap ?? () => _showTrackSheet(context),
-      backgroundColor: AppColors.primaryDark,
-      elevation: 4,
-      highlightElevation: 6,
-      shape: const CircleBorder(),
-      child: const Icon(Icons.add, color: Colors.white, size: 28),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: _barHeight,
+          child: Row(
+            children: [
+              Expanded(
+                child: _NavTab(
+                  item: kNavDestinations[0],
+                  selected: currentIndex == 0,
+                  onTap: () => onSelect(0),
+                ),
+              ),
+              Expanded(
+                child: _NavTab(
+                  item: kNavDestinations[1],
+                  selected: currentIndex == 1,
+                  onTap: () => onSelect(1),
+                ),
+              ),
+              _CenterFab(onTap: onCenterTap ?? () => _showTrackSheet(context)),
+              Expanded(
+                child: _NavTab(
+                  item: kNavDestinations[2],
+                  selected: currentIndex == 2,
+                  onTap: () => onSelect(2),
+                ),
+              ),
+              Expanded(
+                child: _NavTab(
+                  item: kNavDestinations[3],
+                  selected: currentIndex == 3,
+                  onTap: () => onSelect(3),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -128,6 +130,36 @@ class AppBottomNav extends StatelessWidget {
         Navigator.pop(ctx);
         ctx.go(route);
       },
+    );
+  }
+}
+
+class _CenterFab extends StatelessWidget {
+  const _CenterFab({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 56,
+      child: Center(
+        child: Material(
+          color: AppColors.primaryDark,
+          elevation: 3,
+          shadowColor: AppColors.primaryDark.withValues(alpha: 0.35),
+          shape: const CircleBorder(),
+          child: InkWell(
+            onTap: onTap,
+            customBorder: const CircleBorder(),
+            child: const SizedBox(
+              width: 48,
+              height: 48,
+              child: Icon(Icons.add, color: Colors.white, size: 26),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

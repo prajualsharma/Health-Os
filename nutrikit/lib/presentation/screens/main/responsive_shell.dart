@@ -38,11 +38,7 @@ class ResponsiveShell extends StatelessWidget {
         }
         return Scaffold(
           backgroundColor: AppColors.bg,
-          extendBody: true,
           body: child,
-          floatingActionButton: AppBottomNav.centerFab(context),
-          floatingActionButtonLocation:
-              FloatingActionButtonLocation.centerDocked,
           bottomNavigationBar: AppBottomNav(
             currentIndex: currentIndex,
             onSelect: onSelect,

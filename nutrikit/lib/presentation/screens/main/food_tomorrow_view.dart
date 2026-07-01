@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/models/dish.dart';
@@ -84,7 +85,12 @@ class _FoodTomorrowViewState extends State<FoodTomorrowView> {
       animation: CartStore.instance,
       builder: (context, _) {
         return SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 96),
+          padding: const EdgeInsets.fromLTRB(
+            20,
+            20,
+            20,
+            AppConstants.shellScrollBottomPadding,
+          ),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 640),

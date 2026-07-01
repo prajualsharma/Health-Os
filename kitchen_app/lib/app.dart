@@ -12,8 +12,8 @@ class KitchenApp extends StatelessWidget {
     return MaterialApp.router(
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark,
-      themeMode: ThemeMode.dark,
+      theme: AppTheme.bistro,
+      themeMode: ThemeMode.light,
       routerConfig: AppRouter.router,
     );
   }

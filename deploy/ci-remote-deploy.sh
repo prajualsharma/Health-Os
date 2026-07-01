@@ -42,6 +42,11 @@ if [[ "$ORACLE_STACK" == "dev" ]]; then
   upsert_env NOTIFICATION_ENABLED "false"
   upsert_env OTP_DEV_BYPASS "true"
   upsert_env DEV_OTP_CODE "${DEV_OTP_CODE:-123456}"
+  upsert_env KAFKA_NOTIFICATIONS_ENABLED "true"
+  upsert_env KAFKA_BOOTSTRAP_SERVERS "kafka:9092"
+  upsert_env NOTIFICATION_TOPIC "notification-topic"
+  upsert_env ONBOARDING_REMINDER_DELAY_MINUTES "${ONBOARDING_REMINDER_DELAY_MINUTES:-120}"
+  upsert_env NUTRIKIT_RESUME_BASE_URL "${NUTRIKIT_RESUME_BASE_URL:-https://nutrikit.vercel.app}"
 elif [[ -n "${SMTP_PASSWORD:-}" ]]; then
   upsert_env SMTP_PASSWORD "$SMTP_PASSWORD"
   upsert_env OTP_DEV_BYPASS "false"

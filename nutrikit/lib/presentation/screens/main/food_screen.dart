@@ -37,7 +37,7 @@ class _FoodScreenState extends State<FoodScreen> {
   @override
   void initState() {
     super.initState();
-    _segment = widget.initialSegment ?? FoodSegment.nutriplan;
+    _segment = widget.initialSegment ?? FoodSegment.cafe;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ProfileProvider>().loadProfile();
     });
@@ -67,7 +67,9 @@ class _FoodScreenState extends State<FoodScreen> {
         ),
         Expanded(
           child: ColoredBox(
-            color: AppColors.bg,
+            color: _segment == FoodSegment.cafe
+                ? const Color(0xFFF7F8FA)
+                : AppColors.bg,
             child: _segmentBody(),
           ),
         ),

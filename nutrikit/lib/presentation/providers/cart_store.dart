@@ -14,9 +14,21 @@ class CartStore extends ChangeNotifier {
 
   double get subtotal => _items.fold(0, (sum, i) => sum + i.price);
 
+  int quantityFor(String id) => _items.where((i) => i.id == id).length;
+
   void add(OrderItem item) {
     _items.add(item);
     notifyListeners();
+  }
+
+  void increment(OrderItem item) => add(item);
+
+  void decrement(String id) {
+    final idx = _items.indexWhere((i) => i.id == id);
+    if (idx >= 0) {
+      _items.removeAt(idx);
+      notifyListeners();
+    }
   }
 
   void remove(String id) {

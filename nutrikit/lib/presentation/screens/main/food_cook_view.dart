@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/models/recipe.dart';
@@ -78,38 +79,94 @@ class _FoodCookViewState extends State<FoodCookView> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Recipes', style: AppTypography.h3.copyWith(fontSize: 20)),
-          const SizedBox(height: 4),
-          Text(
-            'Matched to your goals. Free with any NutriPlan.',
-            style: AppTypography.caption,
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              Text('Recipes', style: AppTypography.h3.copyWith(fontSize: 20)),
+              const SizedBox(height: 4),
+              Text(
+                'Matched to your goals. Free with any NutriPlan.',
+                style: AppTypography.caption,
+              ),
+              const SizedBox(height: 14),
+              _pricingNote(),
+              const SizedBox(height: 14),
+              PillChipRow<RecipeFilter>(
+                items: RecipeFilter.values,
+                labelBuilder: (f) => switch (f) {
+                  RecipeFilter.all => 'All',
+                  RecipeFilter.veg => 'Veg',
+                  RecipeFilter.nonVeg => 'Non-Veg',
+                  RecipeFilter.deficit => 'Calorie Deficit',
+                  RecipeFilter.gain => 'Calorie Gain',
+                },
+                selected: _filter,
+                onSelected: (f) => setState(() => _filter = f),
+                selectedTextColor: Colors.white,
+              ),
+              const SizedBox(height: 16),
+            ]),
           ),
-          const SizedBox(height: 14),
-          _pricingNote(),
-          const SizedBox(height: 14),
-          PillChipRow<RecipeFilter>(
-            items: RecipeFilter.values,
-            labelBuilder: (f) => switch (f) {
-              RecipeFilter.all => 'All',
-              RecipeFilter.veg => 'Veg',
-              RecipeFilter.nonVeg => 'Non-Veg',
-              RecipeFilter.deficit => 'Calorie Deficit',
-              RecipeFilter.gain => 'Calorie Gain',
-            },
-            selected: _filter,
-            onSelected: (f) => setState(() => _filter = f),
-            selectedTextColor: Colors.white,
+        ),
+        ..._contentSlivers(),
+        const SliverPadding(
+          padding: EdgeInsets.only(
+            bottom: AppConstants.shellScrollBottomPadding,
           ),
-          const SizedBox(height: 16),
-          Expanded(child: _body()),
-        ],
-      ),
+        ),
+      ],
     );
+  }
+
+  List<Widget> _contentSlivers() {
+    if (_error != null) {
+      return [
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          sliver: SliverToBoxAdapter(
+            child: ErrorState(message: _error!, onRetry: _load),
+          ),
+        ),
+      ];
+    }
+    if (_loading) {
+      return [
+        const SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          sliver: SliverToBoxAdapter(
+            child: ShimmerList(count: 4, height: 120),
+          ),
+        ),
+      ];
+    }
+    final recipes = _filtered;
+    if (recipes.isEmpty) {
+      return [
+        const SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          sliver: SliverToBoxAdapter(
+            child: EmptyState(
+              emoji: '🍳',
+              title: 'No recipes yet',
+              subtitle: 'Try a different filter',
+            ),
+          ),
+        ),
+      ];
+    }
+    return [
+      SliverPadding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        sliver: SliverList.separated(
+          itemCount: recipes.length,
+          separatorBuilder: (_, _) => const SizedBox(height: 12),
+          itemBuilder: (_, i) => _recipeCard(recipes[i], i),
+        ),
+      ),
+    ];
   }
 
   Widget _pricingNote() {
@@ -157,28 +214,6 @@ class _FoodCookViewState extends State<FoodCookView> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _body() {
-    if (_error != null) {
-      return ErrorState(message: _error!, onRetry: _load);
-    }
-    if (_loading) {
-      return const ShimmerList(count: 4, height: 120);
-    }
-    final recipes = _filtered;
-    if (recipes.isEmpty) {
-      return const EmptyState(
-        emoji: '🍳',
-        title: 'No recipes yet',
-        subtitle: 'Try a different filter',
-      );
-    }
-    return ListView.separated(
-      itemCount: recipes.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 12),
-      itemBuilder: (_, i) => _recipeCard(recipes[i], i),
     );
   }
 

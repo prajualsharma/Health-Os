@@ -57,4 +57,12 @@ class AppTypography {
         color: AppColors.muted,
         letterSpacing: 0.5,
       );
+
+  static TextStyle get cafeSectionTitle => GoogleFonts.dmSans(
+        fontSize: 18,
+        fontWeight: FontWeight.w900,
+        fontStyle: FontStyle.italic,
+        letterSpacing: 0.5,
+        color: AppColors.text,
+      );
 }

@@ -51,6 +51,14 @@ healthos:
     base-url: ${NOTIFICATION_BASE_URL:http://localhost:8082}
     tenant-id: ${NOTIFICATION_TENANT_ID:healthos}
     otp-email-to: ${OTP_EMAIL_TO:}
+  kafka:
+    enabled: ${KAFKA_NOTIFICATIONS_ENABLED:false}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    topic: ${NOTIFICATION_TOPIC:notification-topic}
+  onboarding-reminder:
+    delay-minutes: ${ONBOARDING_REMINDER_DELAY_MINUTES:120}
+    resume-base-url: ${NUTRIKIT_RESUME_BASE_URL:https://nutrikit.vercel.app}
+    poll-interval-ms: ${ONBOARDING_REMINDER_POLL_MS:300000}
   smtp:
     enabled: ${SMTP_ENABLED:true}
     host: ${SMTP_HOST:smtp.gmail.com}

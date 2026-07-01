@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../onboarding/onboarding_flow.dart';
+import '../../onboarding/onboarding_progress_reporter.dart';
 import 'onboarding_progress_bar.dart';
 
 class OnboardingScaffold extends StatelessWidget {
@@ -30,6 +31,7 @@ class OnboardingScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    OnboardingProgressReporter.trackRoute(routePath);
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: SafeArea(
@@ -86,7 +88,12 @@ class OnboardingScaffold extends StatelessWidget {
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: nextEnabled && !isLoading ? onNext : null,
+                  onPressed: nextEnabled && !isLoading
+                      ? () {
+                          onNext?.call();
+                          OnboardingProgressReporter.reportRoute(routePath);
+                        }
+                      : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     disabledBackgroundColor: AppColors.cardBorder,

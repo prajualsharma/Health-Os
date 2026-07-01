@@ -30,4 +30,11 @@ class OnboardingFlow {
     if (i < 0 || i >= steps.length - 1) return null;
     return steps[i + 1];
   }
+
+  static String? stepKeyFromPath(String path) {
+    if (!path.startsWith('/onboarding/')) return null;
+    return path.substring('/onboarding/'.length);
+  }
+
+  static String routeForStep(String stepKey) => '/onboarding/$stepKey';
 }

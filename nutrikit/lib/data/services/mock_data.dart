@@ -193,9 +193,16 @@ class MockData {
       protein: 18,
       isVeg: true,
       price: 179,
+      originalPrice: 199,
       portion: '180g',
+      prepTimeMins: 12,
       isAddOn: true,
       kitchenName: 'HealthOS Cloud Kitchen',
+      description: '◆ Smoky paneer with mint dip',
+      isHighlyReordered: true,
+      isPreviouslyBought: true,
+      imageUrl:
+          'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&h=400&fit=crop',
     ),
     const Dish(
       id: 'd8',
@@ -207,8 +214,13 @@ class MockData {
       isVeg: true,
       price: 99,
       portion: '80g',
+      prepTimeMins: 10,
       isAddOn: true,
       kitchenName: 'HealthOS Cloud Kitchen',
+      description: '◆ Crunchy protein snack',
+      isHighlyReordered: true,
+      imageUrl:
+          'https://images.unsplash.com/photo-1599490659213-2b9526928f0f?w=400&h=400&fit=crop',
     ),
     const Dish(
       id: 'd9',
@@ -219,9 +231,17 @@ class MockData {
       protein: 1,
       isVeg: true,
       price: 150,
+      originalPrice: 179,
       portion: '250ml',
+      prepTimeMins: 12,
       isAddOn: true,
       kitchenName: 'HealthOS Cloud Kitchen',
+      description: '◆ Bold, smooth cold brew',
+      isHighlyReordered: true,
+      isMostLoved: true,
+      isPreviouslyBought: true,
+      imageUrl:
+          'https://images.unsplash.com/photo-1517701603779-8ce7bd86a9d4?w=400&h=400&fit=crop',
     ),
     const Dish(
       id: 'd10',
@@ -233,8 +253,12 @@ class MockData {
       isVeg: true,
       price: 120,
       portion: '120g',
+      prepTimeMins: 10,
       isAddOn: true,
       kitchenName: 'FitFuel Kitchen',
+      description: '◆ Tangy sprout chaat',
+      imageUrl:
+          'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=400&fit=crop',
     ),
     const Dish(
       id: 'd11',
@@ -245,9 +269,183 @@ class MockData {
       protein: 4,
       isVeg: true,
       price: 139,
+      originalPrice: 169,
       portion: '300ml',
+      prepTimeMins: 8,
       isAddOn: true,
       kitchenName: 'HealthOS Cloud Kitchen',
+      description: '◆ Spinach, apple & ginger',
+      isMostLoved: true,
+      imageUrl:
+          'https://images.unsplash.com/photo-1610970881699-44a5587cabec?w=400&h=400&fit=crop',
+    ),
+    const Dish(
+      id: 'd12',
+      name: 'Cranberry Iced Coffee',
+      emoji: '☕',
+      category: 'Beverage',
+      calories: 85,
+      protein: 2,
+      isVeg: true,
+      price: 159,
+      portion: '360ml',
+      prepTimeMins: 12,
+      isAddOn: true,
+      kitchenName: 'NutriCafe',
+      description: '◆ Fruity, bold iced coffee',
+      isHighlyReordered: true,
+      isPreviouslyBought: true,
+      imageUrl:
+          'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400&h=400&fit=crop',
+    ),
+    const Dish(
+      id: 'd13',
+      name: 'Adrak Chai',
+      emoji: '🍵',
+      category: 'Beverage',
+      calories: 69,
+      protein: 2,
+      isVeg: true,
+      price: 69,
+      originalPrice: 99,
+      portion: '2 cups',
+      prepTimeMins: 15,
+      isAddOn: true,
+      kitchenName: 'NutriCafe',
+      description: '◆ Spiced & soothing sip',
+      isHighlyReordered: true,
+      isMostLoved: true,
+      imageUrl:
+          'https://images.unsplash.com/photo-1571934811356-5cc061b6821f?w=400&h=400&fit=crop',
+    ),
+    const Dish(
+      id: 'd14',
+      name: 'Dal Makhani & Paratha',
+      emoji: '🍛',
+      category: 'Meals',
+      calories: 420,
+      protein: 16,
+      isVeg: true,
+      price: 169,
+      portion: 'Serves 1',
+      prepTimeMins: 13,
+      isAddOn: true,
+      kitchenName: 'NutriCafe',
+      description: '◆ Served with onion & green chilli',
+      isChefsChoice: true,
+      imageUrl:
+          'https://images.unsplash.com/photo-1585937421612-70a008296fbe?w=400&h=400&fit=crop',
+    ),
+    const Dish(
+      id: 'd15',
+      name: 'Crispy Peri Peri Fries',
+      emoji: '🍟',
+      category: 'Snack',
+      calories: 280,
+      protein: 4,
+      isVeg: true,
+      price: 139,
+      portion: '250g',
+      prepTimeMins: 15,
+      isAddOn: true,
+      kitchenName: 'NutriCafe',
+      description: '◆ Spicy crispy fries',
+      isHighlyReordered: true,
+      imageUrl:
+          'https://images.unsplash.com/photo-1573080496219-b998a60c8d8a?w=400&h=400&fit=crop',
+    ),
+    const Dish(
+      id: 'd16',
+      name: 'Chilli Cheese Garlic Toast',
+      emoji: '🍞',
+      category: 'Snack',
+      calories: 310,
+      protein: 12,
+      isVeg: true,
+      price: 149,
+      originalPrice: 169,
+      portion: '4 pcs',
+      prepTimeMins: 14,
+      isAddOn: true,
+      kitchenName: 'NutriCafe',
+      description: '◆ Cheesy garlic toast',
+      isMostLoved: true,
+      imageUrl:
+          'https://images.unsplash.com/photo-1619535854576-2f8a7e1e99e5?w=400&h=400&fit=crop',
+    ),
+    const Dish(
+      id: 'd17',
+      name: 'Veg Delight Party Platter',
+      emoji: '🥗',
+      category: 'Party',
+      calories: 380,
+      protein: 14,
+      isVeg: true,
+      price: 399,
+      originalPrice: 437,
+      portion: 'Serves 3-4',
+      prepTimeMins: 15,
+      isAddOn: true,
+      kitchenName: 'NutriCafe',
+      description: '◆ Free cheese pops included',
+      isHighlyReordered: true,
+      imageUrl:
+          'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=400&fit=crop',
+    ),
+    const Dish(
+      id: 'd18',
+      name: 'Crispy Chicken Popcorn',
+      emoji: '🍗',
+      category: 'Snack',
+      calories: 320,
+      protein: 22,
+      isVeg: false,
+      price: 179,
+      portion: '150g',
+      prepTimeMins: 15,
+      isAddOn: true,
+      kitchenName: 'NutriCafe',
+      description: '◆ Crunchy bite-sized chicken',
+      isChefsChoice: true,
+      imageUrl:
+          'https://images.unsplash.com/photo-1562967914-608f82629710?w=400&h=400&fit=crop',
+    ),
+    const Dish(
+      id: 'd19',
+      name: 'Masala Maggi',
+      emoji: '🍜',
+      category: 'Meals',
+      calories: 340,
+      protein: 8,
+      isVeg: true,
+      price: 89,
+      portion: '1 bowl',
+      prepTimeMins: 12,
+      isAddOn: true,
+      kitchenName: 'NutriCafe',
+      description: '◆ Late night comfort food',
+      isHighlyReordered: true,
+      imageUrl:
+          'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&h=400&fit=crop',
+    ),
+    const Dish(
+      id: 'd20',
+      name: 'Butter Chicken Bowl',
+      emoji: '🍗',
+      category: 'Meals',
+      calories: 480,
+      protein: 32,
+      isVeg: false,
+      price: 249,
+      originalPrice: 279,
+      portion: 'Serves 1',
+      prepTimeMins: 18,
+      isAddOn: true,
+      kitchenName: 'NutriCafe',
+      description: '◆ Creamy butter chicken with rice',
+      isMostLoved: true,
+      imageUrl:
+          'https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=400&h=400&fit=crop',
     ),
   ];
 
@@ -257,10 +455,89 @@ class MockData {
           .where((d) =>
               d.isAddOn ||
               d.category == 'Snack' ||
-              d.category == 'Beverage')
+              d.category == 'Beverage' ||
+              d.category == 'Meals' ||
+              d.category == 'Party')
           .toList();
     }
     return kitchenMenu;
+  }
+
+  static CafeSections cafeSections() {
+    final items = kitchenMenuFiltered(addOnsOnly: true);
+    return CafeSections(
+      orderAgain: [
+        items.firstWhere((d) => d.id == 'd12'),
+        items.firstWhere((d) => d.id == 'd9'),
+        items.firstWhere((d) => d.id == 'd13'),
+      ],
+      categories: const [
+        CafeCategoryItem(
+          label: 'Sandwich & Burger',
+          emoji: '🥪',
+          imageUrl:
+              'https://images.unsplash.com/photo-1550317138-10000606a72d?w=200&h=200&fit=crop',
+        ),
+        CafeCategoryItem(
+          label: 'Tea & Sides',
+          emoji: '🍵',
+          imageUrl:
+              'https://images.unsplash.com/photo-1571934811356-5cc061b6821f?w=200&h=200&fit=crop',
+        ),
+        CafeCategoryItem(
+          label: 'Protein Rich',
+          emoji: '💪',
+          imageUrl:
+              'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&h=200&fit=crop',
+        ),
+        CafeCategoryItem(
+          label: 'Coffee',
+          emoji: '☕',
+          imageUrl:
+              'https://images.unsplash.com/photo-1517701603779-8ce7bd86a9d4?w=200&h=200&fit=crop',
+        ),
+        CafeCategoryItem(
+          label: 'Snacks',
+          emoji: '🍟',
+          imageUrl:
+              'https://images.unsplash.com/photo-1573080496219-b998a60c8d8a?w=200&h=200&fit=crop',
+        ),
+        CafeCategoryItem(
+          label: 'Meals',
+          emoji: '🍛',
+          imageUrl:
+              'https://images.unsplash.com/photo-1585937421612-70a008296fbe?w=200&h=200&fit=crop',
+        ),
+        CafeCategoryItem(
+          label: 'Dessert',
+          emoji: '🍰',
+          imageUrl:
+              'https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=200&h=200&fit=crop',
+        ),
+        CafeCategoryItem(
+          label: 'Under ₹99',
+          emoji: '💰',
+          imageUrl:
+              'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=200&h=200&fit=crop',
+        ),
+      ],
+      bestsellers: items
+          .where((d) => d.isMostLoved || d.isHighlyReordered)
+          .take(6)
+          .toList(),
+      lateNight: items
+          .where((d) =>
+              d.category == 'Meals' ||
+              d.name.toLowerCase().contains('maggi') ||
+              d.name.toLowerCase().contains('chai'))
+          .take(5)
+          .toList(),
+      partyPacks: [
+        ...items.where((d) => d.category == 'Party'),
+        ...items.where((d) => d.portion.contains('Serves')).take(2),
+      ],
+      allItems: items,
+    );
   }
 
   static List<MealSystemPlan> mealSystemPlans() => const [

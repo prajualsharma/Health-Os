@@ -59,6 +59,16 @@ spring:
                 redis-rate-limiter: "#{@redisRateLimiter}"
                 key-resolver: "#{@ipKeyResolver}"
 
+        - id: kitchen_consumer_v1
+          uri: ${KITCHEN_BASE_URL:http://localhost:8083}
+          predicates:
+            - Path=/v1/cafe/**,/v1/meal-systems,/v1/meal-plan/**,/v1/recipes
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter: "#{@redisRateLimiter}"
+                key-resolver: "#{@ipKeyResolver}"
+
         - id: user_mgmt_docs
           uri: ${USER_MGMT_BASE_URL:http://localhost:8081}
           predicates:

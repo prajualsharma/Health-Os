@@ -24,7 +24,7 @@ var Module = fx.Options(
 	),
 	postgres.Module,
 	fx.Provide(gateway.NewUserManagementClient),
-	fx.Provide(service.NewKitchenService, service.NewMenuService, service.NewOrderService),
+	fx.Provide(service.NewKitchenService, service.NewMenuService, service.NewOrderService, service.NewCatalogService),
 	handler.Module,
 	fx.Invoke(postgres.RunMigrations),
 	fx.Invoke(fxutil.RunHTTPServer),

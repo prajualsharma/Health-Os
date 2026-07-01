@@ -49,6 +49,7 @@ public class ConsumerAuthService {
   private final OtpRateLimitService otpRateLimitService;
   private final NotificationClient notificationClient;
   private final HealthOsProperties props;
+  private final OnboardingProgressService onboardingProgressService;
 
   public PhoneInitiateResult initiatePhone(String rawPhone) {
     var phone = normalizePhone(rawPhone);
@@ -81,7 +82,13 @@ public class ConsumerAuthService {
         return PhoneVerifyResult.returningUser(issueTokens(account, Instant.now()));
       }
     }
-    return PhoneVerifyResult.pendingRegistration(otpService.issueRegistrationToken(phone));
+    return PhoneVerifyResult.pendingRegistration(startRegistration(phone));
+  }
+
+  private String startRegistration(String phone) {
+    var token = otpService.issueRegistrationToken(phone);
+    onboardingProgressService.startSession(phone, token);
+    return token;
   }
 
   @Transactional
@@ -138,6 +145,7 @@ public class ConsumerAuthService {
     profileRepository.save(profile);
 
     otpService.consumeRegistrationToken(cmd.registrationToken());
+    onboardingProgressService.completeByPhone(phone);
     return new RegistrationResult(issueTokens(saved, now), saved.getId(), targets);
   }
 

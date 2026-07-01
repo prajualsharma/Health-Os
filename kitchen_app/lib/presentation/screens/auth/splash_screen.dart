@@ -69,27 +69,25 @@ class _SplashScreenState extends State<SplashScreen>
                 width: 88,
                 height: 88,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.primary, AppColors.primaryDark],
-                  ),
+                  gradient: AppColors.headerGradient,
                   borderRadius: BorderRadius.circular(22),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.4),
+                      color: AppColors.primary.withValues(alpha: 0.35),
                       blurRadius: 24,
                     ),
                   ],
                 ),
-                child: const Icon(Icons.restaurant_menu,
+                child: const Icon(Icons.coffee,
                     color: Colors.white, size: 44),
               ),
             ),
             const SizedBox(height: 24),
             const Text(
-              'HealthOS Cloud Kitchen',
+              'NutriCafe Kitchen',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: AppColors.primary,
+                color: AppColors.primaryDark,
                 fontSize: 24,
                 fontWeight: FontWeight.w900,
               ),

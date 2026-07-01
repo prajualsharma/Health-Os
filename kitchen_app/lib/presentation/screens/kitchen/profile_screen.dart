@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../data/models/models.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/kitchen_store.dart';
+import '../../widgets/kitchen/bistro_card.dart';
 
 class KitchenProfileScreen extends StatelessWidget {
   const KitchenProfileScreen({super.key});
@@ -16,69 +17,100 @@ class KitchenProfileScreen extends StatelessWidget {
     final kitchen = store.selected;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.cardBorder),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Icon(Icons.soup_kitchen, color: AppColors.primary),
+      backgroundColor: AppColors.bg,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            pinned: true,
+            expandedHeight: 88,
+            backgroundColor: AppColors.headerDark,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: AppColors.headerGradient,
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                alignment: Alignment.bottomLeft,
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                child: const Text(
+                  'Store',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                BistroCard(
+                  child: Row(
                     children: [
-                      Text(kitchen?.name ?? 'Kitchen',
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w800)),
-                      const SizedBox(height: 2),
-                      Text(
-                        [kitchen?.address, kitchen?.city]
-                            .where((e) => e != null && e.isNotEmpty)
-                            .join(', '),
-                        style: const TextStyle(
-                            color: AppColors.muted, fontSize: 12),
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryLight,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(Icons.storefront,
+                            color: AppColors.primaryDark),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              kitchen?.name ?? 'Kitchen',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              [kitchen?.address, kitchen?.city]
+                                  .where((e) => e != null && e.isNotEmpty)
+                                  .join(', '),
+                              style: const TextStyle(
+                                color: AppColors.muted,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ),
-              ],
+                const SizedBox(height: 8),
+                _tile(
+                  icon: Icons.swap_horiz,
+                  label: 'Switch to corporate view',
+                  onTap: () async {
+                    await context
+                        .read<AuthProvider>()
+                        .setRole(SessionRole.corporate);
+                    if (context.mounted) context.go('/corporate');
+                  },
+                ),
+                _tile(
+                  icon: Icons.refresh,
+                  label: 'Refresh board',
+                  onTap: () => store.refreshBoard(),
+                ),
+                _tile(
+                  icon: Icons.logout,
+                  label: 'Logout',
+                  color: AppColors.danger,
+                  onTap: () => context.read<AuthProvider>().logout(),
+                ),
+              ]),
             ),
-          ),
-          const SizedBox(height: 16),
-          _tile(
-            icon: Icons.swap_horiz,
-            label: 'Switch to corporate view',
-            onTap: () async {
-              await context.read<AuthProvider>().setRole(SessionRole.corporate);
-              if (context.mounted) context.go('/corporate');
-            },
-          ),
-          _tile(
-            icon: Icons.refresh,
-            label: 'Refresh board',
-            onTap: () => store.refreshBoard(),
-          ),
-          _tile(
-            icon: Icons.logout,
-            label: 'Logout',
-            color: AppColors.danger,
-            onTap: () => context.read<AuthProvider>().logout(),
           ),
         ],
       ),
@@ -91,16 +123,18 @@ class KitchenProfileScreen extends StatelessWidget {
     required VoidCallback onTap,
     Color? color,
   }) {
-    return Container(
+    return BistroCard(
       margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.cardBorder),
-      ),
+      padding: EdgeInsets.zero,
       child: ListTile(
-        leading: Icon(icon, color: color ?? AppColors.text),
-        title: Text(label, style: TextStyle(color: color ?? AppColors.text)),
+        leading: Icon(icon, color: color ?? AppColors.primaryDark),
+        title: Text(
+          label,
+          style: TextStyle(
+            color: color ?? AppColors.text,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         trailing: const Icon(Icons.chevron_right, color: AppColors.dim),
         onTap: onTap,
       ),

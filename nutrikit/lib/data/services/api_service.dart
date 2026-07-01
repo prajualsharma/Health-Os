@@ -205,6 +205,41 @@ class ApiService {
     });
   }
 
+  Future<void> updateOnboardingProgress({
+    required String registrationToken,
+    required String step,
+    String? firstName,
+    String? email,
+  }) async {
+    if (_mockAuth) return;
+    await _guarded(() async {
+      await _dio.put('/auth/nutrikit/onboarding/progress', data: {
+        'registrationToken': registrationToken,
+        'step': step,
+        if (firstName != null && firstName.isNotEmpty) 'firstName': firstName,
+        if (email != null && email.isNotEmpty) 'email': email,
+      });
+    });
+  }
+
+  Future<OnboardingProgress> getOnboardingProgress(
+      String registrationToken) async {
+    if (_mockAuth) {
+      return const OnboardingProgress(
+        currentStep: 'name',
+        routePath: '/onboarding/name',
+        stepLabel: 'Add your name',
+      );
+    }
+    return _guarded(() async {
+      final res = await _dio.get(
+        '/auth/nutrikit/onboarding/progress',
+        queryParameters: {'registrationToken': registrationToken},
+      );
+      return OnboardingProgress.fromJson(res.data as Map<String, dynamic>);
+    });
+  }
+
   // ---- Dashboard / Plan ----
   Future<DashboardData> getDashboard() async {
     if (_mock) {
@@ -235,11 +270,22 @@ class ApiService {
       return MockData.kitchenMenuFiltered(addOnsOnly: addOnsOnly);
     }
     return _guarded(() async {
-      final res = await _dio.get('/v1/kitchen/menu',
+      final res = await _dio.get('/v1/cafe/menu',
           queryParameters: {if (addOnsOnly) 'addOnsOnly': true});
       return (res.data as List<dynamic>)
           .map((e) => Dish.fromJson(e as Map<String, dynamic>))
           .toList();
+    });
+  }
+
+  Future<CafeSections> getCafeSections() async {
+    if (_mock) {
+      await _mockDelay();
+      return MockData.cafeSections();
+    }
+    return _guarded(() async {
+      final res = await _dio.get('/v1/cafe/sections');
+      return CafeSections.fromJson(res.data as Map<String, dynamic>);
     });
   }
 

@@ -233,7 +233,9 @@ class AppRouter {
       GoRoute(
         path: '/cart',
         parentNavigatorKey: _rootKey,
-        builder: (context, state) => const CartScreen(),
+        builder: (context, state) => CartScreen(
+          isCafeCheckout: state.uri.queryParameters['context'] == 'cafe',
+        ),
       ),
       GoRoute(
         path: '/order-confirm',

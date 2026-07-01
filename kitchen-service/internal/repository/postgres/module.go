@@ -50,5 +50,6 @@ var Module = fx.Module("postgres",
 		fx.Annotate(NewKitchenRepo, fx.As(new(domain.KitchenRepository))),
 		fx.Annotate(NewMenuRepo, fx.As(new(domain.MenuRepository))),
 		fx.Annotate(NewOrderRepo, fx.As(new(domain.OrderRepository))),
+		fx.Annotate(NewCatalogRepo, fx.As(new(domain.CatalogRepository))),
 	),
 )

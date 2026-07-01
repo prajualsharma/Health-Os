@@ -35,4 +35,7 @@ class AppConstants {
   static const String registrationPhoneKey = 'registration_phone';
   static const String onboardingDoneKey = 'onboarding_done';
   static const String profileKey = 'profile_cache';
+
+  /// Bottom scroll inset above the shell bottom nav (inline FAB layout).
+  static const double shellScrollBottomPadding = 24;
 }

@@ -144,7 +144,7 @@ if [[ "$ORACLE_STACK" == "full" ]]; then
 elif [[ "$ORACLE_STACK" == "dev" ]]; then
   sudo $COMPOSE up -d $BUILD_FLAG \
     postgres redis mongo kafka \
-    user-management-service kitchen-service api-gateway
+    user-management-service kitchen-service notification-service api-gateway
 else
   sudo $COMPOSE up -d $BUILD_FLAG \
     postgres redis user-management-service api-gateway

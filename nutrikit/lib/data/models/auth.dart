@@ -312,3 +312,25 @@ class OnboardingResponse {
         targetWeight: (json['targetWeight'] as num?)?.toDouble() ?? 0,
       );
 }
+
+class OnboardingProgress {
+  const OnboardingProgress({
+    required this.currentStep,
+    required this.routePath,
+    required this.stepLabel,
+    this.phone,
+  });
+
+  final String currentStep;
+  final String routePath;
+  final String stepLabel;
+  final String? phone;
+
+  factory OnboardingProgress.fromJson(Map<String, dynamic> json) =>
+      OnboardingProgress(
+        currentStep: json['currentStep'] as String? ?? 'name',
+        routePath: json['routePath'] as String? ?? '/onboarding/name',
+        stepLabel: json['stepLabel'] as String? ?? 'Add your name',
+        phone: json['phone'] as String?,
+      );
+}

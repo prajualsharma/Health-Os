@@ -24,6 +24,8 @@ const (
 	MealDinner    MealCategory = "DINNER"
 	MealSnack     MealCategory = "SNACK"
 	MealBeverage  MealCategory = "BEVERAGE"
+	MealMeals     MealCategory = "MEALS"
+	MealParty     MealCategory = "PARTY"
 )
 
 type MenuItem struct {

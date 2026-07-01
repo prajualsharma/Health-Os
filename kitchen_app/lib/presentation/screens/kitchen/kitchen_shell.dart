@@ -30,6 +30,7 @@ class _KitchenShellState extends State<KitchenShell> {
     final newCount = context.select<KitchenStore, int>((s) => s.newCount);
 
     return Scaffold(
+      backgroundColor: AppColors.bg,
       body: IndexedStack(
         index: _index,
         children: const [
@@ -45,25 +46,27 @@ class _KitchenShellState extends State<KitchenShell> {
           NavigationDestination(
             icon: Badge(
               isLabelVisible: newCount > 0,
+              backgroundColor: AppColors.danger,
               label: Text('$newCount'),
               child: const Icon(Icons.receipt_long_outlined),
             ),
             selectedIcon: Badge(
               isLabelVisible: newCount > 0,
+              backgroundColor: AppColors.danger,
               label: Text('$newCount'),
-              child: const Icon(Icons.receipt_long, color: AppColors.primary),
+              child: const Icon(Icons.receipt_long),
             ),
             label: 'Orders',
           ),
           const NavigationDestination(
-            icon: Icon(Icons.restaurant_menu_outlined),
-            selectedIcon: Icon(Icons.restaurant_menu, color: AppColors.primary),
-            label: 'Menu',
+            icon: Icon(Icons.inventory_2_outlined),
+            selectedIcon: Icon(Icons.inventory_2),
+            label: 'Stock',
           ),
           const NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person, color: AppColors.primary),
-            label: 'Profile',
+            icon: Icon(Icons.store_outlined),
+            selectedIcon: Icon(Icons.store),
+            label: 'Store',
           ),
         ],
       ),

@@ -229,16 +229,19 @@ class ApiService {
     });
   }
 
-  // ----------------------------------------------------------------- Menu
+  // ----------------------------------------------------------------- Menu (catalog read + availability)
   Future<List<MenuItem>> getMenu(String kitchenId) async {
     if (_mock) {
       await _mockDelay();
       return MockData.menu(kitchenId);
     }
     return _guarded(() async {
-      final res = await _dio.get('/kitchen/kitchens/$kitchenId/menu');
+      final res = await _dio.get(
+        '/kitchen/catalog/kitchens/$kitchenId/items',
+        queryParameters: {'channel': 'CAFE'},
+      );
       return (res.data as List<dynamic>)
-          .map((e) => MenuItem.fromJson(e as Map<String, dynamic>))
+          .map((e) => MenuItem.fromCatalogJson(e as Map<String, dynamic>))
           .toList();
     });
   }
@@ -285,9 +288,17 @@ class ApiService {
       await _mockDelay();
       return item.copyWith(available: available, priceCents: priceCents);
     }
+    if (available != null) {
+      return _guarded(() async {
+        final res = await _dio.patch(
+          '/kitchen/catalog/items/${item.id}/available',
+          data: {'available': available},
+        );
+        return MenuItem.fromCatalogJson(res.data as Map<String, dynamic>);
+      });
+    }
     return _guarded(() async {
       final res = await _dio.patch('/kitchen/menu/${item.id}', data: {
-        if (available != null) 'available': available,
         if (priceCents != null) 'priceCents': priceCents,
       });
       return MenuItem.fromJson(res.data as Map<String, dynamic>);

@@ -188,6 +188,17 @@ class MenuItem {
         veg: json['veg'] as bool? ?? true,
         available: json['available'] as bool? ?? true,
       );
+
+  factory MenuItem.fromCatalogJson(Map<String, dynamic> json) => MenuItem(
+        id: json['id'] as String,
+        kitchenId: json['kitchenId'] as String? ?? '',
+        name: json['name'] as String? ?? '',
+        description: json['description'] as String?,
+        category: MealCategoryX.parse(json['mealCategory'] as String?),
+        priceCents: (json['priceCents'] as num?)?.toInt() ?? 0,
+        veg: json['veg'] as bool? ?? true,
+        available: json['available'] as bool? ?? true,
+      );
 }
 
 class OrderLine {

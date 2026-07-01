@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../data/services/api_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/onboarding_store.dart';
 import '../../providers/profile_provider.dart';
@@ -59,7 +60,18 @@ class _SplashScreenState extends State<SplashScreen>
       if (phone != null && phone.isNotEmpty) {
         OnboardingStore.instance.update((d) => d.copyWith(phone: phone));
       }
-      context.go('/onboarding/name');
+      var route = '/onboarding/name';
+      try {
+        final progress =
+            await ApiService.instance.getOnboardingProgress(registrationToken);
+        if (progress.routePath.isNotEmpty) {
+          route = progress.routePath;
+        }
+      } catch (_) {
+        // Fall back to first onboarding step.
+      }
+      if (!mounted) return;
+      context.go(route);
     } else {
       context.go('/auth/phone');
     }

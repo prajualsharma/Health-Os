@@ -32,11 +32,7 @@ class AuthHeroScaffold extends StatelessWidget {
         children: [
           DecoratedBox(
             decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFF1E293B), Color(0xFF0F172A), Color(0xFF020617)],
-              ),
+              gradient: AppColors.headerGradient,
             ),
             child: SafeArea(
               child: Column(

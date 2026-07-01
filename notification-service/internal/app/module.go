@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/healthos/notification-service/internal/bootstrap"
 	"github.com/healthos/notification-service/internal/config"
 	"github.com/healthos/notification-service/internal/consumer"
 	"github.com/healthos/notification-service/internal/domain"
@@ -21,13 +22,13 @@ func provideHTTPPort(cfg config.Config) string {
 	return cfg.Port
 }
 
-func provideSenders(logger *zap.Logger, smtpSender *smtp.EmailSender) []provider.Sender {
+func provideSenders(logger *zap.Logger, smtpSender *smtp.EmailSender, whatsappSender *whatsapp.Sender) []provider.Sender {
 	return []provider.Sender{
 		smtpSender,
+		whatsappSender,
 		provider.NewStub(domain.ProviderAWSSES, logger),
 		provider.NewStub(domain.ProviderTwilio, logger),
 		provider.NewStub(domain.ProviderMSG91, logger),
-		provider.NewStub(domain.ProviderMetaWhatsApp, logger),
 		provider.NewStub(domain.ProviderGupshup, logger),
 	}
 }
@@ -41,7 +42,7 @@ var Module = fx.Options(
 	),
 	mongorepo.Module,
 	redisrepo.Module,
-	fx.Provide(smtp.NewEmailSender, smtp.NewOTPMailer, whatsapp.NewClient),
+	fx.Provide(smtp.NewEmailSender, smtp.NewOTPMailer, whatsapp.NewClient, whatsapp.NewSender),
 	fx.Provide(provideSenders, provider.NewFactory),
 	fx.Provide(
 		service.NewTemplateRenderer,
@@ -54,5 +55,6 @@ var Module = fx.Options(
 	),
 	fx.Provide(handler.NewRouter),
 	consumer.Module,
+	fx.Invoke(bootstrap.SeedDefaults),
 	fx.Invoke(fxutil.RunHTTPServer),
 )

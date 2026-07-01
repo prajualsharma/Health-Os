@@ -5,6 +5,12 @@ import '../../../core/theme/app_colors.dart';
 import '../../../data/models/models.dart';
 import '../../providers/kitchen_store.dart';
 import '../../widgets/common.dart';
+import '../../widgets/kitchen/bistro_card.dart';
+
+const _adminPortalUrl = String.fromEnvironment(
+  'ADMIN_PORTAL_URL',
+  defaultValue: 'https://admin-portal-eta-beige.vercel.app',
+);
 
 class MenuScreen extends StatelessWidget {
   const MenuScreen({super.key});
@@ -13,27 +19,69 @@ class MenuScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final store = context.watch<KitchenStore>();
     final menu = store.menu;
+    final live = menu.where((m) => m.available).length;
+    final soldOut = menu.length - live;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Menu')),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppColors.primary,
-        onPressed: () => _showAddSheet(context),
-        icon: const Icon(Icons.add),
-        label: const Text('Add item'),
-      ),
-      body: store.loadingBoard && menu.isEmpty
-          ? const Center(child: CircularProgressIndicator())
-          : menu.isEmpty
-              ? const EmptyHint(
-                  icon: Icons.restaurant_menu, message: 'No menu items yet')
-              : ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+      backgroundColor: AppColors.bg,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            pinned: true,
+            expandedHeight: 100,
+            backgroundColor: AppColors.headerDark,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: AppColors.headerGradient,
+                ),
+                padding: const EdgeInsets.fromLTRB(16, 56, 16, 12),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    for (final category in MealCategory.values)
-                      ..._categorySection(context, store, category),
+                    Text(
+                      'Stock & availability',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    Text(
+                      'Toggle items live or sold out during service',
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                    ),
                   ],
                 ),
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(child: _StockSummary(live: live, soldOut: soldOut)),
+          SliverToBoxAdapter(child: _AdminPortalBanner()),
+          if (store.loadingBoard && menu.isEmpty)
+            const SliverFillRemaining(
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (menu.isEmpty)
+            const SliverFillRemaining(
+              child: EmptyHint(
+                icon: Icons.coffee_outlined,
+                message: 'No published cafe items yet',
+              ),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  for (final category in MealCategory.values)
+                    ..._categorySection(context, store, category),
+                ]),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -42,52 +90,150 @@ class MenuScreen extends StatelessWidget {
     final items = store.menu.where((m) => m.category == category).toList();
     if (items.isEmpty) return const [];
     return [
-      Padding(
-        padding: const EdgeInsets.only(top: 8, bottom: 10),
+      Container(
+        margin: const EdgeInsets.only(top: 12, bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppColors.sectionMint,
+          borderRadius: BorderRadius.circular(12),
+        ),
         child: Row(
           children: [
-            Text(category.emoji, style: const TextStyle(fontSize: 18)),
-            const SizedBox(width: 8),
-            Text(category.label,
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+            Text(category.emoji, style: const TextStyle(fontSize: 20)),
+            const SizedBox(width: 10),
+            Text(
+              category.label,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w900,
+                color: AppColors.primaryDark,
+              ),
+            ),
           ],
         ),
       ),
-      ...items.map((item) => _MenuTile(item: item)),
-      const SizedBox(height: 8),
+      ...items.map((item) => _AvailabilityTile(item: item)),
     ];
   }
+}
 
-  void _showAddSheet(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+class _StockSummary extends StatelessWidget {
+  const _StockSummary({required this.live, required this.soldOut});
+
+  final int live;
+  final int soldOut;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: _pill('Live on menu', live, AppColors.success),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _pill('Sold out', soldOut, AppColors.dim),
+          ),
+        ],
       ),
-      builder: (_) => const _AddMenuItemSheet(),
+    );
+  }
+
+  Widget _pill(String label, int count, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.cardBorder),
+        boxShadow: AppColors.cardShadow,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '$count',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  color: color,
+                ),
+              ),
+              Text(
+                label,
+                style: const TextStyle(fontSize: 11, color: AppColors.muted),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _MenuTile extends StatelessWidget {
-  const _MenuTile({required this.item});
+class _AdminPortalBanner extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.primaryLight,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.storefront_outlined,
+                size: 20, color: AppColors.primaryDark),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Text(
+                'Edit menu, photos & sections in NutriKit Admin',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    backgroundColor: AppColors.primary,
+                    content: Text('Open $_adminPortalUrl'),
+                  ),
+                );
+              },
+              child: const Text('Open'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AvailabilityTile extends StatelessWidget {
+  const _AvailabilityTile({required this.item});
 
   final MenuItem item;
 
   @override
   Widget build(BuildContext context) {
     final store = context.read<KitchenStore>();
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
+
+    return BistroCard(
+      accent: item.available ? AppColors.success : AppColors.dim,
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.cardBorder),
-      ),
       child: Row(
         children: [
           VegDot(veg: item.veg),
@@ -96,30 +242,39 @@ class _MenuTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.name,
-                    style: const TextStyle(fontWeight: FontWeight.w700)),
-                if (item.description != null)
-                  Text(item.description!,
-                      style: const TextStyle(
-                          color: AppColors.muted, fontSize: 12)),
+                Text(
+                  item.name,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    decoration:
+                        item.available ? null : TextDecoration.lineThrough,
+                    color: item.available ? AppColors.text : AppColors.dim,
+                  ),
+                ),
+                if (item.description != null && item.description!.isNotEmpty)
+                  Text(
+                    item.description!,
+                    style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                  ),
                 const SizedBox(height: 4),
-                Text('₹${item.price.toStringAsFixed(0)}',
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w800, color: AppColors.primary)),
+                Text(
+                  '₹${item.price.toStringAsFixed(0)}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.primaryDark,
+                  ),
+                ),
               ],
             ),
           ),
           Column(
             children: [
+              _LiveChip(available: item.available),
+              const SizedBox(height: 8),
               Switch(
                 value: item.available,
-                activeThumbColor: AppColors.success,
                 onChanged: (_) => store.toggleAvailability(item),
               ),
-              Text(item.available ? 'Available' : 'Sold out',
-                  style: TextStyle(
-                      fontSize: 11,
-                      color: item.available ? AppColors.success : AppColors.dim)),
             ],
           ),
         ],
@@ -128,96 +283,29 @@ class _MenuTile extends StatelessWidget {
   }
 }
 
-class _AddMenuItemSheet extends StatefulWidget {
-  const _AddMenuItemSheet();
+class _LiveChip extends StatelessWidget {
+  const _LiveChip({required this.available});
 
-  @override
-  State<_AddMenuItemSheet> createState() => _AddMenuItemSheetState();
-}
-
-class _AddMenuItemSheetState extends State<_AddMenuItemSheet> {
-  final _name = TextEditingController();
-  final _price = TextEditingController();
-  MealCategory _category = MealCategory.lunch;
-  bool _veg = true;
-
-  @override
-  void dispose() {
-    _name.dispose();
-    _price.dispose();
-    super.dispose();
-  }
-
-  Future<void> _save() async {
-    final price = int.tryParse(_price.text.trim()) ?? 0;
-    if (_name.text.trim().isEmpty || price <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter a name and a valid price')),
-      );
-      return;
-    }
-    await context.read<KitchenStore>().addMenuItem(
-          name: _name.text.trim(),
-          category: _category,
-          priceCents: price * 100,
-          veg: _veg,
-        );
-    if (mounted) Navigator.of(context).pop();
-  }
+  final bool available;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: available
+            ? AppColors.success.withValues(alpha: 0.12)
+            : AppColors.dim.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Add menu item',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _name,
-            decoration: const InputDecoration(hintText: 'Item name'),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _price,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-                hintText: 'Price (₹)', prefixText: '₹ '),
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<MealCategory>(
-            initialValue: _category,
-            decoration: const InputDecoration(labelText: 'Category'),
-            dropdownColor: AppColors.surface,
-            items: MealCategory.values
-                .map((c) => DropdownMenuItem(value: c, child: Text(c.label)))
-                .toList(),
-            onChanged: (v) => setState(() => _category = v ?? _category),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              const Text('Veg'),
-              Switch(
-                value: _veg,
-                activeThumbColor: AppColors.veg,
-                onChanged: (v) => setState(() => _veg = v),
-              ),
-              Text(_veg ? 'Vegetarian' : 'Non-veg',
-                  style: const TextStyle(color: AppColors.muted)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          PrimaryButton(label: 'Add to menu', onPressed: _save),
-        ],
+      child: Text(
+        available ? 'LIVE' : 'SOLD OUT',
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.5,
+          color: available ? AppColors.success : AppColors.dim,
+        ),
       ),
     );
   }

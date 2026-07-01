@@ -15,10 +15,11 @@ import (
 type RouterParams struct {
 	fx.In
 
-	Config         config.Config
-	KitchenHandler *KitchenHandler
-	MenuHandler    *MenuHandler
-	OrderHandler   *OrderHandler
+	Config          config.Config
+	KitchenHandler  *KitchenHandler
+	MenuHandler     *MenuHandler
+	OrderHandler    *OrderHandler
+	CatalogHandler  *CatalogHandler
 }
 
 func NewRouter(p RouterParams) http.Handler {
@@ -41,11 +42,17 @@ func NewRouter(p RouterParams) http.Handler {
 		r.With(middleware.RequirePermission("kitchen:order:read")).Get("/kitchens/{kitchenId}/orders", p.OrderHandler.list)
 		r.With(middleware.RequirePermission("kitchen:order:write")).Post("/kitchens/{kitchenId}/orders", p.OrderHandler.create)
 		r.With(middleware.RequirePermission("kitchen:order:write")).Patch("/orders/{orderId}/status", p.OrderHandler.updateStatus)
+		r.Route("/catalog", func(r chi.Router) {
+			r.Use(middleware.RequirePermission("kitchen:menu:write"))
+			r.Mount("/", p.CatalogHandler.AdminRoutes())
+		})
 	})
+
+	r.Mount("/v1", p.CatalogHandler.ConsumerRoutes())
 
 	return r
 }
 
 var Module = fx.Module("handler",
-	fx.Provide(NewKitchenHandler, NewMenuHandler, NewOrderHandler, NewRouter),
+	fx.Provide(NewKitchenHandler, NewMenuHandler, NewOrderHandler, NewCatalogHandler, NewRouter),
 )

@@ -4,9 +4,9 @@
 #
 #   export SSH_KEY=/home/pras/Downloads/ssh-key-2026-06-30.key
 #   export ORACLE_HOST=ubuntu@<public-ip>
-#   export ORACLE_STACK=dev            # recommended: gateway + user-mgmt + kitchen + datastores, OTP 123456
+#   export ORACLE_STACK=dev            # gateway + user-mgmt + kitchen + notification + datastores, OTP 123456
 #   export ORACLE_STACK=minimal        # auth only (no kitchen/mongo/kafka)
-#   export ORACLE_STACK=full           # + notification-service
+#   export ORACLE_STACK=full           # same as dev + web frontend
 #   export SMTP_PASSWORD=...           # optional; disables OTP_DEV_BYPASS when set
 #   bash deploy/oracle-deploy.sh
 #
@@ -67,7 +67,7 @@ if command -v docker >/dev/null 2>&1 \
     && docker image inspect healthos-kitchen-service >/dev/null 2>&1; then
     IMAGES+=(healthos-kitchen-service)
   fi
-  if [[ "$ORACLE_STACK" == "full" ]] \
+  if [[ "$ORACLE_STACK" == "dev" || "$ORACLE_STACK" == "full" ]] \
     && docker image inspect healthos-notification-service >/dev/null 2>&1; then
     IMAGES+=(healthos-notification-service)
   fi

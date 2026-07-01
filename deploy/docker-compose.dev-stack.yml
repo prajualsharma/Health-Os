@@ -1,12 +1,11 @@
-# Dev backend stack: gateway + user-mgmt + kitchen (Go) + all datastores.
-# No notification-service, no web/nginx (frontends live on Vercel).
+# Dev backend stack: gateway + user-mgmt + kitchen + notification + datastores.
 # OTP dev bypass: 123456
 #
 #   docker compose -f docker-compose.yml \
 #     -f deploy/docker-compose.backend.yml \
 #     -f deploy/docker-compose.dev-stack.yml \
 #     -f deploy/docker-compose.oracle-6gb.yml up -d --build \
-#     postgres redis mongo kafka user-management-service kitchen-service api-gateway
+#     postgres redis mongo kafka user-management-service kitchen-service notification-service api-gateway
 
 services:
   postgres:
@@ -36,10 +35,22 @@ services:
       NOTIFICATION_ENABLED: "false"
       OTP_DEV_BYPASS: "true"
       DEV_OTP_CODE: "123456"
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_NOTIFICATIONS_ENABLED: "true"
+      NOTIFICATION_TOPIC: notification-topic
+      ONBOARDING_REMINDER_DELAY_MINUTES: ${ONBOARDING_REMINDER_DELAY_MINUTES:-120}
+      NUTRIKIT_RESUME_BASE_URL: ${NUTRIKIT_RESUME_BASE_URL:-https://nutrikit.vercel.app}
 
   notification-service:
-    profiles: ["notification"]
-    restart: "no"
+    profiles: []
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
 
   kitchen-service:
     profiles: []
@@ -55,6 +66,8 @@ services:
       user-management-service:
         condition: service_healthy
       kitchen-service:
+        condition: service_healthy
+      notification-service:
         condition: service_healthy
 
   web:

@@ -4,7 +4,10 @@ import com.healthos.usermgmt.adapters.outbound.notification.NotificationClient;
 import com.healthos.usermgmt.adapters.outbound.security.JwtService;
 import com.healthos.usermgmt.adapters.outbound.security.TokenHasher;
 import com.healthos.usermgmt.application.ActiveScopeService;
-import com.healthos.usermgmt.application.AuthService;
+import com.healthos.usermgmt.application.AuthContracts;
+import com.healthos.usermgmt.application.AuthContracts.AuthTokens;
+import com.healthos.usermgmt.application.AuthContracts.PhoneInitiateResult;
+import com.healthos.usermgmt.application.AuthContracts.PhoneVerifyResult;
 import com.healthos.usermgmt.application.OtpService;
 import com.healthos.usermgmt.application.ScopedMembershipService;
 import com.healthos.usermgmt.config.HealthOsProperties;
@@ -41,7 +44,7 @@ public class StaffAuthService {
   private final NotificationClient notificationClient;
   private final HealthOsProperties props;
 
-  public AuthService.PhoneInitiateResult initiatePhone(String rawPhone) {
+  public PhoneInitiateResult initiatePhone(String rawPhone) {
     var phone = normalizePhone(rawPhone);
     boolean exists =
         accountRepository.findByPhone(phone).isPresent()
@@ -54,11 +57,11 @@ public class StaffAuthService {
         otpDelivered && props.getNotification().isEnabled()
             ? props.getNotification().getOtpEmailTo()
             : null;
-    return new AuthService.PhoneInitiateResult(phone, exists, true, devMode, otpDelivered, deliveryEmail);
+    return new PhoneInitiateResult(phone, exists, true, devMode, otpDelivered, deliveryEmail);
   }
 
   @Transactional
-  public AuthService.PhoneVerifyResult verifyPhone(String rawPhone, String otp, ClientId clientId) {
+  public PhoneVerifyResult verifyPhone(String rawPhone, String otp, ClientId clientId) {
     var phone = normalizePhone(rawPhone);
     otpService.verify(phone, otp);
 
@@ -70,17 +73,17 @@ public class StaffAuthService {
       var memberships = membershipService.listClaimsForUser(account.getId());
       var portalMemberships = memberships.stream().filter(m -> m.portal() == portal).toList();
       if (!portalMemberships.isEmpty()) {
-        return AuthService.PhoneVerifyResult.returningUser(issueTokens(account, Instant.now()));
+        return PhoneVerifyResult.returningUser(issueTokens(account, Instant.now()));
       }
       if (!memberships.isEmpty()) {
         throw new IllegalStateException("No " + portal + " membership for this account");
       }
     }
-    return AuthService.PhoneVerifyResult.pendingRegistration(otpService.issueRegistrationToken(phone));
+    return PhoneVerifyResult.pendingRegistration(otpService.issueRegistrationToken(phone));
   }
 
   @Transactional
-  public AuthService.AuthTokens registerStaff(String phoneRaw, String registrationToken, String name) {
+  public AuthTokens registerStaff(String phoneRaw, String registrationToken, String name) {
     var phone = normalizePhone(phoneRaw);
     var boundPhone = otpService.peekRegistrationToken(registrationToken);
     if (!boundPhone.equals(phone)) {
@@ -110,7 +113,7 @@ public class StaffAuthService {
   }
 
   @Transactional
-  public AuthService.AuthTokens refresh(String refreshTokenRaw) {
+  public AuthTokens refresh(String refreshTokenRaw) {
     var now = Instant.now();
     var hash = tokenHasher.sha256Hex(refreshTokenRaw);
     var token =
@@ -125,7 +128,7 @@ public class StaffAuthService {
     return issueTokens(token.getAccount(), now);
   }
 
-  private AuthService.AuthTokens issueTokens(StaffAccount account, Instant now) {
+  private AuthTokens issueTokens(StaffAccount account, Instant now) {
     var memberships = membershipService.listClaimsForUser(account.getId());
     var activeScope =
         activeScopeService
@@ -141,7 +144,7 @@ public class StaffAuthService {
     refresh.setCreatedAt(now);
     refresh.setExpiresAt(now.plusSeconds(props.getSecurity().getJwt().getRefreshTokenTtlSeconds()));
     refreshTokenRepository.save(refresh);
-    return new AuthService.AuthTokens(
+    return new AuthTokens(
         accessToken,
         refreshRaw,
         now.plusSeconds(props.getSecurity().getJwt().getAccessTokenTtlSeconds()),

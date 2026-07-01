@@ -1,6 +1,7 @@
 package com.healthos.usermgmt.adapters.inbound.rest.dto;
 
 import com.healthos.usermgmt.domain.UserStatus;
+import com.healthos.usermgmt.shared.domain.AccountType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -14,6 +15,7 @@ public class AdminDtos {
   @Data
   public static class UserResponse {
     private UUID id;
+    private AccountType accountType;
     private String firstName;
     private String lastName;
     private String email;

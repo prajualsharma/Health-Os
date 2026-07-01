@@ -1,6 +1,6 @@
 package com.healthos.usermgmt.application;
 
-import com.healthos.usermgmt.application.AuthService.NutritionTargets;
+import com.healthos.usermgmt.application.AuthContracts.NutritionTargets;
 
 /**
  * Computes daily calorie and macro targets using the Mifflin-St Jeor equation. This is a simple,

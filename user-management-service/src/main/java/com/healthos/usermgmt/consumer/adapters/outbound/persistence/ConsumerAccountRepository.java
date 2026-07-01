@@ -8,5 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface ConsumerAccountRepository extends JpaRepository<ConsumerAccount, UUID> {
   Optional<ConsumerAccount> findByPhone(String phone);
 
+  Optional<ConsumerAccount> findByEmail(String email);
+
   boolean existsByEmail(String email);
 }

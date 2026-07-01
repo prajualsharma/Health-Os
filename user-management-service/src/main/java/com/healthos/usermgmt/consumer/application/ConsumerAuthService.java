@@ -3,7 +3,14 @@ package com.healthos.usermgmt.consumer.application;
 import com.healthos.usermgmt.adapters.outbound.notification.NotificationClient;
 import com.healthos.usermgmt.adapters.outbound.security.JwtService;
 import com.healthos.usermgmt.adapters.outbound.security.TokenHasher;
-import com.healthos.usermgmt.application.AuthService;
+import com.healthos.usermgmt.application.AuthContracts;
+import com.healthos.usermgmt.application.AuthContracts.AuthTokens;
+import com.healthos.usermgmt.application.AuthContracts.NutritionTargets;
+import com.healthos.usermgmt.application.AuthContracts.OAuthResolveResult;
+import com.healthos.usermgmt.application.AuthContracts.PhoneInitiateResult;
+import com.healthos.usermgmt.application.AuthContracts.PhoneVerifyResult;
+import com.healthos.usermgmt.application.AuthContracts.RegistrationCommand;
+import com.healthos.usermgmt.application.AuthContracts.RegistrationResult;
 import com.healthos.usermgmt.application.NutritionCalculator;
 import com.healthos.usermgmt.application.OtpRateLimitService;
 import com.healthos.usermgmt.application.OtpService;
@@ -43,7 +50,7 @@ public class ConsumerAuthService {
   private final NotificationClient notificationClient;
   private final HealthOsProperties props;
 
-  public AuthService.PhoneInitiateResult initiatePhone(String rawPhone) {
+  public PhoneInitiateResult initiatePhone(String rawPhone) {
     var phone = normalizePhone(rawPhone);
     otpRateLimitService.checkConsumerAllowed(phone);
     boolean exists =
@@ -57,11 +64,11 @@ public class ConsumerAuthService {
         otpDelivered && props.getNotification().isEnabled()
             ? props.getNotification().getOtpEmailTo()
             : null;
-    return new AuthService.PhoneInitiateResult(phone, exists, true, devMode, otpDelivered, deliveryEmail);
+    return new PhoneInitiateResult(phone, exists, true, devMode, otpDelivered, deliveryEmail);
   }
 
   @Transactional
-  public AuthService.PhoneVerifyResult verifyPhone(String rawPhone, String otp) {
+  public PhoneVerifyResult verifyPhone(String rawPhone, String otp) {
     var phone = normalizePhone(rawPhone);
     otpService.verify(phone, otp);
 
@@ -71,14 +78,14 @@ public class ConsumerAuthService {
       var profile = profileRepository.findById(account.getId()).orElse(null);
       if (isProfileComplete(profile)) {
         ensurePhoneAuthMethod(account, phone);
-        return AuthService.PhoneVerifyResult.returningUser(issueTokens(account, Instant.now()));
+        return PhoneVerifyResult.returningUser(issueTokens(account, Instant.now()));
       }
     }
-    return AuthService.PhoneVerifyResult.pendingRegistration(otpService.issueRegistrationToken(phone));
+    return PhoneVerifyResult.pendingRegistration(otpService.issueRegistrationToken(phone));
   }
 
   @Transactional
-  public AuthService.RegistrationResult registerFromPhone(AuthService.RegistrationCommand cmd) {
+  public RegistrationResult registerFromPhone(RegistrationCommand cmd) {
     var phone = normalizePhone(cmd.phone());
     var boundPhone = otpService.peekRegistrationToken(cmd.registrationToken());
     if (!boundPhone.equals(phone)) {
@@ -131,11 +138,11 @@ public class ConsumerAuthService {
     profileRepository.save(profile);
 
     otpService.consumeRegistrationToken(cmd.registrationToken());
-    return new AuthService.RegistrationResult(issueTokens(saved, now), saved.getId(), targets);
+    return new RegistrationResult(issueTokens(saved, now), saved.getId(), targets);
   }
 
   @Transactional
-  public AuthService.AuthTokens refresh(String refreshTokenRaw) {
+  public AuthTokens refresh(String refreshTokenRaw) {
     var now = Instant.now();
     var hash = tokenHasher.sha256Hex(refreshTokenRaw);
     var token =
@@ -150,7 +157,40 @@ public class ConsumerAuthService {
     return issueTokens(token.getAccount(), now);
   }
 
-  private AuthService.AuthTokens issueTokens(ConsumerAccount account, Instant now) {
+  @Transactional
+  public OAuthResolveResult resolveOAuth(AuthMethodType method, String subject, String email) {
+    var existing = authMethodRepository.findByMethodAndIdentifier(method, subject);
+    if (existing.isPresent()) {
+      return OAuthResolveResult.found(existing.get().getAccount());
+    }
+    if (email != null && !email.isBlank()) {
+      var accountOpt = accountRepository.findByEmail(email.toLowerCase());
+      if (accountOpt.isPresent()) {
+        var account = accountOpt.get();
+        saveOAuthMethod(account, method, subject);
+        return OAuthResolveResult.linked(account);
+      }
+    }
+    return OAuthResolveResult.noAccount();
+  }
+
+  @Transactional
+  public void storeRefreshToken(UUID accountId, String refreshTokenRaw) {
+    var account =
+        accountRepository
+            .findById(accountId)
+            .orElseThrow(() -> new IllegalArgumentException("Consumer account not found"));
+    var now = Instant.now();
+    var refresh = new ConsumerRefreshToken();
+    refresh.setId(UUID.randomUUID());
+    refresh.setAccount(account);
+    refresh.setTokenHash(tokenHasher.sha256Hex(refreshTokenRaw));
+    refresh.setCreatedAt(now);
+    refresh.setExpiresAt(now.plusSeconds(props.getSecurity().getJwt().getRefreshTokenTtlSeconds()));
+    refreshTokenRepository.save(refresh);
+  }
+
+  private AuthTokens issueTokens(ConsumerAccount account, Instant now) {
     var accessToken = jwtService.issueConsumerToken(account, now);
     var refreshRaw = UUID.randomUUID() + "." + UUID.randomUUID();
     var refresh = new ConsumerRefreshToken();
@@ -160,7 +200,7 @@ public class ConsumerAuthService {
     refresh.setCreatedAt(now);
     refresh.setExpiresAt(now.plusSeconds(props.getSecurity().getJwt().getRefreshTokenTtlSeconds()));
     refreshTokenRepository.save(refresh);
-    return new AuthService.AuthTokens(
+    return new AuthTokens(
         accessToken,
         refreshRaw,
         now.plusSeconds(props.getSecurity().getJwt().getAccessTokenTtlSeconds()),
@@ -177,7 +217,7 @@ public class ConsumerAuthService {
         .map(ConsumerAuthMethod::getAccount);
   }
 
-  private ConsumerAccount createAccount(AuthService.RegistrationCommand cmd, String phone, Instant now) {
+  private ConsumerAccount createAccount(RegistrationCommand cmd, String phone, Instant now) {
     var account = new ConsumerAccount();
     account.setId(UUID.randomUUID());
     applyName(account, cmd.name());
@@ -239,10 +279,24 @@ public class ConsumerAuthService {
     account.setEmail(email);
   }
 
+  private void saveOAuthMethod(ConsumerAccount account, AuthMethodType method, String identifier) {
+    if (authMethodRepository.existsByMethodAndIdentifier(method, identifier)) {
+      return;
+    }
+    var am = new ConsumerAuthMethod();
+    am.setId(UUID.randomUUID());
+    am.setAccount(account);
+    am.setMethod(method);
+    am.setIdentifier(identifier);
+    am.setVerified(true);
+    am.setCreatedAt(Instant.now());
+    authMethodRepository.save(am);
+  }
+
   private static void applyProfile(
       ConsumerUserProfile profile,
-      AuthService.RegistrationCommand cmd,
-      AuthService.NutritionTargets targets,
+      RegistrationCommand cmd,
+      NutritionTargets targets,
       Instant now) {
     profile.setHeight(cmd.height());
     profile.setWeight(cmd.weight());
@@ -323,7 +377,7 @@ public class ConsumerAuthService {
     return cleaned.isEmpty() ? null : String.join(",", cleaned);
   }
 
-  private static String resolvePrimaryGoal(AuthService.RegistrationCommand cmd) {
+  private static String resolvePrimaryGoal(RegistrationCommand cmd) {
     if (cmd.goal() != null && !cmd.goal().isBlank()) {
       return cmd.goal();
     }

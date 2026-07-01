@@ -5,7 +5,6 @@ import com.healthos.usermgmt.consumer.domain.ConsumerAccount;
 import com.healthos.usermgmt.domain.ActiveScope;
 import com.healthos.usermgmt.domain.MembershipClaim;
 import com.healthos.usermgmt.domain.Role;
-import com.healthos.usermgmt.domain.User;
 import com.healthos.usermgmt.shared.domain.AccountType;
 import com.healthos.usermgmt.staff.domain.StaffAccount;
 import io.jsonwebtoken.Jwts;
@@ -29,11 +28,6 @@ public class JwtService {
   public JwtService(HealthOsProperties props) {
     this.props = props;
     this.key = Keys.hmacShaKeyFor(props.getSecurity().getJwt().getSecret().getBytes(StandardCharsets.UTF_8));
-  }
-
-  public String issueAccessToken(
-      User user, Instant now, List<MembershipClaim> memberships, ActiveScope activeScope) {
-    return issueStaffToken(user.getId(), user.getEmail(), roleNames(user.getRoles()), now, memberships, activeScope);
   }
 
   public String issueConsumerToken(ConsumerAccount account, Instant now) {

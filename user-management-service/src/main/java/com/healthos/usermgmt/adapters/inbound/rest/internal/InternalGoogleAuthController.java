@@ -1,6 +1,7 @@
 package com.healthos.usermgmt.adapters.inbound.rest.internal;
 
-import com.healthos.usermgmt.application.AuthService;
+import com.healthos.usermgmt.application.AuthContracts.OAuthResolveResult;
+import com.healthos.usermgmt.consumer.application.ConsumerAuthService;
 import com.healthos.usermgmt.domain.AuthMethodType;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -13,15 +14,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/internal/auth")
 @RequiredArgsConstructor
 public class InternalGoogleAuthController {
-  private final AuthService authService;
+  private final ConsumerAuthService consumerAuthService;
 
-  /**
-   * Resolves an OAuth identity to an existing account (link-only). Never creates a new account:
-   * signup is phone-first. Returns {@code NO_ACCOUNT} when there is no match.
-   */
   @PostMapping("/oauth/resolve")
-  public AuthService.OAuthResolveResult resolveOAuth(@RequestBody ResolveOAuthRequest req) {
-    return authService.resolveOAuth(req.getMethod(), req.getSubject(), req.getEmail());
+  public OAuthResolveResult resolveOAuth(@RequestBody ResolveOAuthRequest req) {
+    return consumerAuthService.resolveOAuth(req.getMethod(), req.getSubject(), req.getEmail());
   }
 
   @Data
@@ -31,4 +28,3 @@ public class InternalGoogleAuthController {
     @Email private String email;
   }
 }
-

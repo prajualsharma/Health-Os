@@ -1,38 +1,43 @@
 package com.healthos.usermgmt.adapters.inbound.rest.mappers;
 
 import com.healthos.usermgmt.adapters.inbound.rest.dto.AdminDtos;
+import com.healthos.usermgmt.application.AccountAdminService;
 import com.healthos.usermgmt.domain.Permission;
 import com.healthos.usermgmt.domain.Role;
-import com.healthos.usermgmt.domain.User;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import javax.annotation.processing.Generated;
 import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-07-01T21:26:23+0530",
+    date = "2026-07-01T21:57:22+0530",
     comments = "version: 1.6.3, compiler: javac, environment: Java 21.0.11 (Ubuntu)"
 )
 @Component
 public class AdminMapperImpl implements AdminMapper {
 
     @Override
-    public AdminDtos.UserResponse toUserResponse(User user) {
-        if ( user == null ) {
+    public AdminDtos.UserResponse toUserResponse(AccountAdminService.AdminAccountView account) {
+        if ( account == null ) {
             return null;
         }
 
         AdminDtos.UserResponse userResponse = new AdminDtos.UserResponse();
 
-        userResponse.setId( user.getId() );
-        userResponse.setFirstName( user.getFirstName() );
-        userResponse.setLastName( user.getLastName() );
-        userResponse.setEmail( user.getEmail() );
-        userResponse.setPhone( user.getPhone() );
-        userResponse.setStatus( user.getStatus() );
-        userResponse.setCreatedAt( user.getCreatedAt() );
-        userResponse.setUpdatedAt( user.getUpdatedAt() );
-
-        userResponse.setRoles( mapRoles(user) );
+        Set<String> set = account.roles();
+        if ( set != null ) {
+            userResponse.setRoles( new LinkedHashSet<String>( set ) );
+        }
+        userResponse.setId( account.id() );
+        userResponse.setAccountType( account.accountType() );
+        userResponse.setFirstName( account.firstName() );
+        userResponse.setLastName( account.lastName() );
+        userResponse.setEmail( account.email() );
+        userResponse.setPhone( account.phone() );
+        userResponse.setStatus( account.status() );
+        userResponse.setCreatedAt( account.createdAt() );
+        userResponse.setUpdatedAt( account.updatedAt() );
 
         return userResponse;
     }

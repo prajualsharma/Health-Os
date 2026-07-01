@@ -1,44 +1,52 @@
 # user-management-service
 
-Identity + RBAC service for HealthOS.
+Identity service for HealthOS — consumer (NutriKit) and staff (Kitchen + Gym) pools.
 
-## Features
-- Flyway migrations (Postgres)
-- Users, Roles, Permissions, User Profiles
-- Scoped RBAC (portal-agnostic memberships for gym/clinic/nutrition)
-- Auth endpoints:
-  - `POST /auth/register`
-  - `POST /auth/login`
-  - `POST /auth/refresh`
-  - `POST /auth/logout`
-  - `POST /auth/otp/request` (dev)
-  - `POST /auth/otp/verify` (dev)
-  - `POST /auth/forgot-password` (dev returns token)
-  - `POST /auth/reset-password`
-- Me endpoints:
-  - `GET /me/profile`
-  - `PUT /me/profile`
-  - `GET /me/memberships`
-  - `POST /me/active-scope`
-- Scoped membership endpoints:
-  - `GET /scoped-memberships`
-  - `POST /scoped-memberships`
-  - `DELETE /scoped-memberships/{id}`
-  - `POST /internal/scoped-memberships` (service-to-service)
-- Admin endpoints (RBAC protected):
-  - `/admin/users/**`
-  - `/admin/roles/**`
-  - `/admin/permissions/**`
+## API surface
+
+**NutriKit (consumer)**
+
+- `POST /auth/nutrikit/phone/initiate`
+- `POST /auth/nutrikit/phone/verify`
+- `POST /auth/nutrikit/register-phone`
+- `POST /auth/nutrikit/refresh`
+- `GET /me/nutrikit/profile`
+- `PUT /me/nutrikit/profile`
+
+**Staff (Kitchen + Gym)**
+
+- `POST /auth/staff/phone/initiate`
+- `POST /auth/staff/phone/verify`
+- `POST /auth/staff/register-phone`
+- `POST /auth/staff/refresh`
+- `GET /me/staff/memberships`
+- `POST /me/staff/active-scope`
+- `GET /scoped-memberships` (manage memberships in a scope)
+- `POST /scoped-memberships`
+- `DELETE /scoped-memberships/{id}`
+
+**Internal (service-to-service)**
+
+- `POST /internal/auth/oauth/resolve`
+- `POST /internal/tokens/refresh`
+- `POST /internal/staff/scoped-memberships`
+
+**Admin (RBAC protected)**
+
+- `/admin/users/**`
+- `/admin/roles/**`
+- `/admin/permissions/**`
 
 ## Run
 
 ```bash
-mvn -f pom.xml spring-boot:run
+mvn spring-boot:run
 ```
 
 ## Database
-- Migration: `src/main/resources/db/migration/V1__init.sql`
-- Migrations: `V1__init.sql`, `V2__scoped_rbac.sql`
-- Seed roles: `SUPER_ADMIN`, `ADMIN`, `GYM_OWNER`, `GYM_MANAGER`, `TRAINER`, `STAFF`, `MEMBER`
-- Seed permissions: `gym:org:manage`, `gym:location:manage`, `gym:staff:invite`, `gym:member:read`, `gym:member:write`
 
+Flyway migrations in `src/main/resources/db/migration/`:
+
+- `consumer` schema — NutriKit accounts and profiles
+- `staff` schema — Kitchen/Gym staff accounts and scoped memberships
+- `public` schema — shared RBAC (`roles`, `permissions`) and kitchen tables

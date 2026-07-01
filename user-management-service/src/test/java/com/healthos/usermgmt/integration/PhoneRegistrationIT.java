@@ -116,7 +116,7 @@ class PhoneRegistrationIT {
     var accessToken = registerJson.get("accessToken").asText();
 
     mockMvc
-        .perform(get("/me/profile").header("Authorization", "Bearer " + accessToken))
+        .perform(get("/me/nutrikit/profile").header("Authorization", "Bearer " + accessToken))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.name").value("Ayushi Naidu"))
         .andExpect(jsonPath("$.email").value("test.user@example.com"))
@@ -130,7 +130,7 @@ class PhoneRegistrationIT {
 
     mockMvc
         .perform(
-            post("/auth/phone/verify")
+            post("/auth/nutrikit/phone/verify")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"phone\":\"" + phone + "\",\"otp\":\"123456\"}"))
         .andExpect(status().isOk())

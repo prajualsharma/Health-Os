@@ -164,7 +164,7 @@ class ApiService {
     }
     return _guarded(() async {
       final res =
-          await _dio.post('/auth/phone/initiate', data: {'phone': phone});
+          await _dio.post('/auth/nutrikit/phone/initiate', data: {'phone': phone});
       return PhoneInitiateResult.fromJson(res.data as Map<String, dynamic>);
     });
   }
@@ -177,8 +177,8 @@ class ApiService {
           newUser: true, registrationToken: 'mock-registration-token');
     }
     return _guarded(() async {
-      final res = await _dio
-          .post('/auth/phone/verify', data: {'phone': phone, 'otp': otp});
+      final res = await _dio.post('/auth/nutrikit/phone/verify',
+          data: {'phone': phone, 'otp': otp});
       return PhoneVerifyResult.fromJson(res.data as Map<String, dynamic>);
     });
   }
@@ -196,7 +196,7 @@ class ApiService {
       );
     }
     return _guarded(() async {
-      final res = await _dio.post('/auth/register-phone',
+      final res = await _dio.post('/auth/nutrikit/register-phone',
           data: data.toRegisterJson(registrationToken));
       return RegisterResult.fromJson(
         res.data as Map<String, dynamic>,
@@ -420,7 +420,7 @@ class ApiService {
       return MockData.profile();
     }
     return _guarded(() async {
-      final res = await _dio.get('/me/profile');
+      final res = await _dio.get('/me/nutrikit/profile');
       return UserProfile.fromJson(res.data as Map<String, dynamic>);
     });
   }

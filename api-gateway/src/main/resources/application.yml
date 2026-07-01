@@ -39,10 +39,10 @@ spring:
                 redis-rate-limiter: "#{@redisRateLimiter}"
                 key-resolver: "#{@ipKeyResolver}"
 
-        - id: user_mgmt_auth
+        - id: user_mgmt_admin_internal
           uri: ${USER_MGMT_BASE_URL:http://localhost:8081}
           predicates:
-            - Path=/auth/**,/me/**,/admin/**,/internal/**
+            - Path=/admin/**,/internal/**
           filters:
             - name: RequestRateLimiter
               args:

@@ -1,7 +1,10 @@
 package com.healthos.usermgmt.staff.adapters.inbound.rest;
 
 import com.healthos.usermgmt.adapters.inbound.rest.dto.AuthDtos;
-import com.healthos.usermgmt.application.AuthService;
+import com.healthos.usermgmt.application.AuthContracts;
+import com.healthos.usermgmt.application.AuthContracts.AuthTokens;
+import com.healthos.usermgmt.application.AuthContracts.PhoneInitiateResult;
+import com.healthos.usermgmt.application.AuthContracts.PhoneVerifyResult;
 import com.healthos.usermgmt.shared.domain.ClientId;
 import com.healthos.usermgmt.staff.application.StaffAuthService;
 import jakarta.validation.Valid;
@@ -44,7 +47,7 @@ public class StaffAuthController {
     return toTokenResponse(staffAuthService.refresh(req.getRefreshToken()));
   }
 
-  private static AuthDtos.PhoneInitiateResponse toInitiateResponse(AuthService.PhoneInitiateResult result) {
+  private static AuthDtos.PhoneInitiateResponse toInitiateResponse(PhoneInitiateResult result) {
     var res = new AuthDtos.PhoneInitiateResponse();
     res.setExists(result.exists());
     res.setOtpSent(result.otpSent());
@@ -54,7 +57,7 @@ public class StaffAuthController {
     return res;
   }
 
-  private static AuthDtos.PhoneVerifyResponse toVerifyResponse(AuthService.PhoneVerifyResult result) {
+  private static AuthDtos.PhoneVerifyResponse toVerifyResponse(PhoneVerifyResult result) {
     var res = new AuthDtos.PhoneVerifyResponse();
     res.setNewUser(result.newUser());
     if (result.newUser()) {
@@ -69,7 +72,7 @@ public class StaffAuthController {
     return res;
   }
 
-  private static AuthDtos.TokenResponse toTokenResponse(AuthService.AuthTokens tokens) {
+  private static AuthDtos.TokenResponse toTokenResponse(AuthTokens tokens) {
     var res = new AuthDtos.TokenResponse();
     res.setAccessToken(tokens.accessToken());
     res.setRefreshToken(tokens.refreshToken());

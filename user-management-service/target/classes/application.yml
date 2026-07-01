@@ -28,6 +28,8 @@ healthos:
   security:
     jwt:
       issuer: ${JWT_ISSUER:healthos}
+      consumer-issuer: ${JWT_CONSUMER_ISSUER:healthos-consumer}
+      staff-issuer: ${JWT_STAFF_ISSUER:healthos-staff}
       secret: ${JWT_SECRET:dev-only-change-me-dev-only-change-me}
       access-token-ttl-seconds: ${ACCESS_TOKEN_TTL_SECONDS:900}
       refresh-token-ttl-seconds: ${REFRESH_TOKEN_TTL_SECONDS:2592000} # 30 days
@@ -38,6 +40,12 @@ healthos:
     dev-bypass: ${OTP_DEV_BYPASS:true}
     max-attempts: ${OTP_MAX_ATTEMPTS:5}
     registration-ttl-seconds: ${OTP_REGISTRATION_TTL_SECONDS:900}
+    consumer-rate-limit-per-hour: ${OTP_CONSUMER_RATE_LIMIT_PER_HOUR:10}
+  consumer-scale:
+    # Split consumer-identity-service when NutriKit MAU exceeds split-mau-threshold and DB is saturated.
+    split-mau-threshold: ${CONSUMER_SPLIT_MAU_THRESHOLD:500000}
+    read-replica-enabled: ${CONSUMER_READ_REPLICA_ENABLED:false}
+    read-replica-url: ${CONSUMER_READ_REPLICA_URL:}
   notification:
     enabled: ${NOTIFICATION_ENABLED:false}
     base-url: ${NOTIFICATION_BASE_URL:http://localhost:8082}

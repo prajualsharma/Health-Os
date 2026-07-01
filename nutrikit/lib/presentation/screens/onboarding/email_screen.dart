@@ -6,6 +6,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/validators.dart';
 import '../../providers/onboarding_store.dart';
 import '../../widgets/onboarding/onboarding_scaffold.dart';
+import '../../widgets/onboarding/onboarding_field.dart';
 
 class EmailScreen extends StatefulWidget {
   const EmailScreen({super.key});
@@ -50,26 +51,16 @@ class _EmailScreenState extends State<EmailScreen> {
         key: _formKey,
         child: Column(
           children: [
-            Container(
-              decoration: BoxDecoration(
-                color: AppColors.card,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.cardBorder),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: TextFormField(
-                controller: _email,
-                keyboardType: TextInputType.emailAddress,
-                style: AppTypography.body,
-                decoration: const InputDecoration(
-                  hintText: 'you@email.com',
-                  border: InputBorder.none,
-                ),
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) return null;
-                  return Validators.email(v);
-                },
-              ),
+            OnboardingTextField(
+              controller: _email,
+              hintText: 'you@email.com',
+              style: AppTypography.body,
+              keyboardType: TextInputType.emailAddress,
+              borderColor: AppColors.cardBorder,
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return null;
+                return Validators.email(v);
+              },
             ),
             const SizedBox(height: 16),
             TextButton(

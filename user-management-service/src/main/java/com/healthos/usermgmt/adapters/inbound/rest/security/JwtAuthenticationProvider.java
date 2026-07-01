@@ -2,11 +2,13 @@ package com.healthos.usermgmt.adapters.inbound.rest.security;
 
 import com.healthos.usermgmt.application.ActiveScopeService;
 import com.healthos.usermgmt.application.ScopedMembershipService;
+import com.healthos.usermgmt.adapters.outbound.security.JwtService;
 import com.healthos.usermgmt.config.HealthOsProperties;
 import com.healthos.usermgmt.domain.ActiveScope;
 import com.healthos.usermgmt.domain.MembershipClaim;
 import com.healthos.usermgmt.domain.PortalType;
 import com.healthos.usermgmt.domain.ScopeType;
+import com.healthos.usermgmt.shared.domain.AccountType;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -28,14 +30,17 @@ import org.springframework.stereotype.Component;
 @Component
 public class JwtAuthenticationProvider implements AuthenticationProvider {
   private final SecretKey key;
+  private final JwtService jwtService;
   private final ScopedMembershipService membershipService;
   private final ActiveScopeService activeScopeService;
 
   public JwtAuthenticationProvider(
       HealthOsProperties props,
+      JwtService jwtService,
       ScopedMembershipService membershipService,
       ActiveScopeService activeScopeService) {
     this.key = Keys.hmacShaKeyFor(props.getSecurity().getJwt().getSecret().getBytes(StandardCharsets.UTF_8));
+    this.jwtService = jwtService;
     this.membershipService = membershipService;
     this.activeScopeService = activeScopeService;
   }
@@ -59,9 +64,19 @@ public class JwtAuthenticationProvider implements AuthenticationProvider {
       throw new BadCredentialsException("Invalid JWT", e);
     }
 
+    var issuer = claims.getIssuer();
+    if (issuer != null && !jwtService.isAllowedIssuer(issuer)) {
+      throw new BadCredentialsException("Untrusted token issuer");
+    }
+
     var userId = UUID.fromString(claims.getSubject());
     var email = claims.get("email", String.class);
     var roles = claims.get("roles", List.class);
+    var accountTypeRaw = claims.get("accountType", String.class);
+    var accountType =
+        accountTypeRaw != null
+            ? AccountType.valueOf(accountTypeRaw)
+            : (issuer != null && issuer.contains("staff") ? AccountType.STAFF : AccountType.CONSUMER);
 
     Collection<? extends GrantedAuthority> authorities =
         roles == null
@@ -77,19 +92,19 @@ public class JwtAuthenticationProvider implements AuthenticationProvider {
             : ((List<?>) roles).stream().map(Object::toString).collect(Collectors.toUnmodifiableSet());
 
     var memberships = parseMemberships(claims.get("memberships", List.class));
-    if (memberships.isEmpty()) {
+    if (memberships.isEmpty() && accountType == AccountType.STAFF) {
       memberships = membershipService.listClaimsForUser(userId);
     }
 
     ActiveScope activeScope = parseActiveScope(claims.get("activeScope", Map.class));
-    if (activeScope == null) {
+    if (activeScope == null && accountType == AccountType.STAFF) {
       activeScope = activeScopeService.get(userId).orElse(null);
     }
-    if (activeScope == null) {
+    if (activeScope == null && accountType == AccountType.STAFF) {
       activeScope = activeScopeService.resolveDefault(memberships).orElse(null);
     }
 
-    var principal = new AuthPrincipal(userId, email, roleNames, memberships, activeScope);
+    var principal = new AuthPrincipal(userId, email, roleNames, memberships, activeScope, accountType);
 
     return new JwtAuthenticationToken(principal, token, authorities);
   }

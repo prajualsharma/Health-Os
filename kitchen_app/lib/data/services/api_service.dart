@@ -99,7 +99,11 @@ class ApiService {
       return const PhoneInitiateResult(exists: true, otpSent: true, devMode: true);
     }
     return _guarded(() async {
-      final res = await _dio.post('/auth/phone/initiate', data: {'phone': phone});
+      final res = await _dio.post(
+        '/auth/staff/phone/initiate',
+        queryParameters: {'clientId': 'kitchen'},
+        data: {'phone': phone},
+      );
       return PhoneInitiateResult.fromJson(res.data as Map<String, dynamic>);
     });
   }
@@ -113,8 +117,11 @@ class ApiService {
       );
     }
     return _guarded(() async {
-      final res =
-          await _dio.post('/auth/phone/verify', data: {'phone': phone, 'otp': otp});
+      final res = await _dio.post(
+        '/auth/staff/phone/verify',
+        queryParameters: {'clientId': 'kitchen'},
+        data: {'phone': phone, 'otp': otp},
+      );
       return PhoneVerifyResult.fromJson(res.data as Map<String, dynamic>);
     });
   }
@@ -132,12 +139,51 @@ class ApiService {
       );
     }
     return _guarded(() async {
-      final res = await _dio.post('/auth/register-phone', data: {
+      final res = await _dio.post('/auth/staff/register-phone', data: {
         'phone': phone,
         'registrationToken': registrationToken,
         'name': name,
       });
       return RegisterResult.fromJson(res.data as Map<String, dynamic>);
+    });
+  }
+
+  Future<List<StaffMembership>> getStaffMemberships() async {
+    if (_mockAuth) {
+      await _mockDelay();
+      return const [
+        StaffMembership(
+          portal: 'KITCHEN',
+          scopeType: 'ORGANIZATION',
+          scopeId: 'org-1',
+          role: 'CORPORATE',
+        ),
+      ];
+    }
+    return _guarded(() async {
+      final res = await _dio.get(
+        '/me/staff/memberships',
+        queryParameters: {'portal': 'KITCHEN'},
+      );
+      final list = (res.data as Map<String, dynamic>)['memberships'] as List? ?? [];
+      return list
+          .map((e) => StaffMembership.fromJson(e as Map<String, dynamic>))
+          .toList();
+    });
+  }
+
+  Future<void> setActiveScope({
+    required String portal,
+    required String scopeType,
+    required String scopeId,
+  }) async {
+    if (_mockAuth) return;
+    await _guarded(() async {
+      await _dio.post('/me/staff/active-scope', data: {
+        'portal': portal,
+        'scopeType': scopeType,
+        'scopeId': scopeId,
+      });
     });
   }
 

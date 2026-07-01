@@ -6,7 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.healthos.usermgmt.adapters.outbound.persistence.UserRepository;
+import com.healthos.usermgmt.consumer.adapters.outbound.persistence.ConsumerAccountRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -47,7 +47,7 @@ class PhoneRegistrationIT {
 
   @Autowired private MockMvc mockMvc;
   @Autowired private ObjectMapper objectMapper;
-  @Autowired private UserRepository userRepository;
+  @Autowired private ConsumerAccountRepository consumerAccountRepository;
 
   @Test
   void phoneRegistrationFlow_createsUserAndProfile() throws Exception {
@@ -55,7 +55,7 @@ class PhoneRegistrationIT {
 
     mockMvc
         .perform(
-            post("/auth/phone/initiate")
+            post("/auth/nutrikit/phone/initiate")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"phone\":\"" + phone + "\"}"))
         .andExpect(status().isOk());
@@ -63,7 +63,7 @@ class PhoneRegistrationIT {
     var verifyRes =
         mockMvc
             .perform(
-                post("/auth/phone/verify")
+                post("/auth/nutrikit/phone/verify")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("{\"phone\":\"" + phone + "\",\"otp\":\"123456\"}"))
             .andExpect(status().isOk())
@@ -76,7 +76,7 @@ class PhoneRegistrationIT {
 
     mockMvc
         .perform(
-            post("/auth/register-phone")
+            post("/auth/nutrikit/register-phone")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
@@ -109,7 +109,7 @@ class PhoneRegistrationIT {
         .andExpect(jsonPath("$.targets.calories").isNumber())
         .andExpect(jsonPath("$.targets.timelineWeeks").isNumber());
 
-    var user = userRepository.findByPhone(phone);
+    var user = consumerAccountRepository.findByPhone(phone);
     assertThat(user).isPresent();
     assertThat(user.get().getFirstName()).isEqualTo("Ayushi");
     assertThat(user.get().getLastName()).isEqualTo("Naidu");

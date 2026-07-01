@@ -1,3 +1,5 @@
+import 'models.dart';
+
 class PhoneInitiateResult {
   const PhoneInitiateResult({
     required this.exists,
@@ -52,4 +54,37 @@ class RegisterResult {
         accessToken: json['accessToken'] as String? ?? '',
         refreshToken: json['refreshToken'] as String?,
       );
+}
+
+class StaffMembership {
+  const StaffMembership({
+    required this.portal,
+    required this.scopeType,
+    required this.scopeId,
+    required this.role,
+  });
+
+  final String portal;
+  final String scopeType;
+  final String scopeId;
+  final String role;
+
+  factory StaffMembership.fromJson(Map<String, dynamic> json) => StaffMembership(
+        portal: json['portal']?.toString() ?? '',
+        scopeType: json['scopeType']?.toString() ?? '',
+        scopeId: json['scopeId']?.toString() ?? '',
+        role: json['role']?.toString() ?? '',
+      );
+
+  SessionRole? get sessionRole {
+    if (portal.toUpperCase() != 'KITCHEN') return null;
+    switch (role.toUpperCase()) {
+      case 'CORPORATE':
+        return SessionRole.corporate;
+      case 'KITCHEN_STAFF':
+        return SessionRole.kitchen;
+      default:
+        return null;
+    }
+  }
 }

@@ -74,8 +74,11 @@ class AuthApi {
   Future<bool> initiatePhone(String phone) async {
     if (_mock) return true;
     return _guarded(() async {
-      final res =
-          await _dio.post('/auth/phone/initiate', data: {'phone': phone});
+      final res = await _dio.post(
+        '/auth/staff/phone/initiate',
+        queryParameters: {'clientId': 'gym'},
+        data: {'phone': phone},
+      );
       return (res.data as Map)['otpSent'] as bool? ?? false;
     });
   }
@@ -88,8 +91,11 @@ class AuthApi {
       );
     }
     return _guarded(() async {
-      final res = await _dio
-          .post('/auth/phone/verify', data: {'phone': phone, 'otp': otp});
+      final res = await _dio.post(
+        '/auth/staff/phone/verify',
+        queryParameters: {'clientId': 'gym'},
+        data: {'phone': phone, 'otp': otp},
+      );
       return PhoneVerifyResult.fromJson(res.data as Map<String, dynamic>);
     });
   }
@@ -103,7 +109,7 @@ class AuthApi {
   }) async {
     if (_mock) return 'mock-access-token';
     return _guarded(() async {
-      final res = await _dio.post('/auth/register-phone', data: {
+      final res = await _dio.post('/auth/staff/register-phone', data: {
         'phone': phone,
         'registrationToken': registrationToken,
         'name': name,
@@ -116,7 +122,8 @@ class AuthApi {
     if (_mock) return const [];
     return _guarded(() async {
       final res = await _dio.get(
-        '/me/memberships',
+        '/me/staff/memberships',
+        queryParameters: {'portal': 'GYM'},
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
       final list = (res.data as Map)['memberships'] as List? ?? const [];

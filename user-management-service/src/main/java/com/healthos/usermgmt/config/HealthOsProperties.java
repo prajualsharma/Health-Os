@@ -10,6 +10,7 @@ public class HealthOsProperties {
   private Otp otp = new Otp();
   private Notification notification = new Notification();
   private Smtp smtp = new Smtp();
+  private ConsumerScale consumerScale = new ConsumerScale();
 
   @Data
   public static class Smtp {
@@ -32,7 +33,9 @@ public class HealthOsProperties {
 
   @Data
   public static class Jwt {
-    private String issuer;
+    private String issuer = "healthos";
+    private String consumerIssuer = "healthos-consumer";
+    private String staffIssuer = "healthos-staff";
     private String secret;
     private long accessTokenTtlSeconds;
     private long refreshTokenTtlSeconds;
@@ -46,6 +49,19 @@ public class HealthOsProperties {
     private boolean devBypass = true;
     private int maxAttempts = 5;
     private long registrationTtlSeconds = 900;
+    /** Max OTP initiate requests per phone per hour (consumer pool). */
+    private int consumerRateLimitPerHour = 10;
+  }
+
+  @Data
+  public static class ConsumerScale {
+    /**
+     * Split consumer-identity-service when NutriKit MAU exceeds this threshold and DB is
+     * the bottleneck. See application.yml healthos.consumer-scale.split-triggers.
+     */
+    private long splitMauThreshold = 500_000;
+    private boolean readReplicaEnabled = false;
+    private String readReplicaUrl;
   }
 
   @Data

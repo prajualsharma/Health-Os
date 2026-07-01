@@ -44,11 +44,11 @@ services:
 
   notification-service:
     environment:
-      JAVA_OPTS: "-Xmx200m -XX:+UseSerialGC"
+      GOMEMLIMIT: 80MiB
     deploy:
       resources:
         limits:
-          memory: 280M
+          memory: 120M
 
   api-gateway:
     environment:

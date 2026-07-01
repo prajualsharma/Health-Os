@@ -11,20 +11,31 @@ set -euo pipefail
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_DIR"
 
-COMPOSE="docker compose -f docker-compose.yml \
-  -f deploy/docker-compose.backend.yml \
-  -f deploy/docker-compose.ec2-email.yml \
-  -f deploy/docker-compose.ec2-minimal.yml"
+ORACLE_STACK="${ORACLE_STACK:-dev}"
+
+if [[ "$ORACLE_STACK" == "dev" ]]; then
+  COMPOSE_FILES="-f docker-compose.yml -f deploy/docker-compose.backend.yml -f deploy/docker-compose.dev-stack.yml"
+  COMPOSE_FILES="$COMPOSE_FILES -f deploy/docker-compose.oracle-6gb.yml"
+elif [[ "$ORACLE_STACK" == "minimal" ]]; then
+  COMPOSE_FILES="-f docker-compose.yml -f deploy/docker-compose.backend.yml -f deploy/docker-compose.ec2-email.yml"
+  COMPOSE_FILES="$COMPOSE_FILES -f deploy/docker-compose.ec2-minimal.yml"
+else
+  COMPOSE_FILES="-f docker-compose.yml -f deploy/docker-compose.backend.yml -f deploy/docker-compose.ec2-email.yml"
+  if [[ "${ORACLE_A1_SMALL:-auto}" == "true" ]] || [[ "${ORACLE_A1_SMALL:-auto}" == "auto" && "$(nproc 2>/dev/null || echo 2)" -le 2 && "$(awk '/MemTotal/{print int($2/1024/1024)}' /proc/meminfo 2>/dev/null || echo 99)" -le 7 ]]; then
+    COMPOSE_FILES="$COMPOSE_FILES -f deploy/docker-compose.oracle-6gb.yml"
+  fi
+fi
+
+COMPOSE="docker compose $COMPOSE_FILES"
 
 # Podman on Oracle Linux uses the same CLI when podman-docker is installed.
 if command -v docker >/dev/null 2>&1; then
   :
 elif command -v podman >/dev/null 2>&1; then
-  COMPOSE="podman compose -f docker-compose.yml \
-    -f deploy/docker-compose.backend.yml \
-    -f deploy/docker-compose.ec2-email.yml \
-    -f deploy/docker-compose.ec2-minimal.yml"
+  COMPOSE="podman compose $COMPOSE_FILES"
 fi
+
+echo "==> Stack mode: ${ORACLE_STACK}"
 
 echo "==> [1/6] Configuring swap (helps small E2.Micro shapes)..."
 if ! swapon --show | grep -q /swapfile2; then
@@ -95,27 +106,49 @@ upsert_env() {
     echo "${key}=${val}" >> .env
   fi
 }
-upsert_env NOTIFICATION_ENABLED "true"
+upsert_env NOTIFICATION_ENABLED "${NOTIFICATION_ENABLED:-true}"
 upsert_env OTP_DEV_BYPASS "${OTP_DEV_BYPASS:-true}"
+upsert_env DEV_OTP_CODE "${DEV_OTP_CODE:-123456}"
+if [[ "$ORACLE_STACK" == "dev" ]]; then
+  upsert_env NOTIFICATION_ENABLED "false"
+  upsert_env OTP_DEV_BYPASS "true"
+  upsert_env DEV_OTP_CODE "123456"
+fi
 upsert_env OTP_EMAIL_TO "${OTP_EMAIL_TO:-prajual.sharma.1559@gmail.com}"
 upsert_env SMTP_HOST "smtp.gmail.com"
 upsert_env SMTP_PORT "587"
 upsert_env SMTP_USERNAME "${SMTP_USERNAME:-prajual.sharma.1559@gmail.com}"
 upsert_env SMTP_FROM "${SMTP_FROM:-prajual.sharma.1559@gmail.com}"
 upsert_env SMTP_ENABLED "true"
-if [[ -n "${SMTP_PASSWORD:-}" ]]; then
+if [[ -n "${SMTP_PASSWORD:-}" ]] && [[ "$ORACLE_STACK" != "dev" ]]; then
   upsert_env SMTP_PASSWORD "$SMTP_PASSWORD"
   upsert_env OTP_DEV_BYPASS "false"
 fi
 
-echo "==> [5/6] Starting backend stack (--no-build if images were pre-loaded)..."
+if [[ "${RESET_DB:-false}" == "true" ]]; then
+  echo "==> [4b/6] Resetting databases (docker compose down -v)..."
+  sudo $COMPOSE down -v 2>/dev/null || true
+fi
+
+echo "==> [5/6] Starting backend stack (${ORACLE_STACK}, --no-build if images were pre-loaded)..."
 BUILD_FLAG="--build"
-if sudo $COMPOSE images 2>/dev/null | grep -q user-management-service; then
+if [[ "$ORACLE_STACK" != "dev" ]] && sudo $COMPOSE images 2>/dev/null | grep -q user-management-service; then
   BUILD_FLAG="--no-build"
   echo "    Using pre-loaded images."
 fi
-sudo $COMPOSE up -d $BUILD_FLAG \
-  postgres redis user-management-service api-gateway
+
+if [[ "$ORACLE_STACK" == "full" ]]; then
+  sudo $COMPOSE up -d $BUILD_FLAG \
+    postgres redis mongo kafka \
+    user-management-service notification-service api-gateway
+elif [[ "$ORACLE_STACK" == "dev" ]]; then
+  sudo $COMPOSE up -d $BUILD_FLAG \
+    postgres redis mongo kafka \
+    user-management-service kitchen-service api-gateway
+else
+  sudo $COMPOSE up -d $BUILD_FLAG \
+    postgres redis user-management-service api-gateway
+fi
 
 echo "==> [6/6] Waiting for api-gateway health..."
 for i in $(seq 1 60); do

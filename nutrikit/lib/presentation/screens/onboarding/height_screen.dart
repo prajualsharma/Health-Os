@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/utils/unit_conversion.dart';
 import '../../onboarding/onboarding_flow.dart';
 import '../../providers/onboarding_store.dart';
-import '../../widgets/onboarding/onboarding_number_field.dart';
+import '../../widgets/onboarding/onboarding_field.dart';
 import '../../widgets/onboarding/onboarding_scaffold.dart';
 import '../../widgets/onboarding/unit_segmented_toggle.dart';
 

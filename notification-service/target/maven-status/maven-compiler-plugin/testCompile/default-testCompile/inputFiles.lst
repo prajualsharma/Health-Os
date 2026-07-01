@@ -1,8 +1,0 @@
-/home/pras/Documents/Health-Os/notification-service/src/test/java/com/healthos/notification/adapters/outbound/redis/IdempotencyServiceTest.java
-/home/pras/Documents/Health-Os/notification-service/src/test/java/com/healthos/notification/application/HandlebarsTemplateRendererTest.java
-/home/pras/Documents/Health-Os/notification-service/src/test/java/com/healthos/notification/application/NotificationProcessorTest.java
-/home/pras/Documents/Health-Os/notification-service/src/test/java/com/healthos/notification/application/factory/NotificationStrategyFactoryTest.java
-/home/pras/Documents/Health-Os/notification-service/src/test/java/com/healthos/notification/application/factory/ProviderSenderFactoryTest.java
-/home/pras/Documents/Health-Os/notification-service/src/test/java/com/healthos/notification/integration/NotificationFlowIT.java
-/home/pras/Documents/Health-Os/notification-service/src/test/java/com/healthos/notification/integration/TemplateControllerIT.java
-/home/pras/Documents/Health-Os/notification-service/src/test/java/com/healthos/notification/support/JwtTestUtil.java

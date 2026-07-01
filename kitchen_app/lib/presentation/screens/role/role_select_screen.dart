@@ -17,6 +17,13 @@ class RoleSelectScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final memberships = auth.memberships;
+    final hasCorporate =
+        memberships.any((m) => m.sessionRole == SessionRole.corporate);
+    final hasKitchen =
+        memberships.any((m) => m.sessionRole == SessionRole.kitchen);
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -31,19 +38,26 @@ class RoleSelectScreen extends StatelessWidget {
               const Text('Pick the view that matches your role.',
                   style: TextStyle(color: AppColors.muted)),
               const SizedBox(height: 28),
-              _RoleCard(
-                icon: Icons.business,
-                title: 'Corporate',
-                subtitle: 'Add and manage cloud kitchens across your org.',
-                onTap: () => _choose(context, SessionRole.corporate),
-              ),
-              const SizedBox(height: 16),
-              _RoleCard(
-                icon: Icons.soup_kitchen,
-                title: 'Kitchen',
-                subtitle: 'Work the live order board and manage your menu.',
-                onTap: () => _choose(context, SessionRole.kitchen),
-              ),
+              if (hasCorporate)
+                _RoleCard(
+                  icon: Icons.business,
+                  title: 'Corporate',
+                  subtitle: 'Add and manage cloud kitchens across your org.',
+                  onTap: () => _choose(context, SessionRole.corporate),
+                ),
+              if (hasCorporate && hasKitchen) const SizedBox(height: 16),
+              if (hasKitchen)
+                _RoleCard(
+                  icon: Icons.soup_kitchen,
+                  title: 'Kitchen',
+                  subtitle: 'Work the live order board and manage your menu.',
+                  onTap: () => _choose(context, SessionRole.kitchen),
+                ),
+              if (!hasCorporate && !hasKitchen)
+                const Text(
+                  'No kitchen memberships on this account. Ask your org admin to invite you.',
+                  style: TextStyle(color: AppColors.muted),
+                ),
             ],
           ),
         ),

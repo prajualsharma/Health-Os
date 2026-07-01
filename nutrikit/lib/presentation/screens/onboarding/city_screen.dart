@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_typography.dart';
 import '../../onboarding/onboarding_flow.dart';
 import '../../providers/onboarding_store.dart';
 import '../../widgets/onboarding/onboarding_city_grid.dart';
+import '../../widgets/onboarding/onboarding_field.dart';
 import '../../widgets/onboarding/onboarding_scaffold.dart';
 
 class CityScreen extends StatefulWidget {
@@ -56,24 +55,10 @@ class _CityScreenState extends State<CityScreen> {
       onNext: _continue,
       body: Column(
         children: [
-          TextField(
+          OnboardingSearchField(
             controller: _search,
+            hintText: 'Search for your city',
             onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(
-              hintText: 'Search for your city',
-              hintStyle: AppTypography.caption.copyWith(fontSize: 14),
-              filled: true,
-              fillColor: AppColors.card,
-              suffixIcon: const Icon(Icons.search, color: AppColors.dim),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(28),
-                borderSide: const BorderSide(color: AppColors.cardBorder),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(28),
-                borderSide: const BorderSide(color: AppColors.cardBorder),
-              ),
-            ),
           ),
           const SizedBox(height: 20),
           OnboardingCityGrid(

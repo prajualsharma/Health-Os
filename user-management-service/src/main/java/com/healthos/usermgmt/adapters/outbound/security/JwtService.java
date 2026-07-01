@@ -1,10 +1,13 @@
 package com.healthos.usermgmt.adapters.outbound.security;
 
 import com.healthos.usermgmt.config.HealthOsProperties;
+import com.healthos.usermgmt.consumer.domain.ConsumerAccount;
 import com.healthos.usermgmt.domain.ActiveScope;
 import com.healthos.usermgmt.domain.MembershipClaim;
 import com.healthos.usermgmt.domain.Role;
 import com.healthos.usermgmt.domain.User;
+import com.healthos.usermgmt.shared.domain.AccountType;
+import com.healthos.usermgmt.staff.domain.StaffAccount;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
@@ -30,24 +33,55 @@ public class JwtService {
 
   public String issueAccessToken(
       User user, Instant now, List<MembershipClaim> memberships, ActiveScope activeScope) {
+    return issueStaffToken(user.getId(), user.getEmail(), roleNames(user.getRoles()), now, memberships, activeScope);
+  }
+
+  public String issueConsumerToken(ConsumerAccount account, Instant now) {
+    var ttlSeconds = props.getSecurity().getJwt().getAccessTokenTtlSeconds();
+    var exp = now.plusSeconds(ttlSeconds);
+    var builder =
+        baseBuilder(props.getSecurity().getJwt().getConsumerIssuer(), account.getId().toString(), now, exp)
+            .claim("accountType", AccountType.CONSUMER.name())
+            .claim("aud", "nutrikit");
+    if (account.getEmail() != null) {
+      builder.claim("email", account.getEmail());
+    }
+    return builder.signWith(key, Jwts.SIG.HS256).compact();
+  }
+
+  public String issueStaffToken(
+      StaffAccount account,
+      Instant now,
+      List<MembershipClaim> memberships,
+      ActiveScope activeScope) {
+    return issueStaffToken(
+        account.getId(),
+        account.getEmail(),
+        roleNames(account.getRoles()),
+        now,
+        memberships,
+        activeScope);
+  }
+
+  private String issueStaffToken(
+      java.util.UUID accountId,
+      String email,
+      Set<String> roles,
+      Instant now,
+      List<MembershipClaim> memberships,
+      ActiveScope activeScope) {
     var ttlSeconds = props.getSecurity().getJwt().getAccessTokenTtlSeconds();
     var exp = now.plusSeconds(ttlSeconds);
 
-    Set<String> roles =
-        user.getRoles().stream().map(Role::getName).collect(Collectors.toUnmodifiableSet());
-
     var builder =
-        Jwts.builder()
-            .issuer(props.getSecurity().getJwt().getIssuer())
-            .subject(user.getId().toString())
-            .issuedAt(Date.from(now))
-            .expiration(Date.from(exp))
+        baseBuilder(props.getSecurity().getJwt().getStaffIssuer(), accountId.toString(), now, exp)
+            .claim("accountType", AccountType.STAFF.name())
+            .claim("aud", "staff")
             .claim("roles", roles);
 
-    if (user.getEmail() != null) {
-      builder.claim("email", user.getEmail());
+    if (email != null) {
+      builder.claim("email", email);
     }
-
     if (memberships != null && !memberships.isEmpty()) {
       builder.claim("memberships", memberships.stream().map(this::toClaimMap).toList());
     }
@@ -56,6 +90,29 @@ public class JwtService {
     }
 
     return builder.signWith(key, Jwts.SIG.HS256).compact();
+  }
+
+  public boolean isAllowedIssuer(String issuer) {
+    var jwt = props.getSecurity().getJwt();
+    return jwt.getIssuer().equals(issuer)
+        || jwt.getConsumerIssuer().equals(issuer)
+        || jwt.getStaffIssuer().equals(issuer);
+  }
+
+  private io.jsonwebtoken.JwtBuilder baseBuilder(
+      String issuer, String subject, Instant now, Instant exp) {
+    return Jwts.builder()
+        .issuer(issuer)
+        .subject(subject)
+        .issuedAt(Date.from(now))
+        .expiration(Date.from(exp));
+  }
+
+  private static Set<String> roleNames(Set<Role> roles) {
+    if (roles == null) {
+      return Set.of();
+    }
+    return roles.stream().map(Role::getName).collect(Collectors.toUnmodifiableSet());
   }
 
   private Map<String, Object> toClaimMap(MembershipClaim claim) {

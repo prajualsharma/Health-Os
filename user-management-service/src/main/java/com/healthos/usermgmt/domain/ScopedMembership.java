@@ -1,5 +1,6 @@
 package com.healthos.usermgmt.domain;
 
+import com.healthos.usermgmt.staff.domain.StaffAccount;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -19,14 +20,14 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "scoped_memberships")
+@Table(schema = "staff", name = "scoped_memberships")
 public class ScopedMembership {
   @Id
   private UUID id;
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "user_id", nullable = false)
-  private User user;
+  @JoinColumn(name = "account_id", nullable = false)
+  private StaffAccount account;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "portal_type", nullable = false, length = 32)

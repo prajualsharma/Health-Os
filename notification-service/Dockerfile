@@ -1,22 +1,20 @@
 # syntax=docker/dockerfile:1
 
-# --- Build stage: compile the Spring Boot fat jar from source ---
-FROM maven:3.9-eclipse-temurin-21 AS build
-WORKDIR /workspace
+FROM golang:1.22-alpine AS build
+WORKDIR /src
+RUN apk add --no-cache git ca-certificates
 
-COPY pom.xml .
-RUN mvn -q -B dependency:go-offline
+COPY pkg/healthos ./pkg/healthos
+COPY notification-service ./notification-service
 
-COPY src ./src
-RUN mvn -q -B clean package -DskipTests
+WORKDIR /src/notification-service
+ENV GOWORK=off
+RUN go mod download
+RUN CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -ldflags="-s -w" -o /notification-service ./cmd/server
 
-# --- Runtime stage: small JRE image ---
-FROM eclipse-temurin:21-jre
+FROM alpine:3.20
+RUN apk add --no-cache ca-certificates wget
 WORKDIR /app
-
-COPY --from=build /workspace/target/*.jar app.jar
-
-ENV JAVA_OPTS="-XX:MaxRAMPercentage=70 -XX:InitialRAMPercentage=40"
+COPY --from=build /notification-service /app/notification-service
 EXPOSE 8082
-
-ENTRYPOINT ["sh","-c","java $JAVA_OPTS -jar /app/app.jar"]
+ENTRYPOINT ["/app/notification-service"]

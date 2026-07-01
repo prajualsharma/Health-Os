@@ -2,7 +2,7 @@ package com.healthos.usermgmt.application;
 
 import com.healthos.usermgmt.adapters.outbound.persistence.RoleRepository;
 import com.healthos.usermgmt.adapters.outbound.persistence.ScopedMembershipRepository;
-import com.healthos.usermgmt.adapters.outbound.persistence.UserRepository;
+import com.healthos.usermgmt.staff.adapters.outbound.persistence.StaffAccountRepository;
 import com.healthos.usermgmt.domain.MembershipClaim;
 import com.healthos.usermgmt.domain.MembershipStatus;
 import com.healthos.usermgmt.domain.PortalType;
@@ -20,18 +20,18 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ScopedMembershipService {
   private final ScopedMembershipRepository membershipRepository;
-  private final UserRepository userRepository;
+  private final StaffAccountRepository staffAccountRepository;
   private final RoleRepository roleRepository;
   private final ScopeAuthorizationService authorizationService;
 
   public List<MembershipClaim> listClaimsForUser(UUID userId) {
-    return membershipRepository.findByUserIdAndStatus(userId, MembershipStatus.ACTIVE).stream()
+    return membershipRepository.findByAccountIdAndStatus(userId, MembershipStatus.ACTIVE).stream()
         .map(this::toClaim)
         .toList();
   }
 
   public List<ScopedMembership> listForUser(UUID userId) {
-    return membershipRepository.findByUserIdAndStatus(userId, MembershipStatus.ACTIVE);
+    return membershipRepository.findByAccountIdAndStatus(userId, MembershipStatus.ACTIVE);
   }
 
   public List<ScopedMembership> listForScope(PortalType portalType, ScopeType scopeType, UUID scopeId) {
@@ -79,11 +79,13 @@ public class ScopedMembershipService {
       ScopeType scopeType,
       UUID scopeId,
       String roleName) {
-    var targetUser =
-        userRepository.findById(targetUserId).orElseThrow(() -> new IllegalArgumentException("User not found"));
+    var targetAccount =
+        staffAccountRepository
+            .findById(targetUserId)
+            .orElseThrow(() -> new IllegalArgumentException("Staff account not found"));
 
     var existing =
-        membershipRepository.findByUserIdAndPortalTypeAndScopeTypeAndScopeIdAndRoleName(
+        membershipRepository.findByAccountIdAndPortalTypeAndScopeTypeAndScopeIdAndRoleName(
             targetUserId, portalType, scopeType, scopeId, roleName);
 
     if (existing.isPresent()) {
@@ -97,7 +99,7 @@ public class ScopedMembershipService {
 
     var membership = new ScopedMembership();
     membership.setId(UUID.randomUUID());
-    membership.setUser(targetUser);
+    membership.setAccount(targetAccount);
     membership.setPortalType(portalType);
     membership.setScopeType(scopeType);
     membership.setScopeId(scopeId);

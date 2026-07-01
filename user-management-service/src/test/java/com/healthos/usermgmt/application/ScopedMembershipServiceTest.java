@@ -8,15 +8,15 @@ import static org.mockito.Mockito.when;
 
 import com.healthos.usermgmt.adapters.outbound.persistence.RoleRepository;
 import com.healthos.usermgmt.adapters.outbound.persistence.ScopedMembershipRepository;
-import com.healthos.usermgmt.adapters.outbound.persistence.UserRepository;
+import com.healthos.usermgmt.staff.adapters.outbound.persistence.StaffAccountRepository;
 import com.healthos.usermgmt.domain.MembershipClaim;
 import com.healthos.usermgmt.domain.MembershipStatus;
 import com.healthos.usermgmt.domain.PortalType;
 import com.healthos.usermgmt.domain.ScopeType;
 import com.healthos.usermgmt.domain.ScopedMembership;
 import com.healthos.usermgmt.domain.ScopedRoleName;
-import com.healthos.usermgmt.domain.User;
 import com.healthos.usermgmt.domain.UserStatus;
+import com.healthos.usermgmt.staff.domain.StaffAccount;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -29,7 +29,7 @@ import org.mockito.Mockito;
 
 class ScopedMembershipServiceTest {
   private ScopedMembershipRepository membershipRepository;
-  private UserRepository userRepository;
+  private StaffAccountRepository staffAccountRepository;
   private RoleRepository roleRepository;
   private ScopeAuthorizationService authorizationService;
   private ScopedMembershipService service;
@@ -43,12 +43,12 @@ class ScopedMembershipServiceTest {
   @BeforeEach
   void setUp() {
     membershipRepository = Mockito.mock(ScopedMembershipRepository.class);
-    userRepository = Mockito.mock(UserRepository.class);
+    staffAccountRepository = Mockito.mock(StaffAccountRepository.class);
     roleRepository = Mockito.mock(RoleRepository.class);
     authorizationService = Mockito.mock(ScopeAuthorizationService.class);
     service =
         new ScopedMembershipService(
-            membershipRepository, userRepository, roleRepository, authorizationService);
+            membershipRepository, staffAccountRepository, roleRepository, authorizationService);
     when(roleRepository.existsByName(any())).thenReturn(true);
   }
 
@@ -59,8 +59,8 @@ class ScopedMembershipServiceTest {
 
     when(authorizationService.canAssignMembership(any(), any(), any(), any(), any(), any(), any()))
         .thenReturn(true);
-    when(userRepository.findById(managerId)).thenReturn(Optional.of(activeUser(managerId)));
-    when(membershipRepository.findByUserIdAndPortalTypeAndScopeTypeAndScopeIdAndRoleName(
+    when(staffAccountRepository.findById(managerId)).thenReturn(Optional.of(staffAccount(managerId)));
+    when(membershipRepository.findByAccountIdAndPortalTypeAndScopeTypeAndScopeIdAndRoleName(
             any(), any(), any(), any(), any()))
         .thenReturn(Optional.empty());
     when(membershipRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
@@ -135,15 +135,15 @@ class ScopedMembershipServiceTest {
     assertThat(membership.getStatus()).isEqualTo(MembershipStatus.REVOKED);
   }
 
-  private static User activeUser(UUID id) {
-    var user = new User();
-    user.setId(id);
-    user.setFirstName("Test");
-    user.setEmail("test@example.com");
-    user.setPassword("hash");
-    user.setStatus(UserStatus.ACTIVE);
-    user.setCreatedAt(Instant.now());
-    user.setUpdatedAt(Instant.now());
-    return user;
+  private static StaffAccount staffAccount(UUID id) {
+    var account = new StaffAccount();
+    account.setId(id);
+    account.setFirstName("Test");
+    account.setEmail("test@example.com");
+    account.setPassword("hash");
+    account.setStatus(UserStatus.ACTIVE);
+    account.setCreatedAt(Instant.now());
+    account.setUpdatedAt(Instant.now());
+    return account;
   }
 }

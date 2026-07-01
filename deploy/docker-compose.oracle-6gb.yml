@@ -1,0 +1,15 @@
+# Oracle A1.Flex 1 OCPU / 6 GB — keep Kafka + notification within RAM.
+services:
+  kafka:
+    environment:
+      KAFKA_HEAP_OPTS: "-Xmx256m -Xms128m"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  notification-service:
+    deploy:
+      resources:
+        limits:
+          memory: 256M

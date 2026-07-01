@@ -11,7 +11,7 @@ public class ScopedMembershipMapper {
   public ScopedMembershipDtos.MembershipResponse toResponse(ScopedMembership membership) {
     var res = new ScopedMembershipDtos.MembershipResponse();
     res.setId(membership.getId());
-    res.setUserId(membership.getUser().getId());
+    res.setUserId(membership.getAccount().getId());
     res.setPortalType(membership.getPortalType());
     res.setScopeType(membership.getScopeType());
     res.setScopeId(membership.getScopeId());

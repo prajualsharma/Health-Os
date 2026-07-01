@@ -105,7 +105,7 @@ class SessionNotifier extends Notifier<Session> {
     final memberships =
         await ref.read(authApiProvider).getMemberships(token);
     final gymMembership = memberships
-        .where((m) => m.scopeType.toUpperCase() == 'GYM')
+        .where((m) => m.portal.toUpperCase() == 'GYM')
         .cast<Membership?>()
         .firstWhere((_) => true, orElse: () => null);
 

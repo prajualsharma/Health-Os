@@ -97,6 +97,8 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       JWT_ISSUER: ${JWT_ISSUER:-healthos}
+      JWT_CONSUMER_ISSUER: ${JWT_CONSUMER_ISSUER:-healthos-consumer}
+      JWT_STAFF_ISSUER: ${JWT_STAFF_ISSUER:-healthos-staff}
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
       ACCESS_TOKEN_TTL_SECONDS: 900
       REFRESH_TOKEN_TTL_SECONDS: 2592000
@@ -104,6 +106,7 @@ services:
       OTP_TTL_SECONDS: 600
       OTP_LENGTH: 6
       OTP_DEV_BYPASS: ${OTP_DEV_BYPASS:-true}
+      OTP_CONSUMER_RATE_LIMIT_PER_HOUR: ${OTP_CONSUMER_RATE_LIMIT_PER_HOUR:-10}
       NOTIFICATION_ENABLED: ${NOTIFICATION_ENABLED:-false}
       NOTIFICATION_BASE_URL: http://notification-service:8082
       OTP_EMAIL_TO: ${OTP_EMAIL_TO:-}
@@ -126,8 +129,8 @@ services:
 
   notification-service:
     build:
-      context: ./notification-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: notification-service/Dockerfile
     container_name: healthos-notification-service
     networks: [healthos]
     restart: unless-stopped
@@ -148,6 +151,7 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       SMTP_FROM: ${SMTP_FROM:-${SMTP_USERNAME:-}}
       SMTP_ENABLED: ${SMTP_ENABLED:-true}
+      GOMEMLIMIT: 80MiB
     depends_on:
       mongo:
         condition: service_healthy
@@ -163,8 +167,8 @@ services:
 
   kitchen-service:
     build:
-      context: ./kitchen-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: kitchen-service/Dockerfile
     container_name: healthos-kitchen-service
     networks: [healthos]
     restart: unless-stopped
@@ -174,8 +178,11 @@ services:
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-healthos}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-healthos}
       JWT_ISSUER: ${JWT_ISSUER:-healthos}
+      JWT_CONSUMER_ISSUER: ${JWT_CONSUMER_ISSUER:-healthos-consumer}
+      JWT_STAFF_ISSUER: ${JWT_STAFF_ISSUER:-healthos-staff}
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
       USER_MGMT_BASE_URL: http://user-management-service:8081
+      GOMEMLIMIT: 64MiB
     depends_on:
       postgres:
         condition: service_healthy

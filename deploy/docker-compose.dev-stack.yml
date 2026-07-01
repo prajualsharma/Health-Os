@@ -1,0 +1,62 @@
+# Dev backend stack: gateway + user-mgmt + kitchen (Go) + all datastores.
+# No notification-service, no web/nginx (frontends live on Vercel).
+# OTP dev bypass: 123456
+#
+#   docker compose -f docker-compose.yml \
+#     -f deploy/docker-compose.backend.yml \
+#     -f deploy/docker-compose.dev-stack.yml \
+#     -f deploy/docker-compose.oracle-6gb.yml up -d --build \
+#     postgres redis mongo kafka user-management-service kitchen-service api-gateway
+
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+
+  mongo:
+    ports:
+      - "27017:27017"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  kafka:
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_HEAP_OPTS: "-Xmx256m -Xms128m"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  user-management-service:
+    environment:
+      NOTIFICATION_ENABLED: "false"
+      OTP_DEV_BYPASS: "true"
+      DEV_OTP_CODE: "123456"
+
+  notification-service:
+    profiles: ["notification"]
+    restart: "no"
+
+  kitchen-service:
+    profiles: []
+    restart: unless-stopped
+    depends_on:
+      user-management-service:
+        condition: service_healthy
+
+  api-gateway:
+    depends_on: !reset
+      redis:
+        condition: service_healthy
+      user-management-service:
+        condition: service_healthy
+      kitchen-service:
+        condition: service_healthy
+
+  web:
+    profiles: ["full"]
+    restart: "no"

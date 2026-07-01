@@ -38,6 +38,7 @@ public class AuthDtos {
   public static class OtpVerifyRequest {
     @NotBlank @Size(max = 32) private String phone;
     @NotBlank @Size(min = 4, max = 10) private String otp;
+    @Size(max = 32) private String clientId;
   }
 
   @Data
@@ -80,6 +81,8 @@ public class AuthDtos {
   @Data
   public static class PhoneInitiateRequest {
     @NotBlank @Size(max = 32) private String phone;
+    /** nutrikit | kitchen | gym — defaults to nutrikit on legacy /auth routes */
+    @Size(max = 32) private String clientId;
   }
 
   @Data
@@ -144,6 +147,13 @@ public class AuthDtos {
     private int carbs;
     private int fat;
     private int timelineWeeks;
+  }
+
+  @Data
+  public static class StaffRegisterPhoneRequest {
+    @NotBlank @Size(max = 32) private String phone;
+    @NotBlank private String registrationToken;
+    @NotBlank @Size(max = 160) private String name;
   }
 }
 

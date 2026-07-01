@@ -19,6 +19,26 @@ spring:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
 
       routes:
+        - id: user_mgmt_auth_nutrikit
+          uri: ${USER_MGMT_BASE_URL:http://localhost:8081}
+          predicates:
+            - Path=/auth/nutrikit/**,/me/nutrikit/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter: "#{@redisRateLimiter}"
+                key-resolver: "#{@ipKeyResolver}"
+
+        - id: user_mgmt_auth_staff
+          uri: ${USER_MGMT_BASE_URL:http://localhost:8081}
+          predicates:
+            - Path=/auth/staff/**,/me/staff/**,/scoped-memberships/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter: "#{@redisRateLimiter}"
+                key-resolver: "#{@ipKeyResolver}"
+
         - id: user_mgmt_auth
           uri: ${USER_MGMT_BASE_URL:http://localhost:8081}
           predicates:

@@ -6,10 +6,10 @@ import com.healthos.usermgmt.application.AuthService.NutritionTargets;
  * Computes daily calorie and macro targets using the Mifflin-St Jeor equation. This is a simple,
  * deterministic baseline; a dedicated nutrition service can replace it later.
  */
-final class NutritionCalculator {
+public final class NutritionCalculator {
   private NutritionCalculator() {}
 
-  static NutritionTargets compute(
+  public static NutritionTargets compute(
       String gender,
       Integer age,
       Integer heightCm,

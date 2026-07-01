@@ -2,6 +2,9 @@ package com.healthos.usermgmt.adapters.inbound.rest;
 
 import com.healthos.usermgmt.adapters.inbound.rest.dto.AuthDtos;
 import com.healthos.usermgmt.application.AuthService;
+import com.healthos.usermgmt.consumer.application.ConsumerAuthService;
+import com.healthos.usermgmt.shared.domain.ClientId;
+import com.healthos.usermgmt.staff.application.StaffAuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AuthController {
   private final AuthService authService;
+  private final ConsumerAuthService consumerAuthService;
+  private final StaffAuthService staffAuthService;
 
   @PostMapping("/register")
   public AuthDtos.TokenResponse register(@Valid @RequestBody AuthDtos.RegisterRequest req) {
@@ -54,7 +59,11 @@ public class AuthController {
   @PostMapping("/phone/initiate")
   public AuthDtos.PhoneInitiateResponse initiatePhone(
       @Valid @RequestBody AuthDtos.PhoneInitiateRequest req) {
-    var result = authService.initiatePhone(req.getPhone());
+    var clientId = resolveClientId(req.getClientId());
+    var result =
+        clientId == ClientId.NUTRIKIT
+            ? consumerAuthService.initiatePhone(req.getPhone())
+            : staffAuthService.initiatePhone(req.getPhone());
     var res = new AuthDtos.PhoneInitiateResponse();
     res.setExists(result.exists());
     res.setOtpSent(result.otpSent());
@@ -67,7 +76,11 @@ public class AuthController {
   @PostMapping("/phone/verify")
   public AuthDtos.PhoneVerifyResponse verifyPhone(
       @Valid @RequestBody AuthDtos.OtpVerifyRequest req) {
-    var result = authService.verifyPhone(req.getPhone(), req.getOtp());
+    var clientId = resolveClientId(req.getClientId());
+    var result =
+        clientId == ClientId.NUTRIKIT
+            ? consumerAuthService.verifyPhone(req.getPhone(), req.getOtp())
+            : staffAuthService.verifyPhone(req.getPhone(), req.getOtp(), clientId);
     var res = new AuthDtos.PhoneVerifyResponse();
     res.setNewUser(result.newUser());
     if (result.newUser()) {
@@ -86,7 +99,7 @@ public class AuthController {
   public AuthDtos.RegisterPhoneResponse registerPhone(
       @Valid @RequestBody AuthDtos.RegisterPhoneRequest req) {
     var result =
-        authService.registerFromPhone(
+        consumerAuthService.registerFromPhone(
             new AuthService.RegistrationCommand(
                 req.getPhone(),
                 req.getRegistrationToken(),
@@ -138,6 +151,13 @@ public class AuthController {
   @PostMapping("/reset-password")
   public void resetPassword(@Valid @RequestBody AuthDtos.ResetPasswordRequest req) {
     authService.resetPassword(req.getResetToken(), req.getNewPassword());
+  }
+
+  private static ClientId resolveClientId(String raw) {
+    if (raw == null || raw.isBlank()) {
+      return ClientId.NUTRIKIT;
+    }
+    return ClientId.from(raw);
   }
 
   private static AuthDtos.TokenResponse toTokenResponse(AuthService.AuthTokens tokens) {

@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../data/models/auth.dart';
 import '../../data/models/models.dart';
 import '../../data/services/api_service.dart';
 
@@ -21,6 +22,7 @@ class AuthProvider extends ChangeNotifier {
   String? _error;
   bool _lastDevMode = false;
   SessionRole? _role;
+  List<StaffMembership> _memberships = [];
 
   String? get token => _token;
   String? get registrationToken => _registrationToken;
@@ -30,6 +32,7 @@ class AuthProvider extends ChangeNotifier {
   bool get isAuthenticated => _token != null;
   bool get lastDevMode => _lastDevMode;
   SessionRole? get role => _role;
+  List<StaffMembership> get memberships => _memberships;
 
   Future<void> _loadSession() async {
     final prefs = await SharedPreferences.getInstance();
@@ -44,7 +47,28 @@ class AuthProvider extends ChangeNotifier {
           _role = null;
         }
       }
+      await _refreshMemberships();
       notifyListeners();
+    }
+  }
+
+  Future<void> _refreshMemberships() async {
+    if (_token == null) return;
+    try {
+      _memberships = await _api.getStaffMemberships();
+      if (_role == null) {
+        final derived = _memberships
+            .map((m) => m.sessionRole)
+            .whereType<SessionRole>()
+            .firstOrNull;
+        if (derived != null) {
+          _role = derived;
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString(AppConstants.roleKey, derived.name);
+        }
+      }
+    } catch (_) {
+      _memberships = [];
     }
   }
 
@@ -66,7 +90,6 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Verifies OTP. Returns true for new user, false for returning user, null on error.
   Future<bool?> verifyPhone(String phone, String otp) async {
     _setLoading(true);
     try {
@@ -81,6 +104,7 @@ class AuthProvider extends ChangeNotifier {
         res.accessToken ?? 'mock-access-token',
         res.refreshToken,
       );
+      await _refreshMemberships();
       return false;
     } on ApiException catch (e) {
       _error = e.message;
@@ -112,6 +136,7 @@ class AuthProvider extends ChangeNotifier {
       await _persistTokens(res.accessToken, res.refreshToken);
       _registrationToken = null;
       _pendingPhone = null;
+      await _refreshMemberships();
       return true;
     } on ApiException catch (e) {
       _error = e.message;
@@ -128,6 +153,19 @@ class AuthProvider extends ChangeNotifier {
     _role = role;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(AppConstants.roleKey, role.name);
+    final match = _memberships
+        .where((m) => m.sessionRole == role)
+        .cast<StaffMembership?>()
+        .firstOrNull;
+    if (match != null) {
+      try {
+        await _api.setActiveScope(
+          portal: match.portal,
+          scopeType: match.scopeType,
+          scopeId: match.scopeId,
+        );
+      } catch (_) {}
+    }
     notifyListeners();
   }
 
@@ -153,6 +191,7 @@ class AuthProvider extends ChangeNotifier {
     await prefs.remove(AppConstants.roleKey);
     _token = null;
     _role = null;
+    _memberships = [];
     _registrationToken = null;
     _pendingPhone = null;
     notifyListeners();

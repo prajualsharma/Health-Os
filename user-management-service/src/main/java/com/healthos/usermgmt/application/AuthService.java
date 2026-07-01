@@ -538,11 +538,11 @@ public class AuthService {
       String deliveryEmail) {}
 
   public record PhoneVerifyResult(boolean newUser, AuthTokens tokens, String registrationToken) {
-    static PhoneVerifyResult returningUser(AuthTokens tokens) {
+    public static PhoneVerifyResult returningUser(AuthTokens tokens) {
       return new PhoneVerifyResult(false, tokens, null);
     }
 
-    static PhoneVerifyResult pendingRegistration(String registrationToken) {
+    public static PhoneVerifyResult pendingRegistration(String registrationToken) {
       return new PhoneVerifyResult(true, null, registrationToken);
     }
   }

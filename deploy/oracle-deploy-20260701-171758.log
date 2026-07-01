@@ -1,0 +1,404 @@
+==> Syncing Health-Os to ubuntu@152.67.28.189 (stack: dev)...
+sending incremental file list
+deleting .env
+./
+.env.example
+docker-compose.yml
+api-gateway/src/main/resources/application.yml
+deploy/
+deploy/oracle-deploy-20260701-171758.log
+deploy/oracle-deploy.sh
+deploy/oracle-setup.sh
+healthos_flutter/lib/core/session.dart
+healthos_flutter/lib/core/api/auth_api.dart
+kitchen-service/internal/config/config.go
+kitchen-service/internal/gateway/usermgmt_client.go
+kitchen-service/internal/handler/module.go
+kitchen-service/internal/handler/middleware/auth.go
+kitchen_app/lib/data/models/auth.dart
+kitchen_app/lib/data/services/api_service.dart
+kitchen_app/lib/presentation/providers/auth_provider.dart
+kitchen_app/lib/presentation/screens/role/role_select_screen.dart
+pkg/healthos/jwt/
+pkg/healthos/jwt/jwt.go
+pkg/healthos/jwt/permissions.go
+user-management-service/
+user-management-service/src/main/java/com/healthos/usermgmt/
+user-management-service/src/main/java/com/healthos/usermgmt/adapters/inbound/rest/AuthController.java
+user-management-service/src/main/java/com/healthos/usermgmt/adapters/inbound/rest/dto/AuthDtos.java
+user-management-service/src/main/java/com/healthos/usermgmt/adapters/inbound/rest/mappers/ScopedMembershipMapper.java
+user-management-service/src/main/java/com/healthos/usermgmt/adapters/inbound/rest/security/AuthPrincipal.java
+user-management-service/src/main/java/com/healthos/usermgmt/adapters/inbound/rest/security/JwtAuthenticationProvider.java
+user-management-service/src/main/java/com/healthos/usermgmt/adapters/outbound/persistence/ScopedMembershipRepository.java
+user-management-service/src/main/java/com/healthos/usermgmt/adapters/outbound/security/JwtService.java
+user-management-service/src/main/java/com/healthos/usermgmt/application/
+user-management-service/src/main/java/com/healthos/usermgmt/application/AuthService.java
+user-management-service/src/main/java/com/healthos/usermgmt/application/NutritionCalculator.java
+user-management-service/src/main/java/com/healthos/usermgmt/application/OtpRateLimitService.java
+user-management-service/src/main/java/com/healthos/usermgmt/application/ScopedMembershipService.java
+user-management-service/src/main/java/com/healthos/usermgmt/config/HealthOsProperties.java
+user-management-service/src/main/java/com/healthos/usermgmt/consumer/
+user-management-service/src/main/java/com/healthos/usermgmt/consumer/adapters/
+user-management-service/src/main/java/com/healthos/usermgmt/consumer/adapters/inbound/
+user-management-service/src/main/java/com/healthos/usermgmt/consumer/adapters/inbound/rest/
+user-management-service/src/main/java/com/healthos/usermgmt/consumer/adapters/inbound/rest/NutrikitAuthController.java
+user-management-service/src/main/java/com/healthos/usermgmt/consumer/adapters/outbound/
+user-management-service/src/main/java/com/healthos/usermgmt/consumer/adapters/outbound/persistence/
+user-management-service/src/main/java/com/healthos/usermgmt/consumer/adapters/outbound/persistence/ConsumerAccountRepository.java
+user-management-service/src/main/java/com/healthos/usermgmt/consumer/adapters/outbound/persistence/ConsumerAuthMethodRepository.java
+user-management-service/src/main/java/com/healthos/usermgmt/consumer/adapters/outbound/persistence/ConsumerRefreshTokenRepository.java
+user-management-service/src/main/java/com/healthos/usermgmt/consumer/adapters/outbound/persistence/ConsumerUserProfileRepository.java
+user-management-service/src/main/java/com/healthos/usermgmt/consumer/application/
+user-management-service/src/main/java/com/healthos/usermgmt/consumer/application/ConsumerAuthService.java
+user-management-service/src/main/java/com/healthos/usermgmt/consumer/domain/
+user-management-service/src/main/java/com/healthos/usermgmt/consumer/domain/ConsumerAccount.java
+user-management-service/src/main/java/com/healthos/usermgmt/consumer/domain/ConsumerAuthMethod.java
+user-management-service/src/main/java/com/healthos/usermgmt/consumer/domain/ConsumerRefreshToken.java
+user-management-service/src/main/java/com/healthos/usermgmt/consumer/domain/ConsumerUserProfile.java
+user-management-service/src/main/java/com/healthos/usermgmt/domain/ScopedMembership.java
+user-management-service/src/main/java/com/healthos/usermgmt/shared/
+user-management-service/src/main/java/com/healthos/usermgmt/shared/domain/
+user-management-service/src/main/java/com/healthos/usermgmt/shared/domain/AccountType.java
+user-management-service/src/main/java/com/healthos/usermgmt/shared/domain/ClientId.java
+user-management-service/src/main/java/com/healthos/usermgmt/staff/
+user-management-service/src/main/java/com/healthos/usermgmt/staff/adapters/
+user-management-service/src/main/java/com/healthos/usermgmt/staff/adapters/inbound/
+user-management-service/src/main/java/com/healthos/usermgmt/staff/adapters/inbound/rest/
+user-management-service/src/main/java/com/healthos/usermgmt/staff/adapters/inbound/rest/StaffAuthController.java
+user-management-service/src/main/java/com/healthos/usermgmt/staff/adapters/inbound/rest/StaffMeMembershipController.java
+user-management-service/src/main/java/com/healthos/usermgmt/staff/adapters/inbound/rest/internal/
+user-management-service/src/main/java/com/healthos/usermgmt/staff/adapters/inbound/rest/internal/StaffInternalScopedMembershipController.java
+user-management-service/src/main/java/com/healthos/usermgmt/staff/adapters/outbound/
+user-management-service/src/main/java/com/healthos/usermgmt/staff/adapters/outbound/persistence/
+user-management-service/src/main/java/com/healthos/usermgmt/staff/adapters/outbound/persistence/StaffAccountRepository.java
+user-management-service/src/main/java/com/healthos/usermgmt/staff/adapters/outbound/persistence/StaffAuthMethodRepository.java
+user-management-service/src/main/java/com/healthos/usermgmt/staff/adapters/outbound/persistence/StaffRefreshTokenRepository.java
+user-management-service/src/main/java/com/healthos/usermgmt/staff/application/
+user-management-service/src/main/java/com/healthos/usermgmt/staff/application/StaffAuthService.java
+user-management-service/src/main/java/com/healthos/usermgmt/staff/domain/
+user-management-service/src/main/java/com/healthos/usermgmt/staff/domain/StaffAccount.java
+user-management-service/src/main/java/com/healthos/usermgmt/staff/domain/StaffAuthMethod.java
+user-management-service/src/main/java/com/healthos/usermgmt/staff/domain/StaffRefreshToken.java
+user-management-service/src/main/resources/application.yml
+user-management-service/src/main/resources/db/migration/
+user-management-service/src/main/resources/db/migration/V6__consumer_staff_split.sql
+user-management-service/src/main/resources/db/migration/consumer/
+user-management-service/src/main/resources/db/migration/staff/
+user-management-service/src/test/java/com/healthos/usermgmt/application/ScopedMembershipServiceTest.java
+user-management-service/src/test/java/com/healthos/usermgmt/integration/PhoneRegistrationIT.java
+
+sent 61,983 bytes  received 2,661 bytes  43,096.00 bytes/sec
+total size is 12,294,444  speedup is 190.19
+==> Skipping image transfer (remote aarch64 != local x86_64); will build on VM.
+==> Running oracle-setup.sh on Oracle...
+==> Stack mode: dev
+==> [1/6] Configuring swap (helps small E2.Micro shapes)...
+               total        used        free      shared  buff/cache   available
+Mem:            23Gi       1.5Gi        18Gi        23Mi       3.6Gi        21Gi
+Swap:          2.0Gi       347Mi       1.7Gi
+==> [2/6] Installing container runtime (Docker or Podman)...
+==> [3/6] Opening host firewall (SSH, API, optional web)...
+run-parts: executing /usr/share/netfilter-persistent/plugins.d/15-ip4tables save
+run-parts: executing /usr/share/netfilter-persistent/plugins.d/25-ip6tables save
+    NOTE: also allow TCP 22 and 8080 in the Oracle VCN Security List / NSG.
+==> [4/6] Preparing .env...
+    Wrote .env with a freshly generated JWT_SECRET.
+==> [4b/6] Resetting databases (docker compose down -v)...
+==> [5/6] Starting backend stack (dev, --no-build if images were pre-loaded)...
+ Image healthos-kitchen-service Building 
+ Image healthos-user-management-service Building 
+ Image healthos-api-gateway Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.53kB done
+#1 DONE 0.0s
+
+#2 [kitchen-service internal] load build definition from Dockerfile
+#2 transferring dockerfile: 670B done
+#2 DONE 0.0s
+
+#3 [user-management-service internal] load build definition from Dockerfile
+#3 transferring dockerfile: 581B done
+#3 DONE 0.0s
+
+#4 [api-gateway internal] load build definition from Dockerfile
+#4 transferring dockerfile: 710B done
+#4 DONE 0.0s
+
+#5 [api-gateway] resolve image config for docker-image://docker.io/docker/dockerfile:1
+#5 DONE 1.3s
+
+#6 [user-management-service] docker-image://docker.io/docker/dockerfile:1@sha256:87999aa3d42bdc6bea60565083ee17e86d1f3339802f543c0d03998580f9cb89
+#6 resolve docker.io/docker/dockerfile:1@sha256:87999aa3d42bdc6bea60565083ee17e86d1f3339802f543c0d03998580f9cb89 0.0s done
+#6 CACHED
+
+#7 [api-gateway internal] load metadata for docker.io/library/maven:3.9-eclipse-temurin-21
+#7 DONE 1.2s
+
+#8 [kitchen-service internal] load metadata for docker.io/library/golang:1.22-alpine
+#8 DONE 1.2s
+
+#9 [user-management-service internal] load metadata for docker.io/library/eclipse-temurin:21-jre
+#9 DONE 1.2s
+
+#10 [api-gateway internal] load .dockerignore
+#10 transferring context: 2B done
+#10 DONE 0.0s
+
+#11 [user-management-service internal] load .dockerignore
+#11 transferring context: 2B done
+#11 DONE 0.0s
+
+#12 [api-gateway stage-1 1/3] FROM docker.io/library/eclipse-temurin:21-jre@sha256:8ec353b20d3aab0758572236b81b967c7077c40c4d0819ce97f9a1329d684603
+#12 resolve docker.io/library/eclipse-temurin:21-jre@sha256:8ec353b20d3aab0758572236b81b967c7077c40c4d0819ce97f9a1329d684603 0.0s done
+#12 DONE 0.0s
+
+#13 [api-gateway build 1/6] FROM docker.io/library/maven:3.9-eclipse-temurin-21@sha256:d7e7f57407437c014571f1ad5a9955f03fc3edcb1d964067ef351fa38e798665
+#13 resolve docker.io/library/maven:3.9-eclipse-temurin-21@sha256:d7e7f57407437c014571f1ad5a9955f03fc3edcb1d964067ef351fa38e798665 0.0s done
+#13 DONE 0.0s
+
+#14 [api-gateway internal] load build context
+#14 transferring context: 4.61kB 0.0s done
+#14 DONE 0.0s
+
+#15 [api-gateway build 3/6] COPY pom.xml .
+#15 CACHED
+
+#16 [api-gateway build 4/6] RUN mvn -q -B dependency:go-offline
+#16 CACHED
+
+#17 [user-management-service internal] load build context
+#17 transferring context: 143.93kB 0.0s done
+#17 DONE 0.0s
+
+#18 [user-management-service build 2/6] WORKDIR /workspace
+#18 CACHED
+
+#19 [user-management-service build 3/6] COPY pom.xml .
+#19 CACHED
+
+#20 [user-management-service build 4/6] RUN mvn -q -B dependency:go-offline
+#20 CACHED
+
+#21 [api-gateway build 5/6] COPY src ./src
+#21 DONE 0.1s
+
+#22 [user-management-service build 5/6] COPY src ./src
+#22 DONE 0.1s
+
+#23 [api-gateway build 6/6] RUN mvn -q -B clean package -DskipTests
+#23 ...
+
+#24 [kitchen-service internal] load metadata for docker.io/library/alpine:3.20
+#24 DONE 1.7s
+
+#25 [kitchen-service internal] load .dockerignore
+#25 transferring context: 2B done
+#25 DONE 0.0s
+
+#26 [kitchen-service internal] load build context
+#26 transferring context: 15.82kB done
+#26 DONE 0.0s
+
+#27 [kitchen-service build 1/8] FROM docker.io/library/golang:1.22-alpine@sha256:1699c10032ca2582ec89a24a1312d986a3f094aed3d5c1147b19880afe40e052
+#27 resolve docker.io/library/golang:1.22-alpine@sha256:1699c10032ca2582ec89a24a1312d986a3f094aed3d5c1147b19880afe40e052 0.1s done
+#27 DONE 0.1s
+
+#28 [kitchen-service stage-1 1/5] FROM docker.io/library/alpine:3.20@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc
+#28 resolve docker.io/library/alpine:3.20@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc
+#28 resolve docker.io/library/alpine:3.20@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc 0.1s done
+#28 DONE 0.1s
+
+#29 [kitchen-service build 2/8] WORKDIR /src
+#29 CACHED
+
+#30 [kitchen-service build 3/8] RUN apk add --no-cache git ca-certificates
+#30 CACHED
+
+#31 [kitchen-service build 4/8] COPY pkg/healthos ./pkg/healthos
+#31 DONE 0.1s
+
+#32 [kitchen-service build 5/8] COPY kitchen-service ./kitchen-service
+#32 DONE 0.1s
+
+#33 [user-management-service build 6/6] RUN mvn -q -B clean package -DskipTests
+#33 ...
+
+#34 [kitchen-service build 6/8] WORKDIR /src/kitchen-service
+#34 DONE 0.0s
+
+#35 [kitchen-service build 7/8] RUN go mod download
+#35 DONE 12.2s
+
+#33 [user-management-service build 6/6] RUN mvn -q -B clean package -DskipTests
+#33 ...
+
+#36 [kitchen-service build 8/8] RUN CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -ldflags="-s -w" -o /kitchen-service ./cmd/server
+#36 ...
+
+#23 [api-gateway build 6/6] RUN mvn -q -B clean package -DskipTests
+#23 DONE 15.9s
+
+#33 [user-management-service build 6/6] RUN mvn -q -B clean package -DskipTests
+#33 ...
+
+#37 [user-management-service stage-1 2/3] WORKDIR /app
+#37 CACHED
+
+#37 [api-gateway stage-1 2/3] WORKDIR /app
+#37 CACHED
+
+#38 [api-gateway stage-1 3/3] COPY --from=build /workspace/target/*.jar app.jar
+#38 DONE 0.3s
+
+#33 [user-management-service build 6/6] RUN mvn -q -B clean package -DskipTests
+#33 ...
+
+#39 [api-gateway] exporting to image
+#39 exporting layers
+#39 exporting layers 2.9s done
+#39 exporting manifest sha256:4e4c8d48487fe46e16ad700989ffc1d1b932ffb4cd7a9093d323db6e54beb8a3 0.0s done
+#39 exporting config sha256:f7b571c6ae2d47f86a26cbc1ba5890f53e6fd70f62011b568ef1d020c51e3446 0.0s done
+#39 exporting attestation manifest sha256:a16e81afc6e45107692052428798645d1eace026fcd58d77e91b186ae52bc5f1 0.0s done
+#39 exporting manifest list sha256:8a1ab51af549323de16df642baaab2212c6713fd714a874196d8774f19718c93
+#39 exporting manifest list sha256:8a1ab51af549323de16df642baaab2212c6713fd714a874196d8774f19718c93 0.0s done
+#39 naming to docker.io/library/healthos-api-gateway:latest done
+#39 unpacking to docker.io/library/healthos-api-gateway:latest
+#39 unpacking to docker.io/library/healthos-api-gateway:latest 0.7s done
+#39 DONE 3.7s
+
+#40 [api-gateway] resolving provenance for metadata file
+#40 DONE 0.0s
+
+#33 [user-management-service build 6/6] RUN mvn -q -B clean package -DskipTests
+#33 DONE 32.0s
+
+#36 [kitchen-service build 8/8] RUN CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -ldflags="-s -w" -o /kitchen-service ./cmd/server
+#36 ...
+
+#41 [user-management-service stage-1 3/3] COPY --from=build /workspace/target/*.jar app.jar
+#41 DONE 1.9s
+
+#36 [kitchen-service build 8/8] RUN CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -ldflags="-s -w" -o /kitchen-service ./cmd/server
+#36 ...
+
+#42 [user-management-service] exporting to image
+#42 exporting layers
+#42 ...
+
+#36 [kitchen-service build 8/8] RUN CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -ldflags="-s -w" -o /kitchen-service ./cmd/server
+#36 DONE 24.4s
+
+#42 [user-management-service] exporting to image
+#42 ...
+
+#43 [kitchen-service stage-1 2/5] RUN apk add --no-cache ca-certificates wget
+#43 CACHED
+
+#44 [kitchen-service stage-1 3/5] WORKDIR /app
+#44 CACHED
+
+#45 [kitchen-service stage-1 4/5] COPY --from=build /kitchen-service /app/kitchen-service
+#45 DONE 0.2s
+
+#42 [user-management-service] exporting to image
+#42 ...
+
+#46 [kitchen-service stage-1 5/5] COPY kitchen-service/migrations /app/migrations
+#46 DONE 0.1s
+
+#47 [kitchen-service] exporting to image
+#47 exporting layers 0.6s done
+#47 exporting manifest sha256:6327b27548507524a54a820510ca3417fa8351e465854074ecdceafa70bbb816 0.0s done
+#47 exporting config sha256:b1c03ee9f5c1b42fb30ee6a1ee7813a5731215ec1115ada4bd105a815057cc21 0.0s done
+#47 exporting attestation manifest sha256:1a7c45b8e503c60125cfd897f3ecab9961ddf41fa557d3d3f916af5bb1ff2733 0.0s done
+#47 exporting manifest list sha256:45da1f04a4900482761712c53302b0c040af0b7d6f540e5a7fe9ed6f320ef13b 0.0s done
+#47 naming to docker.io/library/healthos-kitchen-service:latest done
+#47 unpacking to docker.io/library/healthos-kitchen-service:latest
+#47 unpacking to docker.io/library/healthos-kitchen-service:latest 0.1s done
+#47 DONE 0.8s
+
+#42 [user-management-service] exporting to image
+#42 exporting layers 3.1s done
+#42 exporting manifest sha256:51ebfa6ab15d940b386878304e6d8acaea996dce99ec788d5af4b550f9bf3903 0.0s done
+#42 exporting config sha256:36d9e3f45a332d414ba56d7a66f2613893523569e84bf53549c202992e5d0b43 0.0s done
+#42 exporting attestation manifest sha256:574c0f1dd4d75a6a465c65465fd66861972bea364feea570c67f4cef19068a1a 0.1s done
+#42 exporting manifest list sha256:46f5818f7ed37b8c92f655ca4c55b2851fafc4b2b993dae754525ec6e8b199e1
+#42 ...
+
+#48 [kitchen-service] resolving provenance for metadata file
+#48 DONE 0.0s
+
+#42 [user-management-service] exporting to image
+#42 exporting manifest list sha256:46f5818f7ed37b8c92f655ca4c55b2851fafc4b2b993dae754525ec6e8b199e1 0.0s done
+#42 naming to docker.io/library/healthos-user-management-service:latest done
+#42 unpacking to docker.io/library/healthos-user-management-service:latest
+#42 unpacking to docker.io/library/healthos-user-management-service:latest 0.4s done
+#42 DONE 3.6s
+
+#49 [user-management-service] resolving provenance for metadata file
+#49 DONE 0.0s
+ Image healthos-kitchen-service Built 
+ Image healthos-user-management-service Built 
+ Image healthos-api-gateway Built 
+ Volume healthos_pgdata Creating 
+ Volume healthos_pgdata Created 
+ Volume healthos_mongodata Creating 
+ Volume healthos_mongodata Created 
+ Container healthos-postgres Creating 
+ Container healthos-kafka Creating 
+ Container healthos-mongo Creating 
+ Container healthos-redis Creating 
+ Container healthos-api-gateway Creating 
+ Container healthos-api-gateway Created 
+ Container healthos-mongo Created 
+ Container healthos-postgres Created 
+ Container healthos-kitchen-service Recreate 
+ Container healthos-redis Created 
+ Container healthos-user-management-service Creating 
+ Container healthos-kafka Created 
+ Container healthos-user-management-service Created 
+ Container healthos-kitchen-service Recreated 
+ Container healthos-postgres Starting 
+ Container healthos-mongo Starting 
+ Container healthos-api-gateway Starting 
+ Container healthos-redis Starting 
+ Container healthos-kafka Starting 
+ Container healthos-kafka Started 
+ Container healthos-mongo Started 
+ Container healthos-postgres Started 
+ Container healthos-postgres Waiting 
+ Container healthos-redis Started 
+ Container healthos-redis Waiting 
+ Container healthos-postgres Waiting 
+ Container healthos-api-gateway Started 
+ Container healthos-postgres Healthy 
+ Container healthos-kitchen-service Starting 
+ Container healthos-postgres Healthy 
+ Container healthos-redis Healthy 
+ Container healthos-user-management-service Starting 
+ Container healthos-kitchen-service Started 
+ Container healthos-user-management-service Started 
+==> [6/6] Waiting for api-gateway health...
+    api-gateway is UP
+NAME                               IMAGE                              COMMAND                  SERVICE                   CREATED          STATUS                                     PORTS
+healthos-api-gateway               healthos-api-gateway               "sh -c 'java $JAVA_O…"   api-gateway               16 seconds ago   Up 14 seconds (healthy)                    0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp
+healthos-kafka                     apache/kafka:3.7.0                 "/__cacert_entrypoin…"   kafka                     16 seconds ago   Up 14 seconds (healthy)                    0.0.0.0:9092->9092/tcp, [::]:9092->9092/tcp
+healthos-kitchen-service           healthos-kitchen-service           "/app/kitchen-service"   kitchen-service           15 seconds ago   Up 8 seconds (health: starting)            8083/tcp
+healthos-mongo                     mongo:7                            "docker-entrypoint.s…"   mongo                     16 seconds ago   Up 14 seconds (healthy)                    0.0.0.0:27017->27017/tcp, [::]:27017->27017/tcp
+healthos-postgres                  postgres:16                        "docker-entrypoint.s…"   postgres                  16 seconds ago   Up 14 seconds (healthy)                    0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp
+healthos-redis                     redis:7-alpine                     "docker-entrypoint.s…"   redis                     16 seconds ago   Up 14 seconds (healthy)                    0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp
+healthos-user-management-service   healthos-user-management-service   "sh -c 'java $JAVA_O…"   user-management-service   15 seconds ago   Up Less than a second (health: starting)   8081/tcp
+
+============================================================
+HealthOS backend is starting on Oracle Cloud.
+
+  API health : http://152.67.28.189:8080/actuator/health
+  Swagger    : http://152.67.28.189:8080/swagger-ui.html
+
+Set Vercel healthos-api BACKEND_URL=http://152.67.28.189:8080
+
+Watch logs:    sudo docker compose -f docker-compose.yml -f deploy/docker-compose.backend.yml -f deploy/docker-compose.dev-stack.yml -f deploy/docker-compose.oracle-6gb.yml logs -f user-management-service
+Stop stack:    sudo docker compose -f docker-compose.yml -f deploy/docker-compose.backend.yml -f deploy/docker-compose.dev-stack.yml -f deploy/docker-compose.oracle-6gb.yml down
+============================================================
+==> Done. Test: curl -s http://152.67.28.189:8080/actuator/health
+    Then set Vercel healthos-api BACKEND_URL=http://152.67.28.189:8080

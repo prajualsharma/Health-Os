@@ -76,12 +76,32 @@ cp deploy/oracle-host.env.example deploy/oracle-host.env
 
 export SSH_KEY=/home/pras/Downloads/ssh-key-2026-06-30.key
 export ORACLE_HOST=ubuntu@<public-ip>
-# optional: export SMTP_PASSWORD=<gmail-app-password>
+export ORACLE_STACK=dev   # default: backend + kitchen + datastores, OTP 123456
 
 bash deploy/oracle-deploy.sh
 ```
 
-First build on A1.Flex takes ~15–20 minutes (native ARM). Stack:
+**Dev stack** (recommended — frontends stay on Vercel, Oracle is API-only):
+
+| On Oracle | Not on Oracle |
+|-----------|---------------|
+| api-gateway, user-management-service, kitchen-service (Go) | notification-service |
+| postgres, redis, mongo, kafka | web / NutriKit / kitchen_app builds |
+
+```bash
+docker compose -f docker-compose.yml \
+  -f deploy/docker-compose.backend.yml \
+  -f deploy/docker-compose.dev-stack.yml \
+  -f deploy/docker-compose.oracle-6gb.yml \
+  up -d --build \
+  postgres redis mongo kafka user-management-service kitchen-service api-gateway
+```
+
+Dev OTP is always **123456** (`OTP_DEV_BYPASS=true`, no notification-service).
+
+**Minimal stack** (auth only, no kitchen/mongo/kafka): `ORACLE_STACK=minimal bash deploy/oracle-deploy.sh`
+
+Legacy minimal compose:
 
 ```bash
 docker compose -f docker-compose.yml \
@@ -106,8 +126,21 @@ bash deploy/wire-oracle.sh <public-ip>
 curl -s http://<public-ip>:8080/actuator/health
 ```
 
-Dev OTP is **123456** when `OTP_DEV_BYPASS=true`; set `SMTP_PASSWORD` in `~/healthos/.env`
-on the VM for real email OTP.
+Dev OTP is **123456** when `OTP_DEV_BYPASS=true` (default for `ORACLE_STACK=dev`).
+
+### Dev API endpoints
+
+| Purpose | URL |
+|---------|-----|
+| Vercel proxy (NutriKit / kitchen_app) | `https://healthos-api.vercel.app` |
+| Direct Oracle gateway | `http://<public-ip>:8080` |
+| Health | `GET /actuator/health` |
+| Auth OTP | `POST /auth/phone/initiate` then `POST /auth/phone/verify` with `"otp":"123456"` |
+| Kitchen APIs | `GET /kitchen/kitchens`, `/kitchen/kitchens/{id}/menu`, etc. |
+
+Datastore ports (dev-stack publishes to host): Postgres **5432**, Mongo **27017**, Kafka **9092**, Redis **6379** — open in VCN if needed from your laptop.
+
+Set `SMTP_PASSWORD` in `~/healthos/.env` on the VM for real email OTP (not used when `ORACLE_STACK=dev`).
 
 ### Full stack (optional)
 

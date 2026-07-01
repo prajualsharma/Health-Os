@@ -20,9 +20,7 @@ jobs:
       matrix:
         service:
           - user-management-service
-          - notification-service
           - api-gateway
-          - kitchen-service
     steps:
       - uses: actions/checkout@v4
 
@@ -36,6 +34,36 @@ jobs:
       - name: Build and test
         working-directory: ${{ matrix.service }}
         run: mvn -B verify -DskipTests=false
+
+  go:
+    name: Go services
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module:
+          - pkg/healthos
+          - kitchen-service
+          - notification-service
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache-dependency-path: |
+            pkg/healthos/go.sum
+            kitchen-service/go.sum
+            notification-service/go.sum
+
+      - name: Test and build
+        working-directory: ${{ matrix.module }}
+        run: |
+          go test ./...
+          if [ -d cmd/server ]; then
+            go build -buildvcs=false -o /dev/null ./cmd/server
+          fi
 
   nutrikit:
     name: NutriKit (analyze)
